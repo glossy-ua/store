@@ -1,0 +1,191 @@
+/* ===== Auth panel size ===== */
+.auth-panel{
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+/* ===== Tabs ===== */
+.auth-tabs{
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.auth-tab{
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.auth-tab.active{
+  background: #DC7000;
+  color: bisque;
+  border-color: transparent;
+}
+
+/* ===== Message ===== */
+.auth-msg{
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.auth-msg.ok{
+  background: rgba(0,160,80,0.12);
+  border: 1px solid rgba(0,160,80,0.25);
+}
+
+.auth-msg.err{
+  background: rgba(220,0,0,0.10);
+  border: 1px solid rgba(220,0,0,0.20);
+}
+
+/* ===== Forms: override your global .form styles ===== */
+/* важно: ломаем display:grid у label из main.css */
+.auth-form label{
+  display: block;
+  font-size: 14px;
+  color: #4F4F4F;
+}
+
+.auth-form input{
+  width: 100%;
+  margin-top: 6px;
+  box-sizing: border-box;
+
+  /* чтобы не было визуальной "склейки" */
+  background: rgba(107, 89, 80, 0.10);
+  border: 1px solid rgba(108, 107, 107, 0.55);
+  border-radius: 10px;
+  padding: 0px 14px;
+  outline: none;
+  font-size: 14px;
+  height: 44px;  
+  color: #4F4F4F;
+}
+
+.auth-form input:focus{
+  border-color: #DC7000;
+}
+
+/* LOGIN: один столбец */
+#loginForm{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 24px;   /* ВАЖНО */
+  row-gap: 18px;
+}
+
+/* REGISTER: два столбца */
+#registerForm{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px; /* вертикаль / горизонталь */
+  align-items: start;
+}
+
+/* кнопка на всю ширину строки */
+.auth-submit{
+  grid-column: 1 / -1;
+  width: 300px;
+  margin-top: 6px;
+
+  /* по центру */
+  justify-self: start; /* поменяй на center если надо по центру */
+}
+
+/* если хочешь по центру — вот так:
+.auth-submit{ justify-self: center; }
+*/
+
+@media (max-width: 720px){
+  .auth-panel{ max-width: 560px; }
+  #registerForm{ grid-template-columns: 1fr; }
+  .auth-submit{ width: 100%; justify-self: stretch; }
+}
+
+.pw-field{
+  position: relative;
+}
+
+.pw-field input{
+  padding-right: 44px; /* место под глаз */
+}
+
+.pw-toggle{
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: .7;
+}
+
+.pw-toggle:hover{ opacity: 1; }
+
+.pass-hint{
+  grid-column: 1 / -1;
+  margin-top: -6px;
+  font-size: 13px;
+  opacity: .85;
+}
+
+.pass-hint.ok{ color: #1f8a3b; }
+.pass-hint.err{ color: #c0392b; }
+
+.input-ok{ border-color: rgba(31,138,59,.7) !important; }
+.input-err{ border-color: rgba(192,57,43,.7) !important; }
+
+.auth-panel{
+  margin-top: 40px; /* можешь 20-40 подобрать */
+}
+
+.page h1,
+.page .muted {
+  text-align: center;
+}
+
+/* resend блока */
+.auth-resend{
+  display:flex;
+  justify-content:center;
+  margin-top:14px;
+}
+
+/* вторичная кнопка */
+.btn-secondary{
+  border: 1px solid rgba(0,0,0,.12);
+  background: #fff;
+  color: #111;
+  padding: 12px 18px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+  box-shadow: 0 10px 25px rgba(0,0,0,.06);
+}
+
+.btn-secondary:hover{
+  transform: translateY(-1px);
+  background: rgba(0,0,0,.02);
+  box-shadow: 0 14px 35px rgba(0,0,0,.10);
+}
+
+.btn-secondary:active{
+  transform: translateY(0);
+}
+
+.btn-secondary:disabled{
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+

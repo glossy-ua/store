@@ -1,0 +1,345 @@
+/* ===== PROFILE (LK) PAGE ===== */
+
+.page h1 { margin-bottom: 16px; }
+
+.lk-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 22px;
+}
+
+.lk-head h1,
+.lk-head h2 { margin: 0; }
+
+.lk-head .muted {
+  opacity: .7;
+  margin-top: 6px;
+}
+
+/* Сетка: контакты слева, заказы справа */
+.lk-grid {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* Карточки */
+.lk-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+}
+
+/* Заголовки внутри карточек */
+.lk-card h2 {
+  margin: 0 0 10px 0;
+  font-size: 20px;
+}
+
+.lk-card .muted { opacity: .7; }
+
+/* Форма */
+.lk-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.lk-form label {
+  font-size: 14px;
+  opacity: .8;
+}
+
+.lk-form input {
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  padding: 0 14px;
+  outline: none;
+  background: #fff;
+}
+
+.lk-form input:focus {
+  border-color: #b8b8b8;
+  box-shadow: 0 0 0 3px rgba(0,0,0,.06);
+}
+
+/* Кнопки */
+.btn.btn-light {
+  background: #f3f3f3;
+  color: #000;
+}
+.btn.btn-light:hover { filter: brightness(.97); }
+
+/* =========================
+   ORDERS (старый блок ordersList)
+   ========================= */
+
+.orders-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.order-card {
+  border: 1px solid #eee;
+  border-radius: 18px;
+  padding: 16px;
+  background: #fff;
+}
+
+/* Верх карточки: слева инфо, справа кнопки */
+.order-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap: 14px;
+}
+
+/* Левая часть */
+.order-info{
+  display:flex;
+  flex-direction:column;
+  gap: 6px;
+}
+
+/* Заголовок заказа: номер + статус + время (в одну строку) */
+.order-title-row{
+  display:flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.order-title-row strong{
+  font-weight: 800;
+}
+
+/* Бейдж статуса в этом блоке */
+.order-status-badge{
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid #eee;
+  line-height: 1;
+  white-space: nowrap;
+}
+.order-status-badge.st-new{ background:#fff7ed; border-color:#fed7aa; }
+.order-status-badge.st-processing{ background:#eff6ff; border-color:#bfdbfe; }
+.order-status-badge.st-ready{ background:#ecfdf5; border-color:#a7f3d0; }
+.order-status-badge.st-done{ background:#f3f4f6; border-color:#e5e7eb; }
+.order-status-badge.st-cancelled{ background:#fef2f2; border-color:#fecaca; }
+
+/* Время на одной линии */
+.order-date-inline{
+  font-size: 13px;
+  opacity: .75;
+  white-space: nowrap;
+}
+
+/* Кнопки справа */
+.order-actions{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap: wrap;
+  justify-content:flex-end;
+}
+
+/* блок суммы и товаров — справа компактный */
+.order-body{
+  display:grid;
+  grid-template-columns: auto auto;
+  gap: 6px 14px;
+  justify-content:end;
+  text-align:right;
+
+  background:#fafafa;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+
+  width: fit-content;
+  margin-left: auto;
+  margin-top: 10px;
+}
+
+/* детали */
+.order-details{
+  border-top: 1px solid rgba(0,0,0,.08);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.order-item{
+  display:grid;
+  grid-template-columns:64px 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding: 12px 0;
+  border-top:1px solid rgba(0,0,0,.06);
+}
+
+.order-item__img{
+  width:64px;
+  height:64px;
+  border-radius:14px;
+  overflow:hidden;
+  background:#f3f3f3;
+}
+.order-item__img img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* название + код под ним (одной строкой слева) */
+.order-item__text{
+  display:flex;
+  flex-direction:column;
+  gap: 4px;
+}
+.order-item__title{
+  font-weight: 800;
+  line-height: 1.2;
+}
+.order-item__code-line{
+  font-size: 13px;
+  opacity: .75;
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  flex-wrap: wrap;
+}
+.order-item__code-pill{
+  font-size: 12px;
+  color:#555;
+  border:1px solid #eee;
+  border-radius:999px;
+  padding:4px 8px;
+  background:#fafafa;
+}
+
+.order-item__sum{
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* =========================
+   ORDERS (новый красивый блок po-*)
+   ========================= */
+
+.po-card{
+  background:#fff;
+  border:1px solid #ececec;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.06);
+  overflow:hidden;
+  margin: 14px 0;
+}
+
+.po-head{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 16px;
+  border-bottom:1px solid #f0f0f0;
+  align-items:flex-start;
+}
+
+.po-id{ font-weight:800; }
+.po-meta{ margin-top:6px; font-size:13px; color:#666; }
+
+.po-status{
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:800;
+  border:1px solid #eee;
+  white-space:nowrap;
+  line-height: 1;
+}
+
+.po-status.st-new{ background:#fff7ed; border-color:#fed7aa; }
+.po-status.st-processing{ background:#eff6ff; border-color:#bfdbfe; }
+.po-status.st-ready{ background:#ecfdf5; border-color:#a7f3d0; }
+.po-status.st-done{ background:#f3f4f6; border-color:#e5e7eb; }
+.po-status.st-cancelled{ background:#fef2f2; border-color:#fecaca; }
+
+.po-items{ padding:14px 16px; display:flex; flex-direction:column; gap:12px; }
+
+.po-item{
+  display:grid;
+  grid-template-columns:72px 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:10px 12px;
+  border:1px solid #f0f0f0;
+  border-radius:16px;
+}
+
+.po-item__img{
+  width:72px; height:72px;
+  border-radius:14px;
+  overflow:hidden;
+  background:#f6f6f6;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.po-item__img img{ width:100%; height:100%; object-fit:cover; }
+
+.po-item__body{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.po-item__title{
+  font-weight:800;
+  line-height:1.2;
+}
+
+/* код под названием, одной строкой слева */
+.po-item__codeRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  font-size:13px;
+  color:#666;
+}
+
+.po-item__code{
+  font-size:12px;
+  color:#555;
+  border:1px solid #eee;
+  border-radius:999px;
+  padding:4px 8px;
+  background:#fafafa;
+}
+
+.po-item__sum{ font-weight:900; white-space:nowrap; }
+
+/* Адаптив */
+@media (max-width: 950px) {
+  .lk-grid { grid-template-columns: 1fr; }
+  .lk-head { align-items: stretch; }
+  .lk-head .btn { width: 100%; }
+}
+
+@media (max-width: 700px){
+  .order-head{ flex-direction:column; align-items:stretch; }
+  .order-actions{ justify-content:flex-start; }
+  .order-body{
+    width: 100%;
+    justify-content: space-between;
+    text-align: left;
+    margin-left: 0;
+  }
+}

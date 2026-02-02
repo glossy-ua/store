@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Glossy</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/pages-products.css">
+  <link rel="stylesheet" href="css/pages-modal.css">
+  <link rel="stylesheet" href="css/pages-admin.css">
+</head>
+
+<body>
+<div class="wrapper">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">Glossy</a>
+      <div class="header-actions">
+        <button id="logoutBtn" class="btn">Вийти</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <h1>Адмін-панель</h1>
+
+    <!-- ✅ по умолчанию скрыто -->
+    <div id="adminAuth" hidden>
+      <h3>Вхід</h3>
+      <input id="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Пароль">
+      <button id="loginBtn" class="btn">Увійти</button>
+    </div>
+
+    <!-- ✅ по умолчанию скрыто -->
+    <div id="adminApp" hidden>
+  <div class="admin-tabs">
+    <button id="tabProducts" class="btn btn-light is-active" type="button">Товари</button>
+    <button id="tabOrders" class="btn btn-light" type="button">Замовлення</button>
+  </div>
+
+  <!-- PRODUCTS -->
+  <section id="productsSection">
+    <button id="addProductBtn" class="btn-primary">➕ Додати товар</button>
+    <div id="productsGrid" class="products-grid"></div>
+  </section>
+
+  
+
+  
+  <!-- ORDERS -->
+<section id="ordersSection" hidden>
+
+  <div class="orders-filters">
+    <label>
+      Статус:
+      <select id="orderStatusFilter">
+        <option value="all">Всі</option>
+        <option value="new">Нові</option>
+        <option value="processing">В роботі</option>
+        <option value="ready">Готові</option>
+        <option value="done">Завершені</option>
+        <option value="cancelled">Скасовані</option>
+      </select>
+    </label>
+  </div>
+
+  <div id="ordersGrid" class="orders-grid"></div>
+</section>
+
+</div>
+</main>
+
+
+
+<!-- PRODUCT MODAL (используем как форму добавления/редактирования) -->
+<div id="productModal" class="pmodal" aria-hidden="true">
+  <div class="pmodal__overlay" data-close="1"></div>
+
+  <div class="pmodal__dialog" role="dialog" aria-modal="true" aria-label="Товар">
+    <button class="pmodal__close" type="button" data-close="1">✕</button>
+
+    <div class="pmodal__top">
+      <div class="pmodal__img">
+        <img id="pmImg" src="" alt="">
+      </div>
+
+      <div class="pmodal__info">
+        <h2 class="pmodal__title">Товар</h2>
+
+        <div class="pmodal__about" style="margin-top:10px">
+          <label class="muted">Назва</label>
+          <input id="admTitle" class="qty__input" type="text" placeholder="Напр. Мікрофібра для сушки" style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div>
+              <label class="muted">Ціна (грн)</label>
+              <input id="admPrice" class="qty__input" type="number" min="0" step="0.01" placeholder="250" style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
+            </div>
+
+            <div class="adm-field">
+  <label class="adm-label">Категорія</label>
+  <select id="admCategory" class="adm-select"></select>
+</div>
+
+          </div>
+
+          <label class="muted" style="display:block;margin-top:12px">Опис</label>
+          <textarea id="admDesc" placeholder="Опис..." style="width:100%;min-height:90px;border:1px solid #e1e1e1;border-radius:14px;padding:12px 14px;resize:vertical"></textarea>
+
+          <label class="muted" style="display:block;margin-top:12px">Фото (Storage)</label>
+
+<!-- dropzone -->
+<div id="admDrop" class="adm-drop">
+  <div class="adm-drop__inner">
+    <div class="adm-drop__title">Перетягни фото сюди</div>
+    <div class="adm-drop__sub">або натисни кнопку</div>
+    <button id="admPick" type="button" class="btn">Завантажити фото</button>
+    <input id="admFile" type="file" accept="image/*" hidden>
+  </div>
+</div>
+
+<!-- fallback: можно оставить ручной URL (иногда удобно) -->
+<label class="muted" style="display:block;margin-top:12px">Або URL (опційно)</label>
+<input id="admImg" type="text" placeholder="https://...jpg"
+  style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
+
+
+          <div style="display:flex;gap:16px;margin-top:12px;align-items:center">
+            <label style="display:flex;gap:8px;align-items:center">
+              <input id="admActive" type="checkbox" checked>
+              <span>Active</span>
+            </label>
+
+            <label style="display:flex;gap:8px;align-items:center">
+              <input id="admPopular" type="checkbox">
+              <span>Popular</span>
+            </label>
+          </div>
+
+          <div class="pmodal__actions" style="margin-top:16px">
+            <button id="admSave" class="btn-primary" type="button">Зберегти</button>
+            <button id="admCancel" class="btn" type="button">Скасувати</button>
+          </div>
+
+          <p id="admErr" class="muted" style="margin-top:10px;color:#c00"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+      <div class="blocks container">
+        <div class="column">
+          <span class="logo">Glossy</span>
+          <p>Understand & Care</p>
+        </div>
+
+        <div class="column">
+          <h4>Популярні категорії</h4>
+          <ul>
+            <li><a href="catalog/microfiber.html">Мікрофібри</a></li>
+<li><a href="catalog/wheels.html">Колеса</a></li>
+<li><a href="catalog/other.html">Інше для мийки</a></li>
+<li><a href="catalog/interior.html">Для салону</a></li>
+
+          </ul>
+        </div>
+
+        <div class="column">
+          <h4>Контакти</h4>
+          <ul>
+            <li>Пн-Пт 09:00 - 18:00</li>
+            <li>Сб-Нд 10:00 - 16:00</li>
+          </ul>
+          
+          <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
+
+        </div>
+      </div>
+
+      <hr>
+      <p>Glossy © 2026</p>
+    </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

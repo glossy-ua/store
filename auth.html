@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Вхід / Реєстрація</title>
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/pages-auth.css" />
+</head>
+
+<body>
+  <div class="wrapper">
+
+    <!-- HEADER -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html">Glossy</a>
+
+        <nav class="main-nav">
+          <ul>
+            <li><a href="index.html">Головна</a></li>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="pay-delivery.html">Оплата та доставка</a></li>
+            <li><a href="exchange-return.html">Обмін та повернення</a></li>
+            <li><a href="contacts.html">Контакти</a></li>
+          </ul>
+        </nav>
+
+       <form id="searchForm" class="header-search" autocomplete="off">
+  <input type="text" id="searchInput" placeholder="Пошук..." autocomplete="off">
+  <div id="searchSuggest" class="search-suggest" hidden></div>
+</form>
+
+        <div class="header-actions">
+          <a id="accountLink" class="icon-link" href="/auth.html" title="Особистий кабінет">👤</a>
+          <a class="icon-link" href="favorites.html" title="Закладки">❤ <span class="badge">0</span></a>
+          <a class="icon-link" href="cart.html" title="Кошик">🛒 <span class="badge">0</span></a>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="container page">
+      <h1>Вхід / Реєстрація</h1>
+      <p class="muted">Дані акаунта зберігаються у Supabase. Після реєстрації потрібно підтвердити email.</p>
+
+      <section class="panel auth-panel">
+        <div class="auth-tabs">
+          <button class="auth-tab active" type="button" data-tab="login">Вхід</button>
+          <button class="auth-tab" type="button" data-tab="register">Реєстрація</button>
+        </div>
+
+        <p id="authMsg" class="auth-msg" style="display:none;"></p>
+
+        <!-- LOGIN -->
+        <form id="loginForm" class="form auth-form" data-pane="login" autocomplete="on">
+          <label>
+            Email
+            <input id="loginEmail" type="email" placeholder="E-mail" autocomplete="email" required>
+          </label>
+
+          <label>
+  Пароль
+  <div class="pw-field">
+    <input id="loginPass" type="password" placeholder="Пароль" autocomplete="current-password" required>
+    <button class="pw-toggle" type="button" data-toggle="#loginPass" aria-label="Показати пароль">👁</button>
+  </div>
+</label>
+
+
+          <button class="btn-primary auth-submit" type="submit">Увійти</button>
+        </form>
+
+        <!-- REGISTER -->
+        <form id="registerForm" class="form auth-form" data-pane="register" style="display:none;" autocomplete="on">
+          <label>
+  Імʼя
+  <input id="regFirstName" type="text" placeholder="Імʼя" required>
+</label>
+
+<label>
+  Email
+  <input id="regEmail" type="email" placeholder="E-mail" required>
+</label>
+
+
+          <label>
+            Прізвище
+            <input id="regLastName" type="text" placeholder="Прізвище" autocomplete="family-name" required>
+          </label>
+
+          <label>
+            Номер телефона
+            <input id="regPhone" type="tel" placeholder="+38(___)___-__-__" inputmode="tel" autocomplete="tel" required>
+          </label>
+
+          <label>
+  Пароль
+  <div class="pw-field">
+    <input id="regPass" type="password" placeholder="Пароль" autocomplete="new-password" required>
+    <button class="pw-toggle" type="button" data-toggle="#regPass" aria-label="Показати пароль">👁</button>
+  </div>
+</label>
+
+<label>
+  Підтвердіть пароль
+  <div class="pw-field">
+    <input id="regPass2" type="password" placeholder="Підтвердіть пароль" autocomplete="new-password" required>
+    <button class="pw-toggle" type="button" data-toggle="#regPass2" aria-label="Показати пароль">👁</button>
+    <p id="passHint" class="pass-hint" style="display:none;"></p>
+
+  </div>
+</label>
+
+
+          <button class="btn-primary auth-submit" type="submit">Продовжити</button>
+        </form>
+      </section>
+      <div id="resendWrap" class="auth-resend" style="display:none;">
+  <button id="resendBtn" class="btn-secondary" type="button">
+    Надіслати лист ще раз
+  </button>
+</div>
+
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="blocks container">
+        <div class="column">
+          <span class="logo">Glossy</span>
+          <p>Understand & Care</p>
+        </div>
+
+        <div class="column">
+          <h4>Популярні категорії</h4>
+          <ul>
+            <li><a href="catalog/microfiber.html">Мікрофібри</a></li>
+<li><a href="catalog/wheels.html">Колеса</a></li>
+<li><a href="catalog/other.html">Інше для мийки</a></li>
+<li><a href="catalog/interior.html">Для салону</a></li>
+
+          </ul>
+        </div>
+
+        <div class="column">
+          <h4>Контакти</h4>
+          <ul>
+            <li>Пн-Пт 09:00 - 18:00</li>
+            <li>Сб-Нд 10:00 - 16:00</li>
+          </ul>
+          
+          <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
+
+        </div>
+      </div>
+
+      <hr>
+      <p>Glossy © 2026</p>
+    </footer>
+
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+
+<script src="js/store.js"></script>
+<script src="js/header.js"></script>
+<script src="js/auth.js"></script>
+
+
+
+
+</body>
+</html>
