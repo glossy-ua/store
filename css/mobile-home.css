@@ -1,6 +1,24 @@
 /* css/mobile-home.css */
 /* Работает только на телефоне, подключается с media="(max-width: 700px)" */
+.hero{
+  text-align: center !important;
+}
 
+.hero--info h1{
+  font-size: 38px !important;
+  line-height: 1.05 !important;
+  margin-bottom: 4px !important;
+}
+
+.hero--info h3{
+  font-size: 20px !important;
+  margin-bottom: 8px !important;
+}
+
+.hero--info p{
+  font-size: 13px !important;
+  margin-bottom: 14px !important;
+}
 /* общие фиксы контейнера */
 .container{
   width: 100% !important;
@@ -155,3 +173,4 @@ footer .blocks{
 footer{
   padding-bottom: 30px;
 }
+
