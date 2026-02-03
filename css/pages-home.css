@@ -7,6 +7,11 @@
   padding-bottom: 100px;
   position: relative;
   z-index: 1;
+
+  /* ВАЖНО: делаем нормальную сетку */
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
 .hero--info {
@@ -15,14 +20,20 @@
 }
 
 .hero--info h2 {
-  color: #d85a0b;
+  color: #000000;
   font-size: 30px;
   font-weight: 600;
 }
 
 .hero--info h1 {
-  font-size: 40px;
+  font-size: 77px;
   font-weight: 600;
+  line-height: 1.1;
+}
+
+.hero--info h3 {
+  font-size: 39px;
+  line-height: 1.1;
 }
 
 .hero--info p {
@@ -49,11 +60,11 @@
   transform: scale(1.1);
 }
 
+/* КАРТИНКА */
 .hero img {
   width: 40%;
-  position: absolute;
-  top: 100px;
-  right: 100px;
+  margin-top: 50px; /* подняли вверх */
+  position: static;  /* УБРАЛИ absolute */
 }
 
 /* ===== POPULAR / TRENDING ===== */
@@ -62,7 +73,6 @@
   position: relative;
 }
 
-/* Заголовок по центру */
 .trending h3 {
   text-align: center;
   font-size: 34px;
@@ -70,7 +80,6 @@
   margin: 0 0 18px;
 }
 
-/* Обертка: стрелка - viewport - стрелка */
 .popular {
   display: grid;
   grid-template-columns: 64px 1fr 64px;
@@ -82,22 +91,17 @@
 .popular__viewport{
   overflow: hidden;
   width: 100%;
-
-  /* ✅ чтобы тени/скругления карточек не обрезались */
   padding: 16px;
-  margin: -16px; /* чтобы сетка не “раздувала” блок */
+  margin: -16px;
 }
 
 .popular__track{
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 22px;
-
-  /* ✅ компенсируем padding у viewport */
   margin: 16px;
 }
 
-/* Стрелки */
 .popular__nav {
   width: 64px;
   height: 64px;
@@ -117,8 +121,6 @@
   cursor: not-allowed;
 }
 
-/* Если в "Популярні" рендеришь product-card (как в каталоге),
-   просто подправим высоту картинки, чтобы выглядело ровно */
 .home-pop-card .product-card__img {
   height: 220px;
   display: flex;
@@ -132,22 +134,15 @@
   object-fit: contain;
 }
 
-/* Кнопка "ПОДИВИТИСЯ ВСЕ" — по центру */
 .trending .see-all {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   margin: 18px auto 0;
-  float: none;
-  position: static;
-  z-index: auto;
-
   color: #fff;
   background: #b3b2b2;
   border-radius: 14px;
   padding: 14px 30px;
-
   text-decoration: none;
   font-weight: 800;
   width: fit-content;
@@ -158,176 +153,35 @@
   transform: scale(1.06);
 }
 
-/* Адаптив для "Популярні товари" */
-@media (max-width: 1200px) {
-  .popular__track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .popular { grid-template-columns: 56px 1fr 56px; }
-  .popular__nav { width: 56px; height: 56px; font-size: 34px; }
-}
-
-@media (max-width: 700px) {
-  .popular__track { grid-template-columns: 1fr; }
-  .popular { grid-template-columns: 48px 1fr 48px; }
-  .popular__nav { width: 48px; height: 48px; border-radius: 14px; font-size: 32px; }
-}
-
-/* ===== BIG TEXT ===== */
-.big-text {
-  padding: 50px 0;
-  font-size: 35px;
-  font-weight: 600;
-  text-align: center;
-  width: 800px;
-}
-
-/* ===== BANNER ===== */
-.banner {
-  padding: 80px 0;
-}
-
-.banner h3 {
-  font-size: 30px;
-  font-weight: 600;
-  margin-bottom: 30px;
-}
-
-.banner p {
-  line-height: 170%;
-  margin-bottom: 30px;
-  width: 550px;
-}
-
-.banner img {
-  width: 100%;
-  margin-bottom: 30px;
-}
-
-/* ===== FEATURES ===== */
-.features {
-  background: url('../img/backgr.jpg') no-repeat center center fixed;
-  background-size: cover;
-  padding: 80px 0;
-}
-
-.features h3,
-.features p {
-  margin-bottom: 20px;
-  text-align: center;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-  color: white;
-}
-
-.features h3 {
-  font-size: 30px;
-}
-
-.features .info {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.features .info .block {
-  text-align: center;
-  width: 20%;
-  margin: 30px 2%;
-}
-
-.features .info .block img {
-  margin-bottom: 15px;
-}
-
-/* ===== PROJECTS ===== */
-.projects {
-  padding: 100px;
-}
-
-.projects h3 {
-  font-size: 30px;
-  text-align: center;
-}
-
-.projects p {
-  margin: 40px 0;
-  text-align: center;
-}
-
-.projects .images {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 25px;
-}
-
-
-/* ===== EMAIL ===== */
-.email {
-  padding-bottom: 120px;
-}
-
-.email h3 {
-  margin-top: 60px;
-  font-size: 30px;
-}
-
-.email .block {
-  background: #bfbfbf;
-  margin-top: 30px;
-  border-radius: 10px;
-  padding: 40px 3%;
-  width: 94%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.email .block h4 {
-  font-size: 30px;
-  font-weight: 500;
-}
-
-.email .block p {
-  width: 500px;
-}
-
-.email .block input {
-  background: #fff;
-  outline: none;
-  border: 0;
-  border-radius: 5px;
-  width: 270px;
-  font-family: "Poppins", sans-serif;
-  font-weight: 400;
-  padding: 20px 30px;
-  position: relative;
-  right: -123px;
-  z-index: 1;
-  padding-right: 150px;
-}
-
-.email .block input::placeholder {
-  color: #b3b2b2;
-}
-
-.email .block button {
-  cursor: pointer;
-  border: 0;
-  color: beige;
-  background: #FA9021;
-  border-radius: 5px;
-  transition: all 500ms ease;
-  padding: 13px 17px;
-  position: relative;
-  z-index: 2;
-}
-
-.email .block button:hover {
-  background: #d85a0b;
-}
-
 .popular-footer{
   display: flex;
   justify-content: center;
   margin-top: 18px;
 }
+
+/* ===== АДАПТИВ ===== */
+@media (max-width: 1200px) {
+  .popular__track { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .hero{
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .hero--info{
+    width: 100%;
+  }
+
+  .hero img{
+    width: 70%;
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 700px) {
+  .popular__track { grid-template-columns: 1fr; }
+}
+
