@@ -283,6 +283,27 @@
     margin-top: 20px;
   }
 }
+
+  @media (max-width: 768px) {
+
+  .popular {
+    grid-template-columns: 40px 1fr 40px;
+  }
+
+  .popular__track {
+    grid-template-columns: 1fr; /* только одна */
+  }
+
+  .mobile-pop-card {
+    width: 100%;
+  }
+
+  .popular__nav {
+    width: 40px;
+    height: 40px;
+    font-size: 26px;
+  }
+}
   /* ---------- FOOTER компактнее ---------- */
   footer .blocks{
     flex-direction: column;
@@ -294,3 +315,4 @@
   }
 
 }
+
