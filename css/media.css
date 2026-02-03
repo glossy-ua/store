@@ -2,338 +2,148 @@
   .catalog { grid-template-columns: 1fr; }
 }
 
-
-
 /* =========================
-   MOBILE (HOME) — like screenshot
+   HOME: Popular slider — mobile layout like screenshot
    ========================= */
 @media (max-width: 768px){
 
-  /* container */
-  .container{
-    width: 100%;
-    padding-left: 16px;
-    padding-right: 16px;
+  /* контейнер блока */
+  .trending{ padding-bottom: 10px; }
+  .trending h3{
+    font-size: 20px;
+    margin: 18px 0 14px;
+    text-align: center;
   }
 
-  /* ---------- HEADER ---------- */
-  .site-header{
-    padding: 14px 0;
+  /* навигационные стрелки */
+  .popular{
+    position: relative;
+    margin-top: 10px;
   }
-
-  .header-inner{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;          /* перенос строк */
-  }
-
-  /* logo smaller */
-  .site-header .logo{
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: .5px;
-  }
-
-  /* hide top menu on mobile (как у тебя на скрине) */
-  .main-nav{
-    display: none;
-  }
-
-  /* actions stay on first row */
-  .header-actions{
-    margin-left: auto;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .header-actions .icon-link{
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #f3f3f3;
-  }
-
-  /* search goes to new line and stretches */
-  .header-search{
-    order: 10;
-    width: 100%;
-    margin-top: 6px;
-  }
-
-  #searchInput{
-    width: 100%;
-    height: 40px;
+  .popular__nav{
+    width: 44px;
+    height: 44px;
     border-radius: 14px;
-    padding: 0 14px;
-  }
-
-  /* ---------- HERO (Главная) ---------- */
-  .hero{
-    margin-top: 18px;
-  }
-
-  .hero .hero--info{
-    width: 100%;
-  }
-
-  .hero .hero--info h1{
-    font-size: 40px;      /* как крупно на скрине */
-    line-height: 1.05;
-    margin-bottom: 10px;
-  }
-
-  .hero .hero--info h2,
-  .hero .hero--info .subtitle{
-    font-size: 22px;
-    line-height: 1.2;
-    margin-bottom: 12px;
-  }
-
-  .hero .hero--info p{
-    font-size: 14px;
-    line-height: 1.5;
-    max-width: 100%;
-  }
-
-  .hero .hero--info .btn,
-  .hero .hero--info a.btn{
+    border: 0;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 18px;
-    border-radius: 999px;
-    font-weight: 800;
+    font-size: 22px;
+    line-height: 1;
+  }
+  .popular__nav--prev{ left: 6px; }
+  .popular__nav--next{ right: 6px; }
+
+  /* вьюпорт */
+  .popular__viewport{
+    overflow: hidden;
+    padding: 6px 0 12px;
   }
 
-  /* если у тебя в hero есть картинка справа — убираем/переносим вниз */
-  .hero img{
-    position: static !important;
-    width: 100%;
-    height: auto;
-    margin-top: 14px;
-  }
-
-  /* ---------- POPULAR / PRODUCTS ---------- */
-  /* универсально: карточки не должны быть слишком широкими */
-  .product-card,
-  .products-card,
-  .item-card,
-  .popular-card{
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /* если популярные у тебя в гриде */
-  .products-grid,
-  .products,
-  .catalog-grid,
-  .cards{
-    grid-template-columns: 1fr !important;
-  }
-
-  /* кнопка "подивитися все" */
-  .btn,
-  .more-btn,
-  .see-all-btn{
-    max-width: 100%;
-  }
-
-  /* ---------- FOOTER ---------- */
-  footer .blocks{
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  footer .column{
-    width: 100%;
-  }
-
-  footer{
-    padding: 30px 0;
-  }
-}
-
-/* extra small phones */
-@media (max-width: 420px){
-  .hero .hero--info h1{
-    font-size: 34px;
-  }
-}
-
-/* =========================
-   MOBILE: Popular products — like your screenshot (wide card)
-   ========================= */
-@media (max-width: 768px){
-
-  /* 1) Контейнер блока "Популярні товари" (если есть) */
-  .popular,
-  .popular-products,
-  .home-popular,
-  .products-popular{
-    margin-top: 24px;
-  }
-
-  /* 2) Лента/слайдер — делаем горизонтальный скролл со snap */
-  .popular .cards,
-  .popular .products,
-  .popular .products-grid,
-  .popular-products .cards,
-  .popular-products .products,
-  .popular-products .products-grid,
-  .home-popular .cards,
-  .home-popular .products,
-  .home-popular .products-grid{
-    display: flex !important;
+  /* трек — горизонтальная лента */
+  .popular__track{
+    display: flex;
+    gap: 16px;
     overflow-x: auto;
     overflow-y: hidden;
-    gap: 16px;
-    padding: 6px 6px 14px;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    padding: 8px 10px 14px;
   }
+  .popular__track::-webkit-scrollbar{ display:none; }
 
-  /* убрать скроллбар */
-  .popular .cards::-webkit-scrollbar,
-  .popular .products::-webkit-scrollbar,
-  .popular .products-grid::-webkit-scrollbar,
-  .popular-products .cards::-webkit-scrollbar,
-  .popular-products .products::-webkit-scrollbar,
-  .popular-products .products-grid::-webkit-scrollbar,
-  .home-popular .cards::-webkit-scrollbar,
-  .home-popular .products::-webkit-scrollbar,
-  .home-popular .products-grid::-webkit-scrollbar{
-    display: none;
-  }
-
-  /* 3) Карточка товара — широкая, горизонтальная */
-  .popular .product-card,
-  .popular-products .product-card,
-  .home-popular .product-card{
+  /* =====================================
+     КАРТОЧКА ТОВАРА (что бы ни вставлял JS)
+     Подстраховка под разные классы внутри
+     ===================================== */
+  .popular__track > *{
     flex: 0 0 88%;
     scroll-snap-align: center;
+
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.10);
+
+    padding: 16px;
+    min-height: 150px;
 
     display: grid;
     grid-template-columns: 92px 1fr 56px;
     gap: 12px;
-
-    padding: 16px;
-    border-radius: 22px;
-    background: #fff;
-    box-shadow: 0 14px 40px rgba(0,0,0,0.10);
-
-    min-height: 150px;
+    align-items: center;
   }
 
-  /* если у тебя карточка называется иначе — подстраховка */
-  .popular .card,
-  .popular-products .card,
-  .home-popular .card{
-    flex: 0 0 88%;
-    scroll-snap-align: center;
-  }
-
-  /* 4) Картинка слева */
-  .popular .product-card img,
-  .popular-products .product-card img,
-  .home-popular .product-card img{
+  /* Картинка слева (любая img внутри карточки) */
+  .popular__track > * img{
     width: 92px;
     height: 92px;
     object-fit: contain;
     border-radius: 18px;
     background: #f3f3f3;
     padding: 8px;
-    align-self: center;
   }
 
-  /* 5) Текстовая часть (центр) — делаем компактно */
-  .popular .product-card .title,
-  .popular .product-card h3,
-  .popular-products .product-card .title,
-  .popular-products .product-card h3,
-  .home-popular .product-card .title,
-  .home-popular .product-card h3{
+  /* Тексты (если у тебя title/desc/code внутри) */
+  .popular__track > * h4,
+  .popular__track > * h3,
+  .popular__track > * .title{
     font-size: 14px;
     line-height: 1.25;
     font-weight: 800;
     margin: 0 0 6px;
   }
 
-  /* код товара / мелкий текст */
-  .popular .product-card .muted,
-  .popular-products .product-card .muted,
-  .home-popular .product-card .muted,
-  .popular .product-card .code,
-  .popular-products .product-card .code,
-  .home-popular .product-card .code{
+  .popular__track > * .muted,
+  .popular__track > * .code,
+  .popular__track > * small{
     font-size: 12px;
     color: #777;
-    margin: 0 0 10px;
   }
 
-  /* 6) Цена — крупно как на твоём скрине */
-  .popular .product-card .price,
-  .popular-products .product-card .price,
-  .home-popular .product-card .price{
+  /* Цена — крупно */
+  .popular__track > * .price,
+  .popular__track > * .product-price{
     font-size: 26px;
     font-weight: 900;
-    margin-top: auto;
+    margin-top: 10px;
   }
 
-  /* 7) Кнопка корзины справа — квадратная */
-  .popular .product-card .btn-cart,
-  .popular .product-card .add-to-cart,
-  .popular .product-card button[type="button"],
-  .popular-products .product-card .btn-cart,
-  .popular-products .product-card .add-to-cart,
-  .popular-products .product-card button[type="button"],
-  .home-popular .product-card .btn-cart,
-  .home-popular .product-card .add-to-cart,
-  .home-popular .product-card button[type="button"]{
+  /* Кнопка корзины справа — если есть */
+  .popular__track > * .btn-cart,
+  .popular__track > * .add-to-cart,
+  .popular__track > * .cart-btn,
+  .popular__track > * button{
+    justify-self: end;
+    align-self: end;
+  }
+
+  .popular__track > * .btn-cart,
+  .popular__track > * .add-to-cart,
+  .popular__track > * .cart-btn{
     width: 56px;
     height: 56px;
     border-radius: 16px;
-    align-self: end;
-    justify-self: end;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
     border: 0;
     cursor: pointer;
   }
 
-  /* 8) Кнопка "подивитися все" — нормальная ширина на мобилке */
-  .popular .see-all,
-  .popular .more-btn,
-  .popular .btn,
-  .popular-products .see-all,
-  .popular-products .more-btn,
-  .popular-products .btn,
-  .home-popular .see-all,
-  .home-popular .more-btn,
-  .home-popular .btn{
+  /* Кнопка "Подивитися все" */
+  .popular-footer{
+    margin-top: 10px;
+    display:flex;
+    justify-content:center;
+  }
+  .popular-footer .see-all{
     width: 100%;
     max-width: 320px;
-    margin: 14px auto 0;
+    text-align: center;
     display: block;
-  }
-
-  /* 9) Стрелки (если есть) — делаем поверх и по центру */
-  .popular .arrow,
-  .popular-products .arrow,
-  .home-popular .arrow,
-  .popular .slider-arrow,
-  .popular-products .slider-arrow,
-  .home-popular .slider-arrow{
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 5;
   }
 }
