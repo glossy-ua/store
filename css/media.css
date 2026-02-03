@@ -164,3 +164,176 @@
     font-size: 34px;
   }
 }
+
+/* =========================
+   MOBILE: Popular products — like your screenshot (wide card)
+   ========================= */
+@media (max-width: 768px){
+
+  /* 1) Контейнер блока "Популярні товари" (если есть) */
+  .popular,
+  .popular-products,
+  .home-popular,
+  .products-popular{
+    margin-top: 24px;
+  }
+
+  /* 2) Лента/слайдер — делаем горизонтальный скролл со snap */
+  .popular .cards,
+  .popular .products,
+  .popular .products-grid,
+  .popular-products .cards,
+  .popular-products .products,
+  .popular-products .products-grid,
+  .home-popular .cards,
+  .home-popular .products,
+  .home-popular .products-grid{
+    display: flex !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 16px;
+    padding: 6px 6px 14px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* убрать скроллбар */
+  .popular .cards::-webkit-scrollbar,
+  .popular .products::-webkit-scrollbar,
+  .popular .products-grid::-webkit-scrollbar,
+  .popular-products .cards::-webkit-scrollbar,
+  .popular-products .products::-webkit-scrollbar,
+  .popular-products .products-grid::-webkit-scrollbar,
+  .home-popular .cards::-webkit-scrollbar,
+  .home-popular .products::-webkit-scrollbar,
+  .home-popular .products-grid::-webkit-scrollbar{
+    display: none;
+  }
+
+  /* 3) Карточка товара — широкая, горизонтальная */
+  .popular .product-card,
+  .popular-products .product-card,
+  .home-popular .product-card{
+    flex: 0 0 88%;
+    scroll-snap-align: center;
+
+    display: grid;
+    grid-template-columns: 92px 1fr 56px;
+    gap: 12px;
+
+    padding: 16px;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.10);
+
+    min-height: 150px;
+  }
+
+  /* если у тебя карточка называется иначе — подстраховка */
+  .popular .card,
+  .popular-products .card,
+  .home-popular .card{
+    flex: 0 0 88%;
+    scroll-snap-align: center;
+  }
+
+  /* 4) Картинка слева */
+  .popular .product-card img,
+  .popular-products .product-card img,
+  .home-popular .product-card img{
+    width: 92px;
+    height: 92px;
+    object-fit: contain;
+    border-radius: 18px;
+    background: #f3f3f3;
+    padding: 8px;
+    align-self: center;
+  }
+
+  /* 5) Текстовая часть (центр) — делаем компактно */
+  .popular .product-card .title,
+  .popular .product-card h3,
+  .popular-products .product-card .title,
+  .popular-products .product-card h3,
+  .home-popular .product-card .title,
+  .home-popular .product-card h3{
+    font-size: 14px;
+    line-height: 1.25;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+
+  /* код товара / мелкий текст */
+  .popular .product-card .muted,
+  .popular-products .product-card .muted,
+  .home-popular .product-card .muted,
+  .popular .product-card .code,
+  .popular-products .product-card .code,
+  .home-popular .product-card .code{
+    font-size: 12px;
+    color: #777;
+    margin: 0 0 10px;
+  }
+
+  /* 6) Цена — крупно как на твоём скрине */
+  .popular .product-card .price,
+  .popular-products .product-card .price,
+  .home-popular .product-card .price{
+    font-size: 26px;
+    font-weight: 900;
+    margin-top: auto;
+  }
+
+  /* 7) Кнопка корзины справа — квадратная */
+  .popular .product-card .btn-cart,
+  .popular .product-card .add-to-cart,
+  .popular .product-card button[type="button"],
+  .popular-products .product-card .btn-cart,
+  .popular-products .product-card .add-to-cart,
+  .popular-products .product-card button[type="button"],
+  .home-popular .product-card .btn-cart,
+  .home-popular .product-card .add-to-cart,
+  .home-popular .product-card button[type="button"]{
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    align-self: end;
+    justify-self: end;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    cursor: pointer;
+  }
+
+  /* 8) Кнопка "подивитися все" — нормальная ширина на мобилке */
+  .popular .see-all,
+  .popular .more-btn,
+  .popular .btn,
+  .popular-products .see-all,
+  .popular-products .more-btn,
+  .popular-products .btn,
+  .home-popular .see-all,
+  .home-popular .more-btn,
+  .home-popular .btn{
+    width: 100%;
+    max-width: 320px;
+    margin: 14px auto 0;
+    display: block;
+  }
+
+  /* 9) Стрелки (если есть) — делаем поверх и по центру */
+  .popular .arrow,
+  .popular-products .arrow,
+  .home-popular .arrow,
+  .popular .slider-arrow,
+  .popular-products .slider-arrow,
+  .home-popular .slider-arrow{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+  }
+}
