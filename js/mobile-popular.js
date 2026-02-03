@@ -1,6 +1,7 @@
 // js/mobile-popular.js
+if (!window.matchMedia("(max-width: 700px)").matches) return;
 (async function () {
-  if (!window.matchMedia("(max-width: 700px)").matches) return;
+  
 
   const track = document.getElementById("popularTrack");
   if (!track) return;
@@ -44,3 +45,4 @@
 
   render();
 })();
+
