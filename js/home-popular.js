@@ -7,7 +7,8 @@
   const btnPrev = document.querySelector(".popular__nav--prev");
   const btnNext = document.querySelector(".popular__nav--next");
 
-  const VISIBLE = 4; // сколько карточек видно
+  const mq = window.matchMedia("(max-width: 768px)");
+  let VISIBLE = mq.matches ? 1 : 4;   // 👈 мобилка 1, десктоп 4
   let start = 0;
 
   function esc(s) {
@@ -22,22 +23,28 @@
   // 1) Берём популярные товары из БД
   let popularProducts = [];
   try {
-    // fetchProducts() приходит из js/db.js
     popularProducts = await fetchProducts({ popular: true, limit: 8 });
     console.log("POPULAR:", popularProducts);
-
   } catch (e) {
     console.error(e);
     popularProducts = [];
   }
 
+  function getMaxStart() {
+    return Math.max(0, popularProducts.length - VISIBLE);
+  }
+
   function updateNavState() {
-    const maxStart = Math.max(0, popularProducts.length - VISIBLE);
-    if (btnPrev) btnPrev.disabled = (start <= 0);
-    if (btnNext) btnNext.disabled = (start >= maxStart);
+    const maxStart = getMaxStart();
+    if (btnPrev) btnPrev.disabled = start <= 0;
+    if (btnNext) btnNext.disabled = start >= maxStart;
   }
 
   function render() {
+    // на всякий случай поджимаем start при смене VISIBLE
+    const maxStart = getMaxStart();
+    start = Math.max(0, Math.min(start, maxStart));
+
     const slice = popularProducts.slice(start, start + VISIBLE);
 
     track.innerHTML = slice.map(p => {
@@ -79,11 +86,9 @@
       `;
     }).join("");
 
-    // бейджи
     if (typeof updateFavBadge === "function") updateFavBadge();
     if (typeof updateCartBadge === "function") updateCartBadge();
 
-    // состояние сердечек (важно для модалки тоже)
     if (typeof isFav === "function") {
       document.querySelectorAll("#popularTrack .product-card").forEach(card => {
         const id = card.dataset.code;
@@ -99,8 +104,7 @@
   }
 
   function next() {
-    const maxStart = Math.max(0, popularProducts.length - VISIBLE);
-    start = Math.min(maxStart, start + 1);
+    start = Math.min(getMaxStart(), start + 1);
     render();
   }
 
@@ -122,6 +126,18 @@
     if (Math.abs(dx) < 30) return;
     if (dx < 0) next(); else prev();
   });
+
+  // 👇 реагируем на смену брейкпоинта (поворот/ресайз)
+  function applyVisibleFromMedia() {
+    const newVisible = mq.matches ? 1 : 4;
+    if (newVisible === VISIBLE) return;
+    VISIBLE = newVisible;
+    render();
+  }
+
+  // Safari старый: addListener, новый: addEventListener
+  if (mq.addEventListener) mq.addEventListener("change", applyVisibleFromMedia);
+  else mq.addListener(applyVisibleFromMedia);
 
   render();
 })();
