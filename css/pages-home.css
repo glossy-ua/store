@@ -1,0 +1,187 @@
+/* =========================
+   HOME PAGE (page-home.css)
+   ========================= */
+
+/* ===== HERO ===== */
+.hero {
+  padding-bottom: 100px;
+  position: relative;
+  z-index: 1;
+
+  /* ВАЖНО: делаем нормальную сетку */
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.hero--info {
+  width: 530px;
+  padding-top: 70px;
+}
+
+.hero--info h2 {
+  color: #000000;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.hero--info h1 {
+  font-size: 77px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.hero--info h3 {
+  font-size: 39px;
+  line-height: 1.1;
+}
+
+.hero--info p {
+  font-weight: 500;
+  line-height: 170%;
+  margin: 30px 0;
+}
+
+.hero--info .btn {
+  background: #DC7000;
+  color: bisque;
+  border-radius: 50px;
+  padding: 15px 30px;
+  border: 0;
+  transition: all 500ms ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero--info .btn:hover {
+  cursor: pointer;
+  transform: scale(1.1);
+}
+
+/* КАРТИНКА */
+.hero img {
+  width: 40%;
+  margin-top: 50px; /* подняли вверх */
+  position: static;  /* УБРАЛИ absolute */
+}
+
+/* ===== POPULAR / TRENDING ===== */
+.trending {
+  margin: 40px auto 80px;
+  position: relative;
+}
+
+.trending h3 {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 800;
+  margin: 0 0 18px;
+}
+
+.popular {
+  display: grid;
+  grid-template-columns: 64px 1fr 64px;
+  gap: 16px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.popular__viewport{
+  overflow: hidden;
+  width: 100%;
+  padding: 16px;
+  margin: -16px;
+}
+
+.popular__track{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+  margin: 16px;
+}
+
+.popular__nav {
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 18px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 40px;
+  line-height: 1;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.10);
+  display: grid;
+  place-items: center;
+}
+
+.popular__nav:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.home-pop-card .product-card__img {
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-pop-card .product-card__img img {
+  max-height: 100%;
+  width: auto;
+  object-fit: contain;
+}
+
+.trending .see-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 18px auto 0;
+  color: #fff;
+  background: #b3b2b2;
+  border-radius: 14px;
+  padding: 14px 30px;
+  text-decoration: none;
+  font-weight: 800;
+  width: fit-content;
+  transition: transform 300ms ease;
+}
+
+.trending .see-all:hover {
+  transform: scale(1.06);
+}
+
+.popular-footer{
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+/* ===== АДАПТИВ ===== */
+@media (max-width: 1200px) {
+  .popular__track { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .hero{
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .hero--info{
+    width: 100%;
+  }
+
+  .hero img{
+    width: 70%;
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 700px) {
+  .popular__track { grid-template-columns: 1fr; }
+}
+
