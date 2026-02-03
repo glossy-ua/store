@@ -1,3 +1,191 @@
 @media (max-width: 900px) {
   .catalog { grid-template-columns: 1fr; }
 }
+
+/* =========================
+   MOBILE ADAPTATION (Glossy)
+   ========================= */
+
+/* 1) container: делаем резиновым */
+.container{
+  width: min(1400px, 100%);
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* чтобы ничего не распирало экран */
+img, video{
+  max-width: 100%;
+  height: auto;
+}
+
+/* 2) Header: перенос блоков + нормальные отступы */
+.site-header{
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(10px);
+}
+
+.header-inner{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 0;
+}
+
+.logo{
+  flex: 0 0 auto;
+}
+
+/* навигация: перенос в две строки */
+.main-nav{
+  flex: 1 1 520px;
+}
+
+.main-nav ul{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  justify-content: flex-start;
+}
+
+/* поиск + иконки */
+.header-search{
+  flex: 1 1 260px;
+}
+
+.header-search input{
+  width: 100%;
+}
+
+.header-actions{
+  flex: 0 0 auto;
+  display: flex;
+  gap: 10px;
+}
+
+/* 3) Общие заголовки страниц */
+.page-title{
+  margin: 22px 0 18px;
+}
+
+.page-title h1{
+  font-size: 28px;
+}
+
+/* =========================
+   BREAKPOINTS
+   ========================= */
+
+/* Планшет/малый ноут */
+@media (max-width: 1024px){
+  .page-content{ padding: 38px 0; }
+}
+
+/* Телефон */
+@media (max-width: 768px){
+
+  /* шапка: всё в столбик по необходимости */
+  .header-inner{
+    gap: 10px;
+  }
+
+  .main-nav{
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  .header-search{
+    flex: 1 1 100%;
+    order: 2;
+  }
+
+  .header-actions{
+    order: 1;
+    margin-left: auto;
+  }
+
+  /* делаем пункты меню компактнее */
+  .main-nav ul{
+    gap: 8px 12px;
+  }
+  .main-nav a{
+    font-size: 14px;
+  }
+
+  /* 4) Каталог: 1 колонка */
+  .catalog{
+    grid-template-columns: 1fr;
+    row-gap: 22px;
+    column-gap: 0;
+    margin: 26px 0 0;
+  }
+
+  .catalog-item{
+    height: 240px;
+    border-radius: 18px;
+  }
+
+  .catalog-item span{
+    bottom: 14px;
+    font-size: 16px;
+    padding: 7px 16px;
+  }
+
+  /* 5) Контакты: 1 колонка + форма в 1 колонку */
+  .contacts-grid{
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .contacts-left,
+  .contacts-right{
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .contacts-form{
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .field textarea{
+    min-height: 140px;
+  }
+
+  .contacts-actions{
+    justify-content: stretch;
+  }
+  .contacts-btn{
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 14px;
+  }
+
+  /* 6) Карточки инфо-страниц (Оплата/Доставка, Обмен/Возврат) */
+  .info-grid{
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .info-card{
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  /* 7) Футер: в столбик */
+  footer .blocks{
+    flex-direction: column;
+    gap: 18px;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 420px){
+  .page-title h1{ font-size: 24px; }
+  .catalog-item{ height: 210px; }
+  .main-nav a{ font-size: 13px; }
+}
