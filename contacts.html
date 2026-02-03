@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Контакти</title>
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+
+<body>
+  <div class="wrapper">
+
+    <!-- HEADER -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html">Glossy</a>
+
+        <nav class="main-nav">
+          <ul>
+            <li><a href="index.html">Головна</a></li>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="pay-delivery.html">Оплата та доставка</a></li>
+            <li><a href="exchange-return.html">Обмін та повернення</a></li>
+            <li class="active"><a href="contacts.html">Контакти</a></li>
+          </ul>
+        </nav>
+
+        <form id="searchForm" class="header-search" autocomplete="off">
+  <input type="text" id="searchInput" placeholder="Пошук..." autocomplete="off">
+  <div id="searchSuggest" class="search-suggest" hidden></div>
+</form>
+
+
+
+        <div class="header-actions">
+          <a id="accountLink" class="icon-link" href="store/auth.html" title="Особистий кабінет">👤</a>
+
+          <a class="icon-link" href="favorites.html" title="Закладки">
+            ❤ <span class="badge">0</span>
+          </a>
+
+          <a class="icon-link" href="cart.html" title="Кошик">
+            🛒 <span class="badge">0</span>
+          </a>
+        </div>
+      </div>
+      
+
+    </header>
+
+    <!-- CONTENT -->
+     <main class="container page-content">
+  <div class="page-title">
+    <h1>Контакти</h1>
+  </div>
+
+  <div class="contacts-grid">
+
+        <!-- LEFT -->
+        <section class="contacts-left">
+          <div class="contacts-block">
+            <h2>Зателефонувати нам</h2>
+            <a class="contacts-link" href="tel:+380636969378">+38 063 696 93 78</a>
+          </div>
+
+          <div class="contacts-block">
+            <h2>Електронна пошта</h2>
+            <a class="contacts-link" href="mailto:glossy.store.ua@gmail.com">glossy.store.ua@gmail.com</a>
+          </div>
+
+          
+        </section>
+
+        <!-- RIGHT -->
+        <section class="contacts-right">
+          <h2>ЗВОРОТНІЙ ЗВʼЯЗОК</h2>
+
+         <form id="contactForm" class="contacts-form">
+  <div class="field">
+    <label for="cfName">Ім’я <span class="req">*</span></label>
+    <input id="cfName" type="text" required>
+  </div>
+
+  <div class="field">
+    <label for="cfPhone">Телефон</label>
+    <input id="cfPhone" type="tel" placeholder="+380...">
+  </div>
+
+  <div class="field">
+    <label for="cfEmail">Email <span class="req">*</span></label>
+    <input id="cfEmail" type="email" required>
+  </div>
+
+  <div class="field field--message">
+    <label for="cfMessage">Повідомлення</label>
+    <textarea id="cfMessage" rows="6"></textarea>
+  </div>
+
+  <div class="contacts-actions">
+    <button class="contacts-btn" type="submit">Відправити</button>
+  </div>
+
+  <p id="cfMsg" class="muted" style="margin-top:10px;"></p>
+</form>
+
+
+        </section>
+
+      </div>
+    </main>
+
+    
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="blocks container">
+        <div class="column">
+          <span class="logo">Glossy</span>
+          <p>Understand & Care</p>
+        </div>
+
+        <div class="column">
+          <h4>Популярні категорії</h4>
+          <ul>
+            <li><a href="catalog/microfiber.html">Мікрофібри</a></li>
+<li><a href="catalog/wheels.html">Колеса</a></li>
+<li><a href="catalog/other.html">Інше для мийки</a></li>
+<li><a href="catalog/interior.html">Для салону</a></li>
+
+          </ul>
+        </div>
+
+        <div class="column">
+          <h4>Контакти</h4>
+          <ul>
+            <li>Пн-Пт 09:00 - 18:00</li>
+            <li>Сб-Нд 10:00 - 16:00</li>
+          </ul>
+          
+          <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
+
+        </div>
+      </div>
+
+      <hr>
+      <p>Glossy © 2026</p>
+    </footer>
+
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+
+<script src="js/store.js"></script>
+<script src="js/header.js"></script>
+<script src="js/contact.js"></script>
+
+
+
+
+</body>
+</html>

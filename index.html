@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glossy</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+  <div class="wrapper">
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html">Glossy</a>
+
+        <nav class="main-nav">
+          <ul>
+            <li class="active"><a href="index.html">Головна</a></li>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="pay-delivery.html">Оплата та доставка</a></li>
+            <li><a href="exchange-return.html">Обмін та повернення</a></li>
+            <li><a href="contacts.html">Контакти</a></li>
+          </ul>
+        </nav>
+
+        <form id="searchForm" class="header-search" autocomplete="off">
+  <input type="text" id="searchInput" placeholder="Пошук..." autocomplete="off">
+  <div id="searchSuggest" class="search-suggest" hidden></div>
+</form>
+
+
+
+        <div class="header-actions">
+          <a id="accountLink" class="icon-link" href="store/auth.html" title="Особистий кабінет">👤</a>
+
+          <a class="icon-link" href="favorites.html" title="Закладки">
+            ❤ <span class="badge">0</span>
+          </a>
+
+          <a class="icon-link" href="cart.html" title="Кошик">
+            🛒 <span class="badge">0</span>
+          </a>
+        </div>
+      </div>
+      
+
+    </header>
+
+    <div class="hero container">
+      <div class="hero--info">
+        
+        <h1>Аксессуари</h1>
+        <h3>для ідеального блиску</h3>
+        <p>Дбаємо про ваш комфорт — якісно та доступно</p>
+        <a class="btn" href="catalog.html">Перейти до каталогу</a>
+      </div>
+      <img src="img/index.png" alt="">
+    </div>
+
+    <div class="container trending">
+      <h3>Популярні товари</h3>
+
+      <div class="popular">
+        <button class="popular__nav popular__nav--prev" type="button" aria-label="Попередній">‹</button>
+
+        <div class="popular__viewport">
+          <div id="popularTrack" class="popular__track"></div>
+        </div>
+
+        <button class="popular__nav popular__nav--next" type="button" aria-label="Наступний">›</button>
+      </div>
+
+      <!-- ✅ кнопка в обертке для идеального центрирования -->
+      <div class="popular-footer">
+        <a href="catalog.html" class="see-all">ПОДИВИТИСЯ ВСЕ</a>
+      </div>
+    </div>
+
+    <footer>
+      <div class="blocks container">
+        <div class="column">
+          <span class="logo">Glossy</span>
+          <p>Understand & Care</p>
+        </div>
+
+        <div class="column">
+          <h4>Популярні категорії</h4>
+          <ul>
+            <li><a href="catalog/microfiber.html">Мікрофібри</a></li>
+<li><a href="catalog/wheels.html">Колеса</a></li>
+<li><a href="catalog/other.html">Інше для мийки</a></li>
+<li><a href="catalog/interior.html">Для салону</a></li>
+
+          </ul>
+        </div>
+
+        <div class="column">
+          <h4>Контакти</h4>
+          <ul>
+            <li>Пн-Пт 09:00 - 18:00</li>
+            <li>Сб-Нд 10:00 - 16:00</li>
+          </ul>
+          
+          <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
+
+        </div>
+      </div>
+
+      <hr>
+      <p>Glossy © 2026</p>
+    </footer>
+
+  </div>
+
+  <!-- PRODUCT MODAL -->
+  <div id="productModal" class="pmodal" aria-hidden="true">
+    <div class="pmodal__overlay" data-close="1"></div>
+
+    <div class="pmodal__dialog" role="dialog" aria-modal="true" aria-label="Товар">
+      <button class="pmodal__close" type="button" data-close="1">✕</button>
+
+      <div class="pmodal__top">
+        <div class="pmodal__img">
+          <img id="pmImg" src="" alt="">
+        </div>
+
+        <div class="pmodal__info">
+          <h2 id="pmTitle" class="pmodal__title"></h2>
+          <div class="pmodal__meta muted" id="pmCode"></div>
+
+          <div class="pmodal__priceRow">
+            <div class="pmodal__price" id="pmPrice"></div>
+          </div>
+
+          <div class="pmodal__actions">
+            <div class="qty">
+              <button class="qty__btn" data-action="minus" type="button">—</button>
+              <input id="pmQty" class="qty__input" type="number" min="1" value="1">
+              <button class="qty__btn" data-action="plus" type="button">+</button>
+            </div>
+
+            <button id="pmAddToCart" class="btn-primary" type="button">В кошик</button>
+            <button id="pmFav" class="fav-btn" type="button" title="В обране">♡</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pmodal__about">
+        <h3>Все про товар</h3>
+        <div id="pmDesc" class="pmodal__text"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function checkEmail() {
+      let email = document.querySelector('#emailFiled').value.trim();
+      let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!regex.test(email)) {
+        alert('Введіть коректну електронну пошту');
+      } else {
+        alert('Все чудово');
+      }
+    }
+  </script>
+
+ <script src="js/store.js"></script>
+<script src="js/header.js"></script>
+
+<script src="js/db.js"></script>
+<script src="js/products.js"></script>
+<script src="js/home-popular.js"></script>
+
+
+
+</body>
+</html>

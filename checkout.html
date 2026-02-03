@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Оформлення замовлення</title>
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+
+<body>
+  <div class="wrapper">
+
+    <!-- HEADER -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html">Glossy</a>
+
+        <nav class="main-nav">
+          <ul>
+            <li><a href="index.html">Головна</a></li>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="../pay-delivery.html">Оплата та доставка</a></li>
+            <li><a href="../exchange-return.html">Обмін та повернення</a></li>
+            <li><a href="contacts.html">Контакти</a></li>
+          </ul>
+        </nav>
+
+       <form id="searchForm" class="header-search" autocomplete="off">
+  <input type="text" id="searchInput" placeholder="Пошук..." autocomplete="off">
+  <div id="searchSuggest" class="search-suggest" hidden></div>
+</form>
+
+        <div class="header-actions">
+          <a id="accountLink" class="icon-link" href="store/auth.html" title="Особистий кабінет">👤</a>
+
+
+          <a class="icon-link" href="favorites.html" title="Закладки">❤ <span class="badge">0</span></a>
+          <a class="icon-link" href="cart.html" title="Кошик">🛒 <span class="badge">0</span></a>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="container page">
+      <h1>Оформлення замовлення</h1>
+
+      <div class="checkout">
+        <!-- ЛЕВО: форма -->
+        <form id="checkoutForm" class="checkout-form">
+          <h2>Дані отримувача</h2>
+
+          <label class="field">
+            <span>Імʼя</span>
+            <input name="firstName" type="text" required>
+          </label>
+
+          <label class="field">
+            <span>Телефон</span>
+            <input name="phone" type="tel" placeholder="+380..." required>
+          </label>
+
+          <label class="field">
+            <span>Місто</span>
+            <input name="city" type="text" required>
+          </label>
+
+          <label class="field">
+            <span>Відділення / Пошта</span>
+            <input name="postOffice" type="text" placeholder="НП №..., Укрпошта..." required>
+          </label>
+
+          <label class="field">
+            <span>Коментар (необовʼязково)</span>
+            <textarea name="comment" rows="4" placeholder="Наприклад: передзвоніть після 18:00"></textarea>
+          </label>
+
+          <div class="checkout-actions">
+            <a class="btn btn--ghost" href="cart.html">← Назад у кошик</a>
+            <button class="btn" type="submit">Підтвердити замовлення</button>
+          </div>
+
+          <p class="muted" style="margin-top:10px;">
+            Після підтвердження замовлення корзина буде очищена.
+          </p>
+        </form>
+
+        <!-- ПРАВО: итог и список -->
+        <aside class="checkout-summary">
+          <h2>Ваше замовлення</h2>
+
+          <p id="checkoutEmpty" class="muted" style="display:none;">Кошик порожній. Перейдіть в каталог.</p>
+
+          <div id="checkoutList" class="checkout-list"></div>
+
+          <div class="checkout-total">
+            <span>Разом:</span>
+            <strong id="checkoutTotal">0 грн.</strong>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+   <footer>
+      <div class="blocks container">
+        <div class="column">
+          <span class="logo">Glossy</span>
+          <p>Understand & Care</p>
+        </div>
+
+        <div class="column">
+          <h4>Популярні категорії</h4>
+          <ul>
+            <li><a href="catalog/microfiber.html">Мікрофібри</a></li>
+<li><a href="catalog/wheels.html">Колеса</a></li>
+<li><a href="catalog/other.html">Інше для мийки</a></li>
+<li><a href="catalog/interior.html">Для салону</a></li>
+
+          </ul>
+        </div>
+
+        <div class="column">
+          <h4>Контакти</h4>
+          <ul>
+            <li>Пн-Пт 09:00 - 18:00</li>
+            <li>Сб-Нд 10:00 - 16:00</li>
+          </ul>
+          
+          <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
+
+        </div>
+      </div>
+
+      <hr>
+      <p>Glossy © 2026</p>
+    </footer>
+
+  </div>
+
+  <!-- JS -->
+<script src="js/store.js"></script>
+<script src="js/header.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+
+<script src="js/checkout.js"></script>
+
+
+
+</body>
+</html>
