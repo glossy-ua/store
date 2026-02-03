@@ -179,4 +179,53 @@ footer{
   padding-bottom: 30px;
 }
 
+@media (max-width: 700px){
+
+  .hero{
+    flex-direction: column;
+    text-align: center;
+    padding-bottom: 40px;
+  }
+
+  .hero--info h1{
+    font-size: 36px;
+    line-height: 1.05;
+  }
+
+  .hero--info h3{
+    font-size: 20px;
+  }
+
+  .hero--info p{
+    font-size: 13px;
+  }
+
+  .hero img{
+    width: 90%;
+    margin-top: 10px;
+  }
+
+  .popular{
+    grid-template-columns: 40px 1fr 40px;
+  }
+
+  .mobile-card{
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+  }
+
+  .mobile-card .product-card__img{
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-card .product-card__img img{
+    max-height: 100%;
+    width: auto;
+  }
+}
+
 
