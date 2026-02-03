@@ -7,13 +7,8 @@
   const btnPrev = document.querySelector(".popular__nav--prev");
   const btnNext = document.querySelector(".popular__nav--next");
 
-  // ✅ 4 карточки на десктопе, 1 карточка на телефоне
-  function getVisible() {
-    return window.matchMedia("(max-width: 700px)").matches ? 1 : 4;
-  }
-
+  const VISIBLE = 4; // сколько карточек видно
   let start = 0;
-  let VISIBLE = getVisible();
 
   function esc(s) {
     return String(s ?? "")
@@ -27,16 +22,13 @@
   // 1) Берём популярные товары из БД
   let popularProducts = [];
   try {
-    popularProducts = await fetchProducts({ popular: true, limit: 12 });
+    // fetchProducts() приходит из js/db.js
+    popularProducts = await fetchProducts({ popular: true, limit: 8 });
     console.log("POPULAR:", popularProducts);
+
   } catch (e) {
     console.error(e);
     popularProducts = [];
-  }
-
-  function clampStart() {
-    const maxStart = Math.max(0, popularProducts.length - VISIBLE);
-    start = Math.min(Math.max(0, start), maxStart);
   }
 
   function updateNavState() {
@@ -46,34 +38,23 @@
   }
 
   function render() {
-    VISIBLE = getVisible();
-    clampStart();
-
     const slice = popularProducts.slice(start, start + VISIBLE);
-
-    // если товаров нет — покажем пустое состояние (и отключим стрелки)
-    if (!slice.length) {
-      track.innerHTML = <div class="muted" style="padding:16px;">Немає популярних товарів</div>;
-      if (btnPrev) btnPrev.disabled = true;
-      if (btnNext) btnNext.disabled = true;
-      return;
-    }
 
     track.innerHTML = slice.map(p => {
       const priceNum = parseFloat(String(p.price ?? 0).replace(",", ".")) || 0;
 
-      return 
+      return `
         <article class="product-card"
           data-code="${esc(p.id)}"
           data-title="${esc(p.title)}"
           data-price="${esc(priceNum.toFixed(2))}"
-          data-img="${esc(p.img || "")}"
-          data-desc="${esc(p.desc || "")}"
+          data-img="${esc(p.img || '')}"
+          data-desc="${esc(p.desc || '')}"
         >
           <button class="fav-btn" type="button" title="В обране">♡</button>
 
           <div class="product-card__img">
-            <img src="${esc(p.img || "")}" alt="${esc(p.title)}">
+            <img src="${esc(p.img || '')}" alt="${esc(p.title)}">
           </div>
 
           <div class="product-card__body">
@@ -95,14 +76,14 @@
             </div>
           </div>
         </article>
-      ;
+      `;
     }).join("");
 
     // бейджи
     if (typeof updateFavBadge === "function") updateFavBadge();
     if (typeof updateCartBadge === "function") updateCartBadge();
 
-    // состояние сердечек
+    // состояние сердечек (важно для модалки тоже)
     if (typeof isFav === "function") {
       document.querySelectorAll("#popularTrack .product-card").forEach(card => {
         const id = card.dataset.code;
@@ -118,7 +99,6 @@
   }
 
   function next() {
-    VISIBLE = getVisible();
     const maxStart = Math.max(0, popularProducts.length - VISIBLE);
     start = Math.min(maxStart, start + 1);
     render();
@@ -142,9 +122,6 @@
     if (Math.abs(dx) < 30) return;
     if (dx < 0) next(); else prev();
   });
-
-  // ✅ если повернули телефон / изменили ширину — перерендерим
-  window.addEventListener("resize", () => render());
 
   render();
 })();
