@@ -245,6 +245,44 @@
     font-size: 14px !important;
   }
 
+  @media (max-width: 768px) {
+
+  .hero {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 40px;
+  }
+
+  .hero--info {
+    width: 100%;
+    padding-top: 30px;
+  }
+
+  .hero--info h1 {
+    font-size: 42px;   /* было 77 */
+    font-weight: 700;
+  }
+
+  .hero--info h3 {
+    font-size: 22px;   /* было 39 */
+    margin-top: 6px;
+  }
+
+  .hero--info p {
+    font-size: 14px;
+    margin: 14px 0;
+  }
+
+  .hero--info .btn {
+    margin-top: 10px;
+  }
+
+  .hero img {
+    width: 80%;
+    margin-top: 20px;
+  }
+}
   /* ---------- FOOTER компактнее ---------- */
   footer .blocks{
     flex-direction: column;
@@ -254,4 +292,5 @@
   footer{
     padding: 26px 0;
   }
+
 }
