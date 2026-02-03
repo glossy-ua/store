@@ -3,6 +3,11 @@
 .hero{
   text-align: center !important;
 }
+#popularTrack .product-card{
+  width: 100% !important;
+  max-width: 360px;
+  margin: 0 auto;
+}
 
 .hero--info h1{
   font-size: 38px !important;
@@ -173,4 +178,5 @@ footer .blocks{
 footer{
   padding-bottom: 30px;
 }
+
 
