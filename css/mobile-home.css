@@ -1,38 +1,17 @@
 /* css/mobile-home.css */
-/* Работает только на телефоне, подключается с media="(max-width: 700px)" */
-.hero{
-  text-align: center !important;
-}
-#popularTrack .product-card{
-  width: 100% !important;
-  max-width: 360px;
-  margin: 0 auto;
-}
+/* Подключать ТОЛЬКО через:
+   <link rel="stylesheet" href="css/mobile-home.css" media="(max-width: 700px)">
+*/
 
-.hero--info h1{
-  font-size: 38px !important;
-  line-height: 1.05 !important;
-  margin-bottom: 4px !important;
-}
-
-.hero--info h3{
-  font-size: 20px !important;
-  margin-bottom: 8px !important;
-}
-
-.hero--info p{
-  font-size: 13px !important;
-  margin-bottom: 14px !important;
-}
-/* общие фиксы контейнера */
+/* контейнеры — делаем нормальные паддинги на мобиле */
 .container{
   width: 100% !important;
   max-width: 100% !important;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
 }
 
-/* HERO как на фото: по центру, меньше текст, без картинки справа */
+/* HERO: всё по центру, текст меньше */
 .hero{
   flex-direction: column !important;
   align-items: center !important;
@@ -46,21 +25,21 @@
 }
 
 .hero--info h1{
-  font-size: 44px !important;
+  font-size: 40px !important;      /* меньше */
   line-height: 1.05 !important;
   font-weight: 800 !important;
   margin: 10px 0 6px !important;
 }
 
 .hero--info h3{
-  font-size: 22px !important;
-  line-height: 1.1 !important;
+  font-size: 20px !important;      /* меньше */
+  line-height: 1.15 !important;
   font-weight: 800 !important;
   margin: 0 0 10px !important;
 }
 
 .hero--info p{
-  font-size: 14px !important;
+  font-size: 13px !important;      /* меньше */
   line-height: 1.45 !important;
   margin: 0 0 14px !important;
 }
@@ -70,12 +49,12 @@
   font-size: 14px !important;
 }
 
-/* На твоём “идеальном” скрине справа картинки нет */
+/* На рефе на мобиле картинку прячем */
 .hero img{
   display: none !important;
 }
 
-/* Заголовок “Популярні товари” */
+/* Заголовок секции */
 .trending{
   margin: 18px auto 30px !important;
 }
@@ -83,46 +62,60 @@
 .trending h3{
   font-size: 22px !important;
   margin: 14px 0 12px !important;
+  text-align: center !important;
 }
 
-/* Блок популярных: 1 карточка + стрелки */
+/* Популярные: 1 карточка + стрелки */
 .popular{
   display: grid !important;
-  grid-template-columns: 40px 1fr 40px !important;
+  grid-template-columns: 44px 1fr 44px !important;
   gap: 10px !important;
   align-items: center !important;
   margin-top: 8px !important;
 }
 
-/* “окошко” как на фото */
 .popular__viewport{
-  overflow: hidden;
+  overflow: hidden !important;
   padding: 10px !important;
   margin: 0 !important;
 }
 
-/* На мобиле track НЕ сетка из 4 — он просто контейнер под 1 карточку */
 .popular__track{
   display: block !important;
   margin: 0 !important;
 }
 
-/* Стрелки поменьше */
 .popular__nav{
-  width: 40px !important;
-  height: 40px !important;
+  width: 44px !important;
+  height: 44px !important;
   border-radius: 12px !important;
-  font-size: 28px !important;
+  font-size: 30px !important;
 }
 
-/* Карточка как на фото: широкая, внутри всё аккуратно */
+/* карточка */
 #popularTrack .product-card{
-  width: 100%;
-  border-radius: 22px;
-  box-shadow: 0 18px 40px rgba(0,0,0,.10);
+  width: 100% !important;
+  max-width: 360px;
+  margin: 0 auto !important;
+  border-radius: 22px !important;
+  box-shadow: 0 18px 40px rgba(0,0,0,.10) !important;
 }
 
-/* если твоя product-card в десктопе “плоская”, добавим воздуха */
+/* картинка товара (чтобы не растягивалась) */
+#popularTrack .product-card__img{
+  height: 150px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#popularTrack .product-card__img img{
+  max-height: 100% !important;
+  width: auto !important;
+  object-fit: contain !important;
+}
+
+/* тело карточки */
 #popularTrack .product-card__body{
   padding: 14px 14px 16px !important;
 }
@@ -135,27 +128,27 @@
 
 #popularTrack .product-card__code{
   font-size: 12px !important;
+  opacity: .75;
 }
 
-/* Цена большая */
+/* цена большая */
 #popularTrack .product-card__price{
   font-size: 28px !important;
   font-weight: 900 !important;
 }
 
-/* Кнопку “🛒” оставим как у тебя, но ровнее */
+/* qty скрываем на мобиле (как реф) */
+#popularTrack .qty{
+  display: none !important;
+}
+
 #popularTrack .cart-btn{
   width: 52px !important;
   height: 52px !important;
   border-radius: 14px !important;
 }
 
-/* Скрываем quantity на мобиле (как на твоём скрине), если хочешь */
-#popularTrack .qty{
-  display: none !important;
-}
-
-/* Кнопка “подивитися все” как на фото */
+/* кнопка "подивитися все" */
 .popular-footer{
   margin-top: 14px !important;
 }
@@ -169,63 +162,8 @@
   font-size: 13px !important;
 }
 
-/* Футер на телефоне в столбик */
+/* футер в колонку */
 footer .blocks{
-  flex-direction: column;
-  gap: 18px;
+  flex-direction: column !important;
+  gap: 18px !important;
 }
-
-footer{
-  padding-bottom: 30px;
-}
-
-@media (max-width: 700px){
-
-  .hero{
-    flex-direction: column;
-    text-align: center;
-    padding-bottom: 40px;
-  }
-
-  .hero--info h1{
-    font-size: 36px;
-    line-height: 1.05;
-  }
-
-  .hero--info h3{
-    font-size: 20px;
-  }
-
-  .hero--info p{
-    font-size: 13px;
-  }
-
-  .hero img{
-    width: 90%;
-    margin-top: 10px;
-  }
-
-  .popular{
-    grid-template-columns: 40px 1fr 40px;
-  }
-
-  .mobile-card{
-    width: 100%;
-    max-width: 340px;
-    margin: 0 auto;
-  }
-
-  .mobile-card .product-card__img{
-    height: 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .mobile-card .product-card__img img{
-    max-height: 100%;
-    width: auto;
-  }
-}
-
-
