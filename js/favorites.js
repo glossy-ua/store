@@ -1,234 +1,127 @@
-/* =========================
-   favorites.js  (favorites page)
-   ========================= */
+// js/home-popular.js
+(async function () {
+  const track = document.getElementById("popularTrack");
+  if (!track) return;
 
-function $(sel) { return document.querySelector(sel); }
+  const viewport = document.querySelector(".popular__viewport");
+  const btnPrev = document.querySelector(".popular__nav--prev");
+  const btnNext = document.querySelector(".popular__nav--next");
 
-function escapeAttr(s) {
-  return String(s || '')
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
+  const VISIBLE = 4; // сколько карточек видно
+  let start = 0;
 
-function normalizeImg(src) {
-  if (!src) return '';
-  return src.startsWith('../') ? src.replace('../', '') : src;
-}
-
-function setFavBtnState(btn, active) {
-  if (!btn) return;
-  btn.classList.toggle('active', active);
-  btn.textContent = active ? '♥️' : '♡';
-}
-
-function getProductFromFavCard(card) {
-  return {
-    id: String(card.dataset.id || ''),
-    title: card.dataset.title || '',
-    price: card.dataset.price || '',
-    img: card.dataset.img || '',
-    desc: card.dataset.desc || ''
-  };
-}
-
-function renderFavorites() {
-  updateFavBadge();
-
-  const list = $('#favoritesList');
-  const empty = $('#favoritesEmpty');
-  if (!list || !empty) return;
-
-  const favs = getFavorites();
-
-  if (!favs.length) {
-    list.innerHTML = '';
-    empty.style.display = 'block';
-    return;
+  function esc(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
-  empty.style.display = 'none';
+  // 1) Берём популярные товары из БД
+  let popularProducts = [];
+  try {
+    // fetchProducts() приходит из js/db.js
+    popularProducts = await fetchProducts({ popular: true, limit: 8 });
+    console.log("POPULAR:", popularProducts);
 
-  list.innerHTML = favs.map(p => `
-    <article class="product-card"
-      data-id="${escapeAttr(p.id)}"
-      data-title="${escapeAttr(p.title)}"
-      data-price="${escapeAttr(p.price)}"
-      data-img="${escapeAttr(normalizeImg(p.img))}"
-      data-desc="${escapeAttr(p.desc)}">
+  } catch (e) {
+    console.error(e);
+    popularProducts = [];
+  }
 
-      <button class="fav-btn active" type="button" title="Убрать из избранного">♥️</button>
+  function updateNavState() {
+    const maxStart = Math.max(0, popularProducts.length - VISIBLE);
+    if (btnPrev) btnPrev.disabled = (start <= 0);
+    if (btnNext) btnNext.disabled = (start >= maxStart);
+  }
 
-      <div class="product-card__img">
-        <img src="${escapeAttr(normalizeImg(p.img))}" alt="${escapeAttr(p.title)}">
-      </div>
+  function render() {
+    const slice = popularProducts.slice(start, start + VISIBLE);
 
-      <div class="product-card__body">
-        <h3 class="product-card__title">${p.title || ''}</h3>
-        <p class="product-card__code">Код товара: <span>${p.id || ''}</span></p>
+    track.innerHTML = slice.map(p => {
+      const priceNum = parseFloat(String(p.price ?? 0).replace(",", ".")) || 0;
 
-        <div class="product-card__bottom">
-          <div class="product-card__price">${Number(p.price).toFixed(2)} грн
-</div>
+      return `
+        <article class="product-card"
+          data-code="${esc(p.id)}"
+          data-title="${esc(p.title)}"
+          data-price="${esc(priceNum.toFixed(2))}"
+          data-img="${esc(p.img || '')}"
+          data-desc="${esc(p.desc || '')}"
+        >
+          <button class="fav-btn" type="button" title="В обране">♡</button>
 
-          <div class="product-card__actions">
-            <button class="cart-btn add-to-cart" type="button" title="Додати в кошик">🛒</button>
+          <div class="product-card__img">
+            <img src="${esc(p.img || '')}" alt="${esc(p.title)}">
           </div>
-        </div>
-      </div>
-    </article>
-  `).join('');
-}
 
-// ===== MODAL refs =====
-const modal = $('#productModal');
-const pmImg = $('#pmImg');
-const pmTitle = $('#pmTitle');
-const pmCode = $('#pmCode');
-const pmPrice = $('#pmPrice');
-const pmDesc = $('#pmDesc');
-const pmFav = $('#pmFav');
-const pmQty = $('#pmQty');
-const pmAddToCart = $('#pmAddToCart');
+          <div class="product-card__body">
+            <div class="product-card__title">${esc(p.title)}</div>
+            <div class="product-card__code">Код: ${esc(p.id)}</div>
 
-let currentProduct = null;
+            <div class="product-card__bottom">
+              <div class="product-card__price">${esc(priceNum.toFixed(2))} грн.</div>
 
-function openModal(product) {
-  if (!modal) return;
-  currentProduct = product;
+              <div class="product-card__actions">
+                <div class="qty">
+                  <button class="qty__btn" data-action="minus" type="button">—</button>
+                  <input class="qty__input" type="number" min="1" value="1">
+                  <button class="qty__btn" data-action="plus" type="button">+</button>
+                </div>
 
-  if (pmImg) { pmImg.src = product.img || ''; pmImg.alt = product.title || ''; }
-  if (pmTitle) pmTitle.textContent = product.title || '';
-  if (pmCode) pmCode.textContent = product.id ? `Код: ${product.id}` : '';
-  if (pmPrice) pmPrice.textContent = product.price ? `${product.price} грн.` : '';
+                <button class="cart-btn" type="button" title="В кошик">🛒</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
 
-  // В избранном desc может быть HTML (если ты так хранишь) — покажем как HTML.
-  // Если у тебя desc простой текст — тоже ок.
-  if (pmDesc) {
-    const hasTags = /<\/?[a-z][\s\S]*>/i.test(product.desc || '');
-    pmDesc[hasTags ? 'innerHTML' : 'textContent'] = product.desc || 'Опис буде додано пізніше 🙂';
-  }
+    // бейджи
+    if (typeof updateFavBadge === "function") updateFavBadge();
+    if (typeof updateCartBadge === "function") updateCartBadge();
 
-  if (pmQty) pmQty.value = 1;
-
-  if (pmFav) {
-    pmFav.style.display = '';
-    setFavBtnState(pmFav, isFav(product.id));
-  }
-
-  modal.classList.add('open');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeModal() {
-  if (!modal) return;
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-  currentProduct = null;
-}
-
-// ===== events (one delegated click) =====
-document.addEventListener('click', (e) => {
-  // remove from favorites (card heart)
-  const heart = e.target.closest('#favoritesList .fav-btn');
-  if (heart) {
-    const card = heart.closest('.product-card');
-    if (!card) return;
-
-    const id = card.dataset.id;
-    setFavorites(getFavorites().filter(p => String(p.id) !== String(id)));
-    renderFavorites();
-    updateFavBadge();
-
-    // если открыта модалка этого товара — закрыть
-    if (currentProduct && String(currentProduct.id) === String(id) && modal?.classList.contains('open')) {
-      closeModal();
+    // состояние сердечек (важно для модалки тоже)
+    if (typeof isFav === "function") {
+      document.querySelectorAll("#popularTrack .product-card").forEach(card => {
+        const id = card.dataset.code;
+        const btn = card.querySelector(".fav-btn");
+        if (!btn || !id) return;
+        const active = isFav(id);
+        btn.classList.toggle("active", active);
+        btn.textContent = active ? "♥️" : "♡";
+      });
     }
-    return;
+
+    updateNavState();
   }
 
-  // add to cart (card)
-  const addBtn = e.target.closest('#favoritesList .add-to-cart');
-  if (addBtn) {
-    const card = addBtn.closest('.product-card');
-    if (!card) return;
-
-    const p = getProductFromFavCard(card);
-    addToCart(p, 1);
-    updateCartBadge();
-    animateAdded(addBtn, { duration: 700 });
-    return;
+  function next() {
+    const maxStart = Math.max(0, popularProducts.length - VISIBLE);
+    start = Math.min(maxStart, start + 1);
+    render();
   }
 
-  // open modal on card click
-  const card = e.target.closest('#favoritesList .product-card');
-  if (card) {
-    if (e.target.closest('button, .qty, input')) return;
-    openModal(getProductFromFavCard(card));
-    return;
+  function prev() {
+    start = Math.max(0, start - 1);
+    render();
   }
 
-  // close modal overlay/x
-  if (modal?.classList.contains('open') && e.target?.dataset?.close === '1') {
-    closeModal();
-  }
-});
+  btnNext?.addEventListener("click", next);
+  btnPrev?.addEventListener("click", prev);
 
-// ESC close
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && modal?.classList.contains('open')) closeModal();
-});
+  // свайп
+  let x0 = null;
+  viewport?.addEventListener("pointerdown", (e) => { x0 = e.clientX; });
+  viewport?.addEventListener("pointerup", (e) => {
+    if (x0 == null) return;
+    const dx = e.clientX - x0;
+    x0 = null;
+    if (Math.abs(dx) < 30) return;
+    if (dx < 0) next(); else prev();
+  });
 
-// qty +/- in modal
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.qty__btn');
-  if (!btn) return;
-  if (!modal || !modal.classList.contains('open')) return;
-
-  const wrap = btn.closest('.qty');
-  if (!wrap) return;
-
-  const input = wrap.querySelector('input');
-  if (!input) return;
-
-  let val = parseInt(input.value, 10) || 1;
-  if (btn.dataset.action === 'plus') val++;
-  if (btn.dataset.action === 'minus') val = Math.max(1, val - 1);
-  input.value = val;
-});
-
-// modal fav
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#pmFav')) return;
-  if (!currentProduct) return;
-
-  toggleFav(currentProduct);
-  setFavBtnState(pmFav, isFav(currentProduct.id));
-  renderFavorites();
-  updateFavBadge();
-});
-
-// modal add to cart
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#pmAddToCart')) return;
-  if (!currentProduct) return;
-
-  const qty = parseInt(pmQty?.value, 10) || 1;
-  addToCart(currentProduct, qty);
-  updateCartBadge();
-
-  animateAdded(pmAddToCart, { duration: 700, text: 'Додано' });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  renderFavorites();
-  updateCartBadge();
-});
-
-window.addEventListener('storage', (e) => {
-  if (e.key === 'favorites') renderFavorites();
-  if (e.key === 'cart') updateCartBadge();
-});
+  render();
+})();
