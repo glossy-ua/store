@@ -1,0 +1,171 @@
+/* =========================
+   HOME: Popular carousel (mobile)
+   HTML: .popular / .popular__nav / .popular__viewport / #popularTrack
+   ========================= */
+
+.trending h3{
+  text-align: center;
+  margin: 18px 0 12px;
+}
+
+/* контейнер карусели: стрелки по бокам, карточка по центру */
+.popular{
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* viewport: даём место под стрелки */
+.popular__viewport{
+  width: 100%;
+  padding: 0 44px;              /* место под стрелки */
+}
+
+/* трек: на мобиле он просто содержит 1 карточку */
+.popular__track{
+  display: block;
+}
+
+/* стрелки */
+.popular__nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.15);
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0,0,0,.10);
+  display: grid;
+  place-items: center;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.popular__nav--prev{ left: 10px; }
+.popular__nav--next{ right: 10px; }
+
+.popular__nav:disabled{
+  opacity: .45;
+  cursor: default;
+}
+
+/* =========================
+   Product card inside carousel (mobile look like screenshot)
+   ========================= */
+
+#popularTrack .product-card{
+  width: 100%;
+  max-width: 560px;             /* чтобы на больших экранах карточка не расползалась */
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.10);
+  padding: 14px;
+  position: relative;
+
+  /* 2 колонки: картинка слева, текст справа */
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+/* сердечко в правый верх */
+#popularTrack .product-card .fav-btn{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+}
+
+/* картинка */
+#popularTrack .product-card__img{
+  width: 86px;
+  height: 116px;
+  display: grid;
+  place-items: center;
+}
+
+#popularTrack .product-card__img img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* текст */
+#popularTrack .product-card__body{
+  min-width: 0;
+}
+
+#popularTrack .product-card__title{
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 6px;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 4;        /* чтобы не раздувало карточку */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#popularTrack .product-card__code{
+  font-size: 12px;
+  opacity: .65;
+  margin: 0 0 10px;
+}
+
+/* низ: цена слева, корзина справа */
+#popularTrack .product-card__bottom{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+#popularTrack .product-card__price{
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* действия: на мобиле прячем qty и оставляем корзину (как на скрине) */
+#popularTrack .product-card__actions{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#popularTrack .product-card__actions .qty{
+  display: none;
+}
+
+#popularTrack .product-card__actions .cart-btn{
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
+
+/* кнопка "ПОДИВИТИСЯ ВСЕ" */
+.popular-footer{
+  display: flex;
+  justify-content: center;
+  margin: 14px 0 0;
+}
+
+.popular-footer .see-all{
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+  border-radius: 14px;
+  padding: 12px 16px;
+}

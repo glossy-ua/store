@@ -1,0 +1,31 @@
+/* css/mobile.css */
+
+/* 1) база (reset/переменные/типографика) */
+@import "mobile/base.mobile.css";
+
+/* 2) каркас/контейнеры/сетки */
+@import "mobile/layout.mobile.css";
+
+/* 3) общие блоки */
+@import "mobile/header.mobile.css";
+@import "mobile/footer.mobile.css";
+
+/* 4) страницы (как у тебя в main.css) */
+@import "mobile/pages-home.mobile.css";
+@import "mobile/pages-catalog.mobile.css";
+@import "mobile/pages-products.mobile.css";
+@import "mobile/pages-auth.mobile.css";
+@import "mobile/pages-cart.mobile.css";
+@import "mobile/pages-checkout.mobile.css";
+@import "mobile/pages-profile.mobile.css";
+
+@import "mobile/pages-modal.mobile.css";
+
+/* админка (если нужна на телефоне) */
+@import "mobile/pages-admin.mobile.css";
+@import "mobile/pages-admin-orders.mobile.css";
+
+/* прочие */
+@import "mobile/pages-contacts.mobile.css";
+@import "mobile/pages-pay-delivery.mobile.css";
+@import "mobile/pages-exchange-return.mobile.css";

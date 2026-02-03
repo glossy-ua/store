@@ -1,0 +1,11 @@
+/* css/mobile/footer.mobile.css */
+
+footer{
+  padding: 28px 0;
+}
+
+footer .blocks{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
