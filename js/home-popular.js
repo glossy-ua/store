@@ -7,8 +7,11 @@
   const btnPrev = document.querySelector(".popular__nav--prev");
   const btnNext = document.querySelector(".popular__nav--next");
 
-  const VISIBLE = 4; // сколько карточек видно
   let start = 0;
+
+function getVisible(){
+  return window.matchMedia("(max-width: 700px)").matches ? 1 : 4;
+}
 
   function esc(s) {
     return String(s ?? "")
@@ -32,13 +35,18 @@
   }
 
   function updateNavState() {
-    const maxStart = Math.max(0, popularProducts.length - VISIBLE);
-    if (btnPrev) btnPrev.disabled = (start <= 0);
-    if (btnNext) btnNext.disabled = (start >= maxStart);
-  }
+  const VISIBLE = getVisible();
+  const maxStart = Math.max(0, popularProducts.length - VISIBLE);
+  if (btnPrev) btnPrev.disabled = (start <= 0);
+  if (btnNext) btnNext.disabled = (start >= maxStart);
+}
 
   function render() {
-    const slice = popularProducts.slice(start, start + VISIBLE);
+  const VISIBLE = getVisible();
+
+  const slice = popularProducts.slice(start, start + VISIBLE);
+
+ 
 
     track.innerHTML = slice.map(p => {
       const priceNum = parseFloat(String(p.price ?? 0).replace(",", ".")) || 0;
@@ -99,10 +107,11 @@
   }
 
   function next() {
-    const maxStart = Math.max(0, popularProducts.length - VISIBLE);
-    start = Math.min(maxStart, start + 1);
-    render();
-  }
+  const VISIBLE = getVisible();
+  const maxStart = Math.max(0, popularProducts.length - VISIBLE);
+  start = Math.min(maxStart, start + 1);
+  render();
+}
 
   function prev() {
     start = Math.max(0, start - 1);
@@ -122,6 +131,8 @@
     if (Math.abs(dx) < 30) return;
     if (dx < 0) next(); else prev();
   });
-
+window.addEventListener("resize", () => {
+  start = 0;  // чтобы не попасть в пустой диапазон
   render();
 })();
+
