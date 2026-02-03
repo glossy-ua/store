@@ -1,7 +1,5 @@
-
 // js/home-popular.js
 (async function () {
-  if (window.matchMedia("(max-width: 700px)").matches) return;
   const track = document.getElementById("popularTrack");
   if (!track) return;
 
@@ -127,5 +125,3 @@
 
   render();
 })();
-
-
