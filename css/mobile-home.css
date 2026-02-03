@@ -1,318 +1,157 @@
 /* css/mobile-home.css */
-/* ВАЖНО: этот файл ничего не меняет на десктопе */
+/* Работает только на телефоне, подключается с media="(max-width: 700px)" */
 
-@media (max-width: 700px){
-
-  /* ---------- базовые отступы ---------- */
-  .container{
-    width: 100% !important;
-    padding: 0 14px !important;
-    box-sizing: border-box;
-  }
-
-  /* ---------- HEADER (как на фото: лого + поиск + иконки) ---------- */
-  .site-header .header-inner{
-    display: grid !important;
-    grid-template-columns: 1fr 1.2fr auto !important;
-    gap: 10px !important;
-    align-items: center !important;
-  }
-
-  .site-header .logo{
-    font-size: 26px !important;
-    font-weight: 900 !important;
-    letter-spacing: .3px;
-  }
-
-  /* навигацию (меню) прячем на мобиле, как на твоём скрине */
-  .main-nav{ display: none !important; }
-
-  .header-search{
-    position: relative;
-    width: 100%;
-    max-width: none !important;
-  }
-
-  #searchInput{
-    width: 100%;
-    height: 36px;
-    border-radius: 18px;
-    font-size: 14px;
-    padding: 0 12px;
-  }
-
-  .header-actions{
-    display: flex !important;
-    gap: 8px !important;
-    align-items: center !important;
-  }
-
-  .icon-link{
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-  }
-
-  /* ---------- HERO (1в1: без картинки справа) ---------- */
-  .hero{
-    padding: 14px 0 18px !important;
-    display: block !important;
-  }
-
-  .hero img{ display: none !important; }
-
-  .hero--info{
-    width: 100% !important;
-    padding-top: 14px !important;
-    text-align: left !important;
-  }
-
-  .hero--info h1{
-    font-size: 52px !important;
-    font-weight: 900 !important;
-    line-height: 1.02 !important;
-    margin: 0 0 2px !important;
-  }
-
-  .hero--info h3{
-    font-size: 30px !important;
-    font-weight: 900 !important;
-    line-height: 1.05 !important;
-    margin: 0 0 10px !important;
-  }
-
-  .hero--info p{
-    font-size: 14px !important;
-    margin: 0 0 14px !important;
-    opacity: .9;
-  }
-
-  .hero--info .btn{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 18px !important;
-    border-radius: 999px !important;
-    font-weight: 800;
-    font-size: 14px;
-    transform: none !important; /* чтобы hover/scale не прыгал */
-  }
-
-  /* ---------- POPULAR: заголовок + одна карточка + стрелки ---------- */
-  .trending{
-    margin: 10px auto 22px !important;
-  }
-
-  .trending h3{
-    text-align: center !important;
-    font-size: 22px !important;
-    font-weight: 900 !important;
-    margin: 12px 0 14px !important;
-  }
-
-  .popular{
-    display: grid !important;
-    grid-template-columns: 44px 1fr 44px !important;
-    gap: 10px !important;
-    align-items: center !important;
-  }
-
-  .popular__nav{
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 14px !important;
-    font-size: 28px !important;
-    background: #fff !important;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.10) !important;
-  }
-
-  .popular__viewport{
-    overflow: hidden !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  .popular__track{
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* ---------- САМА карточка (1в1 как на фото) ---------- */
-  #popularTrack .product-card{
-    background: #fff;
-    border-radius: 26px;
-    box-shadow: 0 18px 45px rgba(0,0,0,.10);
-    padding: 16px 16px 18px;
-    overflow: hidden;
-
-    display: grid;
-    grid-template-columns: 80px 1fr 58px;
-    gap: 14px;
-    align-items: center;
-  }
-
-  /* на фото нет избранного и qty */
-  #popularTrack .fav-btn{ display:none !important; }
-  #popularTrack .qty{ display:none !important; }
-
-  #popularTrack .product-card__img{
-    height: 70px !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-  }
-  #popularTrack .product-card__img img{
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-
-  #popularTrack .product-card__body{
-    padding: 0 !important;
-  }
-
-  #popularTrack .product-card__title{
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    line-height: 1.25 !important;
-    margin: 0 0 4px !important;
-
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  #popularTrack .product-card__code{
-    font-size: 12px !important;
-    color: #7a7a7a !important;
-    margin: 0 0 10px !important;
-  }
-
-  #popularTrack .product-card__bottom{
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0 !important;
-    align-items: start !important;
-  }
-
-  #popularTrack .product-card__price{
-    font-size: 28px !important;
-    font-weight: 900 !important;
-    letter-spacing: .2px;
-    margin: 0 !important;
-  }
-
-  /* синяя кнопка корзины справа */
-  #popularTrack .product-card__actions{
-    justify-content: flex-end !important;
-    margin-left: auto;
-  }
-
-  #popularTrack .cart-btn{
-    width: 52px !important;
-    height: 52px !important;
-    border-radius: 14px !important;
-    border: 0 !important;
-    cursor: pointer;
-
-    background: #4b3cff !important;
-    box-shadow: 0 12px 25px rgba(75,60,255,.25) !important;
-
-    display: grid;
-    place-items: center;
-    font-size: 20px;
-  }
-
-  /* ---------- кнопка "подивитися все" ---------- */
-  .popular-footer{
-    display:flex;
-    justify-content:center;
-    margin-top: 14px !important;
-  }
-
-  .trending .see-all{
-    background: #bdbdbd !important;
-    color: #fff !important;
-    border-radius: 14px !important;
-    padding: 12px 22px !important;
-    font-weight: 900 !important;
-    font-size: 14px !important;
-  }
-
-  @media (max-width: 768px) {
-
-  .hero {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding-bottom: 40px;
-  }
-
-  .hero--info {
-    width: 100%;
-    padding-top: 30px;
-  }
-
-  .hero--info h1 {
-    font-size: 42px;   /* было 77 */
-    font-weight: 700;
-  }
-
-  .hero--info h3 {
-    font-size: 22px;   /* было 39 */
-    margin-top: 6px;
-  }
-
-  .hero--info p {
-    font-size: 14px;
-    margin: 14px 0;
-  }
-
-  .hero--info .btn {
-    margin-top: 10px;
-  }
-
-  .hero img {
-    width: 80%;
-    margin-top: 20px;
-  }
+/* общие фиксы контейнера */
+.container{
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
-  @media (max-width: 768px) {
-
-  .popular {
-    grid-template-columns: 40px 1fr 40px;
-  }
-
-  .popular__track {
-    grid-template-columns: 1fr; /* только одна */
-  }
-
-  .mobile-pop-card {
-    width: 100%;
-  }
-
-  .popular__nav {
-    width: 40px;
-    height: 40px;
-    font-size: 26px;
-  }
-}
-  /* ---------- FOOTER компактнее ---------- */
-  footer .blocks{
-    flex-direction: column;
-    gap: 18px;
-    align-items: flex-start;
-  }
-  footer{
-    padding: 26px 0;
-  }
-
+/* HERO как на фото: по центру, меньше текст, без картинки справа */
+.hero{
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  padding-bottom: 26px !important;
 }
 
+.hero--info{
+  width: 100% !important;
+  padding-top: 16px !important;
+}
+
+.hero--info h1{
+  font-size: 44px !important;
+  line-height: 1.05 !important;
+  font-weight: 800 !important;
+  margin: 10px 0 6px !important;
+}
+
+.hero--info h3{
+  font-size: 22px !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+  margin: 0 0 10px !important;
+}
+
+.hero--info p{
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  margin: 0 0 14px !important;
+}
+
+.hero--info .btn{
+  padding: 12px 22px !important;
+  font-size: 14px !important;
+}
+
+/* На твоём “идеальном” скрине справа картинки нет */
+.hero img{
+  display: none !important;
+}
+
+/* Заголовок “Популярні товари” */
+.trending{
+  margin: 18px auto 30px !important;
+}
+
+.trending h3{
+  font-size: 22px !important;
+  margin: 14px 0 12px !important;
+}
+
+/* Блок популярных: 1 карточка + стрелки */
+.popular{
+  display: grid !important;
+  grid-template-columns: 40px 1fr 40px !important;
+  gap: 10px !important;
+  align-items: center !important;
+  margin-top: 8px !important;
+}
+
+/* “окошко” как на фото */
+.popular__viewport{
+  overflow: hidden;
+  padding: 10px !important;
+  margin: 0 !important;
+}
+
+/* На мобиле track НЕ сетка из 4 — он просто контейнер под 1 карточку */
+.popular__track{
+  display: block !important;
+  margin: 0 !important;
+}
+
+/* Стрелки поменьше */
+.popular__nav{
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  font-size: 28px !important;
+}
+
+/* Карточка как на фото: широкая, внутри всё аккуратно */
+#popularTrack .product-card{
+  width: 100%;
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.10);
+}
+
+/* если твоя product-card в десктопе “плоская”, добавим воздуха */
+#popularTrack .product-card__body{
+  padding: 14px 14px 16px !important;
+}
+
+#popularTrack .product-card__title{
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+  font-weight: 800 !important;
+}
+
+#popularTrack .product-card__code{
+  font-size: 12px !important;
+}
+
+/* Цена большая */
+#popularTrack .product-card__price{
+  font-size: 28px !important;
+  font-weight: 900 !important;
+}
+
+/* Кнопку “🛒” оставим как у тебя, но ровнее */
+#popularTrack .cart-btn{
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 14px !important;
+}
+
+/* Скрываем quantity на мобиле (как на твоём скрине), если хочешь */
+#popularTrack .qty{
+  display: none !important;
+}
+
+/* Кнопка “подивитися все” как на фото */
+.popular-footer{
+  margin-top: 14px !important;
+}
+
+.trending .see-all{
+  width: 220px !important;
+  justify-content: center !important;
+  background: #bdbdbd !important;
+  border-radius: 14px !important;
+  padding: 12px 18px !important;
+  font-size: 13px !important;
+}
+
+/* Футер на телефоне в столбик */
+footer .blocks{
+  flex-direction: column;
+  gap: 18px;
+}
+
+footer{
+  padding-bottom: 30px;
+}
