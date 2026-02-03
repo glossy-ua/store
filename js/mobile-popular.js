@@ -1,76 +1,124 @@
 // js/mobile-popular.js
 (async function () {
-  if (window.innerWidth > 768) return; // ТОЛЬКО ДЛЯ MOBILE
+  // запускаемся ТОЛЬКО на телефоне
+  if (!window.matchMedia("(max-width: 700px)").matches) return;
 
   const track = document.getElementById("popularTrack");
   if (!track) return;
 
-  const viewport = document.querySelector(".popular__viewport");
   const btnPrev = document.querySelector(".popular__nav--prev");
   const btnNext = document.querySelector(".popular__nav--next");
 
-  const VISIBLE = 1; // 👈 только 1 карточка
-  let start = 0;
+  function esc(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
+  // грузим популярные
   let popularProducts = [];
   try {
-    popularProducts = await fetchProducts({ popular: true, limit: 10 });
+    // fetchProducts() приходит из js/db.js
+    popularProducts = await fetchProducts({ popular: true, limit: 12 });
   } catch (e) {
+    console.error(e);
     popularProducts = [];
   }
 
-  function render() {
-    const slice = popularProducts.slice(start, start + VISIBLE);
+  let idx = 0;
 
-    track.innerHTML = slice.map(p => {
-      const price = parseFloat(p.price || 0).toFixed(2);
+  function updateNavState() {
+    if (btnPrev) btnPrev.disabled = (idx <= 0);
+    if (btnNext) btnNext.disabled = (idx >= popularProducts.length - 1);
+  }
 
-      return 
-        <article class="product-card mobile-pop-card"
-          data-code="${p.id}"
-          data-title="${p.title}"
-          data-price="${price}"
-          data-img="${p.img}"
-          data-desc="${p.desc}"
-        >
-          <div class="product-card__img">
-            <img src="${p.img}" alt="${p.title}">
+  function renderOne() {
+    if (!popularProducts.length) {
+      track.innerHTML = "";
+      if (btnPrev) btnPrev.disabled = true;
+      if (btnNext) btnNext.disabled = true;
+      return;
+    }
+
+    const p = popularProducts[idx];
+    const priceNum = parseFloat(String(p.price ?? 0).replace(",", ".")) || 0;
+
+    track.innerHTML = 
+      <article class="product-card"
+        data-code="${esc(p.id)}"
+        data-title="${esc(p.title)}"
+        data-price="${esc(priceNum.toFixed(2))}"
+        data-img="${esc(p.img || "")}"
+        data-desc="${esc(p.desc || "")}"
+      >
+        <button class="fav-btn" type="button" title="В обране">♡</button>
+
+        <div class="product-card__img">
+          <img src="${esc(p.img || "")}" alt="${esc(p.title)}">
+        </div>
+
+        <div class="product-card__body">
+          <div class="product-card__title">${esc(p.title)}</div>
+          <div class="product-card__code">Код: ${esc(p.id)}</div>
+
+          <div class="product-card__bottom">
+            <div class="product-card__price">${esc(priceNum.toFixed(2))} грн.</div>
+
+            <div class="product-card__actions">
+              <button class="cart-btn" type="button" title="В кошик">🛒</button>
+            </div>
           </div>
+        </div>
+      </article>
+    ;
 
-          <div class="product-card__body">
-            <div class="product-card__title">${p.title}</div>
-            <div class="product-card__code">Код: ${p.id}</div>
-            <div class="product-card__price">${price} грн.</div>
+    // обновим бейджи
+    if (typeof updateFavBadge === "function") updateFavBadge();
+    if (typeof updateCartBadge === "function") updateCartBadge();
 
-            <button class="cart-btn">🛒</button>
-          </div>
-        </article>
-      ;
-    }).join("");
+    // состояние сердечка
+    if (typeof isFav === "function") {
+      const card = track.querySelector(".product-card");
+      const id = card?.dataset.code;
+      const btn = card?.querySelector(".fav-btn");
+      if (id && btn) {
+        const active = isFav(id);
+        btn.classList.toggle("active", active);
+        btn.textContent = active ? "♥️" : "♡";
+      }
+    }
+
+    updateNavState();
   }
 
   function next() {
-    start = (start + 1) % popularProducts.length;
-    render();
+    if (idx < popularProducts.length - 1) idx++;
+    renderOne();
   }
 
   function prev() {
-    start = (start - 1 + popularProducts.length) % popularProducts.length;
-    render();
+    if (idx > 0) idx--;
+    renderOne();
   }
 
   btnNext?.addEventListener("click", next);
   btnPrev?.addEventListener("click", prev);
 
-  // свайп
+  // свайп по карточке (влево/вправо)
+  const viewport = document.querySelector(".popular__viewport");
   let x0 = null;
-  viewport?.addEventListener("pointerdown", e => x0 = e.clientX);
-  viewport?.addEventListener("pointerup", e => {
-    if (!x0) return;
+
+  viewport?.addEventListener("pointerdown", (e) => { x0 = e.clientX; });
+  viewport?.addEventListener("pointerup", (e) => {
+    if (x0 == null) return;
     const dx = e.clientX - x0;
-    if (Math.abs(dx) > 40) dx < 0 ? next() : prev();
     x0 = null;
+    if (Math.abs(dx) < 30) return;
+    if (dx < 0) next(); else prev();
   });
 
-  render();
+  renderOne();
 })();
