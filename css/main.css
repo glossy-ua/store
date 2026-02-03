@@ -21,7 +21,7 @@
 @import "pages-modal.css";
 @import "pages-admin.css";
 @import "pages-admin-orders.css";
-
+@import "mobile-home.css";
 .header-search { position: relative; }
 
 
@@ -184,3 +184,4 @@ footer .column a[href^="tel"]:hover{
 .info-card li {
   margin-bottom: 6px;
 }
+
