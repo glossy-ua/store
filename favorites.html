@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Закладки</title>
-  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/main.css">
 </head>
 
 <body class="page-favorites">
@@ -29,14 +29,38 @@
   <div id="searchSuggest" class="search-suggest" hidden></div>
 </form>
 
-        <div class="header-actions">
-          <a id="accountLink" class="icon-link" href="auth.html" title="Особистий кабінет">👤</a>
-          <a class="icon-link" href="favorites.html" title="Закладки">❤ <span class="badge">0</span></a>
-          <a class="icon-link" href="cart.html" title="Кошик">🛒 <span class="badge">0</span></a>
+         <div class="header-actions">
+          <a id="accountLink" class="icon-link" href="auth.html" title="Особистий кабінет">👤</a> 
+          <a class="icon-link" href="favorites.html" title="Закладки">
+            ❤ <span class="badge">0</span></a>
+          <a class="icon-link" href="cart.html" title="Кошик">
+            🛒 <span class="badge">0</span></a>
+          <button id="burgerBtn" class="burger" type="button" aria-label="Меню">☰</button>
         </div>
       </div>
-    </header>
 
+      
+
+    </header>
+<!-- MOBILE MENU DRAWER -->
+<div id="mmenu" class="mmenu" aria-hidden="true">
+  <div class="mmenu__overlay" data-mclose="1"></div>
+
+  <div class="mmenu__panel" role="dialog" aria-modal="true" aria-label="Меню">
+    <div class="mmenu__top">
+      <div style="font-weight:800; text-transform:uppercase;">Меню</div>
+      <button class="mmenu__close" type="button" data-mclose="1">✕</button>
+    </div>
+
+    <nav class="mmenu__nav">
+      <a class="mmenu__link" href="index.html">Головна</a>
+      <a class="mmenu__link" href="catalog.html">Каталог</a>
+      <a class="mmenu__link" href="pay-delivery.html">Оплата та доставка</a>
+      <a class="mmenu__link" href="exchange-return.html">Обмін та повернення</a>
+      <a class="mmenu__link" href="contacts.html">Контакти</a>
+    </nav>
+  </div>
+</div>
     <main class="container page">
       <h1>Закладки</h1>
       <p class="muted">Тут будуть товари, які ти додав у ❤️.</p>
