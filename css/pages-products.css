@@ -340,3 +340,149 @@
   }
 }
 
+/* =========================
+   CATALOG MOBILE: 2 columns + compact like desktop
+   ========================= */
+
+/* 1) Отключаем hover-эффекты на тач (чтобы не "залипало") */
+@media (hover: none) and (pointer: coarse){
+  .product-card:hover{
+    transform: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.10); /* базовая тень */
+  }
+}
+
+/* 2) Планшет/телефон: 2 колонки */
+@media (max-width: 900px){
+  .products-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 18px 0 60px;
+  }
+
+  .product-card{
+    border-radius: 18px;
+  }
+
+  /* больше места под фото, но карточка ниже за счет меньших отступов */
+  .product-card__img{
+    height: 150px;       /* подгони: 140–170 */
+    padding: 10px;
+  }
+
+  .product-card__body{
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .product-card__title{
+    font-size: 13px;
+    line-height: 1.2;
+
+    /* чтобы названия не раздували карточку */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* код часто не нужен на мобиле — убираем воздух */
+  .product-card__code{
+    display: none;
+  }
+
+  /* низ: цена слева, корзина справа */
+  .product-card__bottom{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .product-card__price{
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  /* убираем qty */
+  .product-card__actions .qty{
+    display: none;
+  }
+
+  .product-card__actions{
+    justify-content: flex-end;
+  }
+
+  /* корзина компактнее */
+  .cart-btn{
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+
+  /* сердечко компактнее */
+  .product-card .fav-btn{
+    width: 34px;
+    height: 34px;
+    top: 10px;
+    right: 10px;
+    font-size: 16px;
+  }
+}
+
+/* 3) Очень маленькие телефоны: ещё плотнее */
+@media (max-width: 360px){
+  .products-grid{ gap: 10px; }
+  .product-card__img{ height: 135px; }
+  .product-card__price{ font-size: 15px; }
+  .cart-btn{ width: 38px; height: 38px; }
+}
+
+.back-btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+
+  padding: 10px 16px;
+  margin-bottom: 14px;
+
+  font-size: 15px;
+  font-weight: 600;
+  color: #000;
+
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+  transition: all .2s ease;
+}
+
+.back-btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+}
+
+.back-icon{
+  font-size: 18px;
+  line-height: 1;
+  color: #4b3cff; /* твой фирменный */
+}
+
+.back-btn{
+  background: rgba(75,60,255,0.08);
+  border-color: rgba(75,60,255,0.25);
+}
+
+@media (max-width: 768px){
+  .back-btn{
+    margin-left: 16px;   /* как у .container */
+  }
+}
+

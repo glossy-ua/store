@@ -220,3 +220,39 @@
   80%{ opacity: 1; transform: scale(1); }
   100%{ opacity: 0; transform: scale(.95); }
 }
+
+/* ===== MODAL: fix fav wrap on mobile ===== */
+@media (max-width: 520px){
+  .pmodal__actions{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;        /* не переносить на новую строку */
+  }
+
+  /* qty не должен растягиваться */
+  .pmodal__actions .qty{
+    flex: 0 0 auto;
+  }
+
+  /* кнопка "В кошик" занимает свободное место */
+  .pmodal__actions .btn-primary,
+  .pmodal__actions #pmAddToCart{
+    flex: 1 1 auto;
+    min-width: 0;             /* важно, чтобы текст не ломал layout */
+    white-space: nowrap;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  /* сердечко фиксированной ширины, всегда справа */
+  .pmodal__actions .fav-btn,
+  .pmodal__actions .pm-fav{
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    margin-left: auto;        /* прижимаем к правому краю */
+  }
+}

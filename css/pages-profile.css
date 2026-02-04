@@ -343,3 +343,161 @@
     margin-left: 0;
   }
 }
+
+/* =========================
+   PROFILE — mobile calm style (keep desktop as is)
+   ========================= */
+@media (max-width: 768px){
+
+  /* меньше воздуха сверху страницы */
+  .page{
+    padding: 18px 0 34px; /* было 40/80 */
+  }
+
+  /* шапка профиля: в столбик, кнопка аккуратная */
+  .lk-head{
+    margin: 10px 0 14px;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .lk-head h1{
+    font-size: 22px;
+    line-height: 1.15;
+  }
+
+  .lk-head .muted{
+    margin-top: 4px;
+    font-size: 13px;
+    opacity: .65;
+  }
+
+  /* кнопка выйти — компактнее */
+  #logoutBtn{
+    width: 100%;
+    height: 42px;
+    border-radius: 14px;
+  }
+
+  /* сетка в 1 колонку */
+  .lk-grid{
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* карточки: меньше “гламура”, меньше теней */
+  .lk-card{
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: none;                 /* убираем тяжёлую тень */
+    border: 1px solid rgba(0,0,0,.08);/* легкая рамка */
+    background: rgba(255,255,255,.92);
+  }
+
+  .lk-card h2{
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  /* форма: плотнее, спокойнее */
+  .lk-form{
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .lk-form label{
+    font-size: 13px;
+    opacity: .75;
+  }
+
+  .lk-form input{
+    height: 42px;
+    border-radius: 12px;
+    padding: 0 12px;
+    border: 1px solid rgba(0,0,0,.12);
+    background: #fff;
+  }
+
+  .lk-form input:focus{
+    box-shadow: 0 0 0 3px rgba(220,112,0,.12); /* твой оранжевый мягко */
+    border-color: rgba(220,112,0,.35);
+  }
+
+  /* кнопка "Зберегти" — на всю ширину, меньше высота */
+  .lk-form .btn{
+    width: 100%;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  /* ===== Orders: делаем спокойнее ===== */
+  .orders-list{
+    gap: 10px;
+  }
+
+  .order-card{
+    border-radius: 16px;
+    padding: 12px;
+    border: 1px solid rgba(0,0,0,.08);
+  }
+
+  .order-title-row strong{
+    font-size: 14px;
+  }
+
+  .order-date-inline{
+    font-size: 12px;
+  }
+
+  .order-status-badge{
+    font-size: 11px;
+    padding: 6px 9px;
+  }
+
+  .order-actions{
+    gap: 8px;
+  }
+
+  .order-actions .btn{
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  /* сумма/товаров — без “плитки”, просто строками */
+  .order-body{
+    width: 100%;
+    margin-top: 10px;
+    background: transparent;   /* было #fafafa */
+    padding: 0;
+    border-radius: 0;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    justify-content: initial;
+    text-align: left;
+  }
+
+  /* детали товаров в заказе — компактнее */
+  .order-item{
+    grid-template-columns: 56px 1fr;
+    gap: 10px;
+  }
+
+  .order-item__sum{
+    display: none; /* на мобиле можно убрать правую цену, чтобы не было тесно */
+  }
+
+  .order-item__img{
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+  }
+
+  .order-item__title{
+    font-size: 14px;
+  }
+
+  .order-item__code-line{
+    font-size: 12px;
+  }
+}

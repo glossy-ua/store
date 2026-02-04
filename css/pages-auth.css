@@ -189,3 +189,76 @@
   box-shadow: none;
 }
 
+/* =========================
+   AUTH — MOBILE calmer UI
+   (desktop stays as is)
+   ========================= */
+@media (max-width: 720px){
+
+  /* меньше воздуха сверху */
+  .auth-panel{
+    margin-top: 18px;      /* было 40 */
+    padding: 14px;         /* добавим внутренний отступ */
+    border-radius: 18px;
+  }
+
+  /* заголовок + подзаголовок компактнее */
+  .page h1{
+    font-size: 24px;
+    margin: 10px 0 10px;
+  }
+  .page .muted{
+    font-size: 13px;
+    line-height: 1.35;
+    margin: 0 0 14px;
+    padding: 0 6px;
+  }
+
+  /* tabs более спокойные */
+  .auth-tabs{
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .auth-tab{
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 14px;
+    font-size: 14px;
+  }
+
+  /* ✅ login тоже в 1 колонку */
+  #loginForm{
+    grid-template-columns: 1fr; /* было 1fr 1fr */
+    row-gap: 14px;
+    column-gap: 0;
+  }
+
+  /* register уже 1 колонка, просто делаем плотнее */
+  #registerForm{
+    gap: 14px;
+  }
+
+  /* инпуты чуть компактнее и менее “жирные” */
+  .auth-form input{
+    height: 42px;
+    border-radius: 14px;
+    background: rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.12);
+  }
+
+  /* кнопка — на всю ширину, без фикс 300px */
+  .auth-submit{
+    width: 100%;
+    justify-self: stretch;
+    margin-top: 2px;
+  }
+
+  /* resend кнопка тоже на всю ширину */
+  .auth-resend{
+    padding: 0 16px;
+  }
+  .btn-secondary{
+    width: 100%;
+    justify-content: center;
+  }
+}

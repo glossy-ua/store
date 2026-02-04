@@ -162,3 +162,158 @@
   cursor: pointer;
 }
 
+/* =========================
+   CART — MOBILE calm version
+   (desktop stays the same)
+   ========================= */
+@media (max-width: 768px){
+
+  /* общий отступ страницы (чтобы было как в избранном/корзине) */
+  .page{
+    padding: 26px 0 60px;
+  }
+
+  /* список компактнее */
+  .cart-list{
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  /* карточка — меньше тени и меньше "воздуха" */
+  .cart-item{
+    grid-template-columns: 86px 1fr;
+    grid-template-areas:
+      "img info"
+      "img controls"
+      "price price";
+    gap: 10px 12px;
+
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.06);
+  }
+
+  /* картинка */
+  .cart-item__img{ grid-area: img; }
+  .cart-item__img img{
+    width: 86px;
+    height: 86px;
+    border-radius: 14px;
+    object-fit: cover;
+  }
+
+  /* инфо */
+  .cart-item__info{ grid-area: info; }
+
+  .cart-item__title{
+    font-size: 15px;
+    margin: 0 0 4px 0;
+    line-height: 1.2;
+  }
+
+  .cart-item__code{
+    font-size: 12px;
+    margin: 0;
+    opacity: .65;
+  }
+
+  /* qty + remove в одну "спокойную" строку */
+  .cart-item__controls{
+    grid-area: controls;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .cart-qty-btn{
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    font-size: 18px;
+    background: #f1f1f1;
+  }
+
+  .cart-qty-input{
+    width: 74px;
+    height: 36px;
+    border-radius: 12px;
+    font-size: 15px;
+  }
+
+  /* кнопка удаления — компактно, справа */
+  .cart-item__remove{
+    margin-left: auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: rgba(0,0,0,.04);
+    opacity: .8;
+  }
+  .cart-item__remove:hover{ opacity: 1; }
+
+  /* цена */
+  .cart-item__price{
+    grid-area: price;
+    text-align: left;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+
+    background: rgba(0,0,0,.03);
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin-top: 2px;
+  }
+
+  .cart-item__price small{
+    font-size: 12px;
+    opacity: .65;
+    margin: 0;
+  }
+
+  .cart-item__price strong{
+    font-size: 16px;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  /* итог — как аккуратная карточка */
+  .cart-total{
+    margin-top: 16px;
+    justify-content: space-between;
+    align-items: center;
+
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.06);
+
+    font-size: 16px;
+  }
+
+  #cartTotal{
+    font-size: 18px;
+  }
+
+  /* кнопка оформления — на всю ширину, как primary */
+  .cart-actions{
+    margin-top: 12px;
+  }
+
+  .cart-actions .btn{
+    width: 100%;
+    text-align: center;
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-weight: 800;
+  }
+
+  /* пустой кошик */
+  #cartEmpty{
+    margin-top: 14px;
+    font-size: 14px;
+    opacity: .7;
+  }
+}
