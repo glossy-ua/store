@@ -218,4 +218,9 @@
     margin: 20px 0;
   }
 }
+/* POPULAR: не режем карточку */
+.popular__viewport{
+  overflow: visible;   /* было hidden */
+}
+
 
