@@ -1,15 +1,22 @@
-// js/home-popular.js
-(async function () {
+// js/mobile-popular.js
+(function () {
+  const isMobile = window.matchMedia("(max-width: 700px)").matches;
+  if (!isMobile) return;
+
   const track = document.getElementById("popularTrack");
   if (!track) return;
 
-  const viewport = document.querySelector(".popular__viewport");
   const btnPrev = document.querySelector(".popular__nav--prev");
   const btnNext = document.querySelector(".popular__nav--next");
+  const viewport = document.querySelector(".popular__viewport");
 
-  const mq = window.matchMedia("(max-width: 768px)");
-  let VISIBLE = mq.matches ? 1 : 4;   // 👈 мобилка 1, десктоп 4
+  // если вдруг home-popular.js уже навесил обработчики — на мобиле забираем управление
+  if (btnPrev) btnPrev.onclick = null;
+  if (btnNext) btnNext.onclick = null;
+
+  const VISIBLE = 1;
   let start = 0;
+  let items = [];
 
   function esc(s) {
     return String(s ?? "")
@@ -20,48 +27,43 @@
       .replace(/'/g, "&#039;");
   }
 
-  // 1) Берём популярные товары из БД
-  let popularProducts = [];
-  try {
-    popularProducts = await fetchProducts({ popular: true, limit: 8 });
-    console.log("POPULAR:", popularProducts);
-  } catch (e) {
-    console.error(e);
-    popularProducts = [];
+  async function load() {
+    try {
+      // fetchProducts() должен быть в js/db.js
+      items = await fetchProducts({ popular: true, limit: 12 });
+    } catch (e) {
+      console.error("mobile-popular load error:", e);
+      items = [];
+    }
+    start = 0;
+    render();
   }
 
-  function getMaxStart() {
-    return Math.max(0, popularProducts.length - VISIBLE);
-  }
-
-  function updateNavState() {
-    const maxStart = getMaxStart();
+  function updateNav() {
+    const maxStart = Math.max(0, items.length - VISIBLE);
     if (btnPrev) btnPrev.disabled = start <= 0;
     if (btnNext) btnNext.disabled = start >= maxStart;
   }
 
   function render() {
-    // на всякий случай поджимаем start при смене VISIBLE
-    const maxStart = getMaxStart();
-    start = Math.max(0, Math.min(start, maxStart));
-
-    const slice = popularProducts.slice(start, start + VISIBLE);
+    const slice = items.slice(start, start + VISIBLE);
 
     track.innerHTML = slice.map(p => {
       const priceNum = parseFloat(String(p.price ?? 0).replace(",", ".")) || 0;
 
-      return `
+      // оставляем классы/атрибуты, чтобы твой store.js мог обработать добавление в корзину
+      return 
         <article class="product-card"
           data-code="${esc(p.id)}"
           data-title="${esc(p.title)}"
           data-price="${esc(priceNum.toFixed(2))}"
-          data-img="${esc(p.img || '')}"
-          data-desc="${esc(p.desc || '')}"
+          data-img="${esc(p.img || "")}"
+          data-desc="${esc(p.desc || "")}"
         >
           <button class="fav-btn" type="button" title="В обране">♡</button>
 
           <div class="product-card__img">
-            <img src="${esc(p.img || '')}" alt="${esc(p.title)}">
+            <img src="${esc(p.img || "")}" alt="${esc(p.title)}">
           </div>
 
           <div class="product-card__body">
@@ -83,28 +85,19 @@
             </div>
           </div>
         </article>
-      `;
+      ;
     }).join("");
 
-    if (typeof updateFavBadge === "function") updateFavBadge();
+    // обновим бейджи, если функции есть
     if (typeof updateCartBadge === "function") updateCartBadge();
+    if (typeof updateFavBadge === "function") updateFavBadge();
 
-    if (typeof isFav === "function") {
-      document.querySelectorAll("#popularTrack .product-card").forEach(card => {
-        const id = card.dataset.code;
-        const btn = card.querySelector(".fav-btn");
-        if (!btn || !id) return;
-        const active = isFav(id);
-        btn.classList.toggle("active", active);
-        btn.textContent = active ? "♥️" : "♡";
-      });
-    }
-
-    updateNavState();
+    updateNav();
   }
 
   function next() {
-    start = Math.min(getMaxStart(), start + 1);
+    const maxStart = Math.max(0, items.length - VISIBLE);
+    start = Math.min(maxStart, start + 1);
     render();
   }
 
@@ -113,8 +106,17 @@
     render();
   }
 
-  btnNext?.addEventListener("click", next);
-  btnPrev?.addEventListener("click", prev);
+  btnNext?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    next();
+  }, { passive: false });
+
+  btnPrev?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    prev();
+  }, { passive: false });
 
   // свайп
   let x0 = null;
@@ -127,17 +129,5 @@
     if (dx < 0) next(); else prev();
   });
 
-  // 👇 реагируем на смену брейкпоинта (поворот/ресайз)
-  function applyVisibleFromMedia() {
-    const newVisible = mq.matches ? 1 : 4;
-    if (newVisible === VISIBLE) return;
-    VISIBLE = newVisible;
-    render();
-  }
-
-  // Safari старый: addListener, новый: addEventListener
-  if (mq.addEventListener) mq.addEventListener("change", applyVisibleFromMedia);
-  else mq.addListener(applyVisibleFromMedia);
-
-  render();
+  load();
 })();

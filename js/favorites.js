@@ -17,6 +17,11 @@ function normalizeImg(src) {
   return src.startsWith('../') ? src.replace('../', '') : src;
 }
 
+function money(v) {
+  const n = parseFloat(String(v ?? '').replace(',', '.').replace(/[^\d.]/g, '')) || 0;
+  return n.toFixed(2);
+}
+
 function setFavBtnState(btn, active) {
   if (!btn) return;
   btn.classList.toggle('active', active);
@@ -34,13 +39,13 @@ function getProductFromFavCard(card) {
 }
 
 function renderFavorites() {
-  updateFavBadge();
+  if (typeof updateFavBadge === "function") updateFavBadge();
 
   const list = $('#favoritesList');
   const empty = $('#favoritesEmpty');
   if (!list || !empty) return;
 
-  const favs = getFavorites();
+  const favs = typeof getFavorites === "function" ? getFavorites() : [];
 
   if (!favs.length) {
     list.innerHTML = '';
@@ -69,10 +74,16 @@ function renderFavorites() {
         <p class="product-card__code">Код товара: <span>${p.id || ''}</span></p>
 
         <div class="product-card__bottom">
-          <div class="product-card__price">${Number(p.price).toFixed(2)} грн
-</div>
+          <div class="product-card__price">${money(p.price)} грн.</div>
 
           <div class="product-card__actions">
+            <!-- qty: на мобилке скрывается твоим CSS -->
+            <div class="qty" aria-label="Кількість">
+              <button class="qty__btn" data-action="minus" type="button">—</button>
+              <input class="qty__input" type="number" min="1" value="1" inputmode="numeric">
+              <button class="qty__btn" data-action="plus" type="button">+</button>
+            </div>
+
             <button class="cart-btn add-to-cart" type="button" title="Додати в кошик">🛒</button>
           </div>
         </div>
@@ -101,20 +112,20 @@ function openModal(product) {
   if (pmImg) { pmImg.src = product.img || ''; pmImg.alt = product.title || ''; }
   if (pmTitle) pmTitle.textContent = product.title || '';
   if (pmCode) pmCode.textContent = product.id ? `Код: ${product.id}` : '';
-  if (pmPrice) pmPrice.textContent = product.price ? `${product.price} грн.` : '';
+  if (pmPrice) pmPrice.textContent = product.price ? `${money(product.price)} грн.` : '';
 
-  // В избранном desc может быть HTML (если ты так хранишь) — покажем как HTML.
-  // Если у тебя desc простой текст — тоже ок.
+  // В избранном desc может быть HTML — покажем как HTML, иначе как текст
   if (pmDesc) {
     const hasTags = /<\/?[a-z][\s\S]*>/i.test(product.desc || '');
-    pmDesc[hasTags ? 'innerHTML' : 'textContent'] = product.desc || 'Опис буде додано пізніше 🙂';
+    pmDesc[hasTags ? 'innerHTML' : 'textContent'] =
+      product.desc || 'Опис буде додано пізніше 🙂';
   }
 
   if (pmQty) pmQty.value = 1;
 
   if (pmFav) {
     pmFav.style.display = '';
-    setFavBtnState(pmFav, isFav(product.id));
+    if (typeof isFav === "function") setFavBtnState(pmFav, isFav(product.id));
   }
 
   modal.classList.add('open');
@@ -130,7 +141,7 @@ function closeModal() {
   currentProduct = null;
 }
 
-// ===== events (one delegated click) =====
+// ===== EVENTS =====
 document.addEventListener('click', (e) => {
   // remove from favorites (card heart)
   const heart = e.target.closest('#favoritesList .fav-btn');
@@ -139,9 +150,13 @@ document.addEventListener('click', (e) => {
     if (!card) return;
 
     const id = card.dataset.id;
-    setFavorites(getFavorites().filter(p => String(p.id) !== String(id)));
+
+    if (typeof setFavorites === "function" && typeof getFavorites === "function") {
+      setFavorites(getFavorites().filter(p => String(p.id) !== String(id)));
+    }
+
     renderFavorites();
-    updateFavBadge();
+    if (typeof updateFavBadge === "function") updateFavBadge();
 
     // если открыта модалка этого товара — закрыть
     if (currentProduct && String(currentProduct.id) === String(id) && modal?.classList.contains('open')) {
@@ -150,16 +165,32 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // add to cart (card)
+  // qty +/- в карточках избранного (DESKTOP)
+  const qtyBtn = e.target.closest('#favoritesList .qty__btn');
+  if (qtyBtn) {
+    const wrap = qtyBtn.closest('.qty');
+    const input = wrap?.querySelector('input');
+    if (!input) return;
+
+    let val = parseInt(input.value, 10) || 1;
+    if (qtyBtn.dataset.action === 'plus') val++;
+    if (qtyBtn.dataset.action === 'minus') val = Math.max(1, val - 1);
+    input.value = val;
+    return;
+  }
+
+  // add to cart (card) — учитываем qty
   const addBtn = e.target.closest('#favoritesList .add-to-cart');
   if (addBtn) {
     const card = addBtn.closest('.product-card');
     if (!card) return;
 
     const p = getProductFromFavCard(card);
-    addToCart(p, 1);
-    updateCartBadge();
-    animateAdded(addBtn, { duration: 700 });
+    const qty = parseInt(card.querySelector('.qty__input')?.value, 10) || 1;
+
+    if (typeof addToCart === "function") addToCart(p, qty);
+    if (typeof updateCartBadge === "function") updateCartBadge();
+    if (typeof animateAdded === "function") animateAdded(addBtn, { duration: 700 });
     return;
   }
 
@@ -205,10 +236,11 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('#pmFav')) return;
   if (!currentProduct) return;
 
-  toggleFav(currentProduct);
-  setFavBtnState(pmFav, isFav(currentProduct.id));
+  if (typeof toggleFav === "function") toggleFav(currentProduct);
+  if (typeof isFav === "function") setFavBtnState(pmFav, isFav(currentProduct.id));
+
   renderFavorites();
-  updateFavBadge();
+  if (typeof updateFavBadge === "function") updateFavBadge();
 });
 
 // modal add to cart
@@ -217,18 +249,21 @@ document.addEventListener('click', (e) => {
   if (!currentProduct) return;
 
   const qty = parseInt(pmQty?.value, 10) || 1;
-  addToCart(currentProduct, qty);
-  updateCartBadge();
 
-  animateAdded(pmAddToCart, { duration: 700, text: 'Додано' });
+  if (typeof addToCart === "function") addToCart(currentProduct, qty);
+  if (typeof updateCartBadge === "function") updateCartBadge();
+
+  if (typeof animateAdded === "function") {
+    animateAdded(pmAddToCart, { duration: 700, text: 'Додано' });
+  }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
   renderFavorites();
-  updateCartBadge();
+  if (typeof updateCartBadge === "function") updateCartBadge();
 });
 
 window.addEventListener('storage', (e) => {
   if (e.key === 'favorites') renderFavorites();
-  if (e.key === 'cart') updateCartBadge();
+  if (e.key === 'cart' && typeof updateCartBadge === "function") updateCartBadge();
 });
