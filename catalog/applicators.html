@@ -66,6 +66,22 @@
     <!-- CONTENT -->
 <main class="container page" data-category="applicators">
   <h1>Аплікатори</h1>
+<button class="back-btn" onclick="history.back()">
+  <span class="back-icon">←</span>
+  <span>Назад</span>
+</button>
+
+
+<script>
+function goBack(){
+  if (document.referrer) {
+    history.back();
+  } else {
+    location.href = '/catalog.html';
+  }
+}
+</script>
+
 
   <!-- сюда будем рендерить из Supabase -->
   <div id="productsGrid" class="products-grid"></div>
