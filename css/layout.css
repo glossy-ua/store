@@ -1,7 +1,12 @@
+/* css/layout.css */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
 }
 
 .wrapper {
@@ -10,12 +15,24 @@
   overflow-x: hidden;
 }
 
+/* контейнер без фикс-ширины */
 .container {
-  width: 1400px;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 16px;
 }
 
 
+
+
+
+/* блокировка скролла (JS добавляет на body) */
+body.no-scroll{
+  overflow: hidden;
+}
+
+/* общие блоки */
 .page{
   padding: 40px 0 80px;
 }
@@ -64,3 +81,8 @@
   width: fit-content;
 }
 .btn-primary:hover{ background: #d85a0b; }
+
+/* плавное смещение контента под fixed-header */
+body{
+  transition: padding-top .22s ease;
+}

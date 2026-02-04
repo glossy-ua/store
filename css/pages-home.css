@@ -1,17 +1,14 @@
-/* =========================
-   HOME PAGE (page-home.css)
-   ========================= */
+/* css/pages-home.css */
 
 /* ===== HERO ===== */
 .hero {
   padding-bottom: 100px;
   position: relative;
   z-index: 1;
-
-  /* ВАЖНО: делаем нормальную сетку */
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 24px;
 }
 
 .hero--info {
@@ -20,7 +17,7 @@
 }
 
 .hero--info h2 {
-  color: #000000;
+  color: #000;
   font-size: 30px;
   font-weight: 600;
 }
@@ -48,23 +45,18 @@
   border-radius: 50px;
   padding: 15px 30px;
   border: 0;
-  transition: all 500ms ease;
+  transition: transform 300ms ease;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
+.hero--info .btn:hover { transform: scale(1.05); }
 
-.hero--info .btn:hover {
-  cursor: pointer;
-  transform: scale(1.1);
-}
-
-/* КАРТИНКА */
 .hero img {
   width: 40%;
-  margin-top: 50px; /* подняли вверх */
-  position: static;  /* УБРАЛИ absolute */
+  margin-top: 50px;
+  position: static;
 }
 
 /* ===== POPULAR / TRENDING ===== */
@@ -78,60 +70,6 @@
   font-size: 34px;
   font-weight: 800;
   margin: 0 0 18px;
-}
-
-.popular {
-  display: grid;
-  grid-template-columns: 64px 1fr 64px;
-  gap: 16px;
-  align-items: center;
-  margin-top: 18px;
-}
-
-.popular__viewport{
-  overflow: hidden;
-  width: 100%;
-  padding: 16px;
-  margin: -16px;
-}
-
-.popular__track{
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 22px;
-  margin: 16px;
-}
-
-.popular__nav {
-  width: 64px;
-  height: 64px;
-  border: 0;
-  border-radius: 18px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 40px;
-  line-height: 1;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.10);
-  display: grid;
-  place-items: center;
-}
-
-.popular__nav:disabled {
-  opacity: .4;
-  cursor: not-allowed;
-}
-
-.home-pop-card .product-card__img {
-  height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.home-pop-card .product-card__img img {
-  max-height: 100%;
-  width: auto;
-  object-fit: contain;
 }
 
 .trending .see-all {
@@ -152,7 +90,48 @@
 .trending .see-all:hover {
   transform: scale(1.06);
 }
+/* ВАЖНО: только ОДНА версия popular */
+.popular{
+  display: grid;
+  grid-template-columns: 64px 1fr 64px;
+  gap: 16px;
+  align-items: center; /* <-- это и центрирует стрелки по карточке */
+  margin-top: 18px;
+}
 
+.popular__viewport{
+  overflow: hidden;
+  width: 100%;
+  min-width: 0; /* чтобы контент не рвал сетку */
+}
+
+.popular__track{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+/* стрелки */
+.popular__nav{
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 18px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 40px;
+  line-height: 1;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.10);
+  display: grid;
+  place-items: center;
+}
+
+.popular__nav:disabled{
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+/* кнопка "все" */
 .popular-footer{
   display: flex;
   justify-content: center;
@@ -161,7 +140,7 @@
 
 /* ===== АДАПТИВ ===== */
 @media (max-width: 1200px) {
-  .popular__track { grid-template-columns: repeat(2, 1fr); }
+  .popular__track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 900px) {
@@ -171,9 +150,7 @@
     text-align: center;
   }
 
-  .hero--info{
-    width: 100%;
-  }
+  .hero--info{ width: 100%; }
 
   .hero img{
     width: 70%;
@@ -181,7 +158,64 @@
   }
 }
 
-@media (max-width: 700px) {
-  .popular__track { grid-template-columns: 1fr; }
+/* ===== MOBILE ===== */
+@media (max-width: 768px){
+  .popular{
+    grid-template-columns: 44px 1fr 44px;
+    gap: 10px;
+  }
+
+  .popular__nav{
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 22px;
+    opacity: .9;
+  }
+
+  /* JS показывает 1 карточку — поэтому одна колонка */
+  .popular__track{
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+/* если прям очень маленькие экраны */
+@media (max-width: 380px){
+  .popular{
+    grid-template-columns: 38px 1fr 38px;
+  }
+  .popular__nav{
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 768px){
+  .hero img{
+    display: none;
+  }
+}
+
+@media (max-width: 768px){
+  .hero--info h1{
+    font-size: 42px;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .hero--info h3{
+    font-size: 22px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .hero--info p{
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
+    margin: 20px 0;
+  }
 }
 

@@ -2,3 +2,11 @@
   .catalog { grid-template-columns: 1fr; }
 }
 
+/* MOBILE: на тач-устройствах hover нет — делаем сердечко всегда доступным */
+@media (max-width: 900px){
+  .product-card .fav-btn{
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}

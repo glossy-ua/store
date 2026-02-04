@@ -1,67 +1,230 @@
-footer {
-  background: #4a4949;
+/* =========================
+   FOOTER (desktop + mobile)
+   ========================= */
+
+/* ----- base (общая база) ----- */
+footer{
+  background: #000;
+  color: #fff;
   padding: 50px 0;
-  color: azure;
 }
 
-footer .blocks {
-  display: flex;
-  justify-content: space-between;
-}
-
-footer .logo {
-  text-transform: uppercase;
-  font-size: 29px;
-  font-weight: 800;
-  color: azure;          /* ДОБАВЬ */
-  display: inline-block; /* ДОБАВЬ */
-}
-
-footer .blocks p {
-  width: 300px;
-  margin: 15px 0;
-}
-
-footer .blocks h4 {
-  font-weight: 500;
-  font-size: 17px;
-}
-
-footer .blocks ul { list-style: none; }
-
-footer .blocks ul li {
-  margin-top: 7px;
-  opacity: 0.8;
-}
-
-footer hr {
-  margin: 30px 0;
-  border: 0;
-  height: 0.6px;
-  background: #b3b2b2;
-}
-
-footer > p { text-align: center;}
-
-footer .column a[href^="tel"]{
+footer a{
   color: inherit;
   text-decoration: none;
-  font-weight: 500;
 }
 
-footer .column a[href^="tel"]:hover{
+footer a:hover{
   color: #ff7a00;
   text-decoration: underline;
 }
 
-footer .column ul li a{
-  color: inherit;
-  text-decoration: none;
-  transition: color .2s ease;
+/* контейнер с колонками */
+footer .blocks{
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  align-items: flex-start;
 }
 
-footer .column ul li a:hover{
-  color: #ff7a00; /* твой оранжевый */
-  text-decoration: underline;
+/* колонки */
+footer .column{
+  min-width: 0;
 }
 
+footer .logo{
+  text-transform: uppercase;
+  font-size: 29px;
+  font-weight: 800;
+  color: #fff;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+/* мелкий текст в лого-колонке */
+footer .blocks p{
+  width: 300px;
+  margin: 15px 0;
+  opacity: .85;
+}
+
+/* заголовки (на десктопе у тебя вместо них кнопки, мы их стилизуем ниже) */
+footer h4{
+  margin: 0 0 10px;
+  font-weight: 500;
+  font-size: 17px;
+}
+
+footer ul{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+footer hr{
+  margin: 30px 0;
+  border: 0;
+  height: 1px;
+  background: rgba(255,255,255,.12);
+}
+
+footer > p{
+  text-align: center;
+  margin: 0;
+  opacity: .8;
+}
+
+/* =========================
+   DESKTOP: вернуть "как было"
+   ========================= */
+@media (min-width: 769px){
+  /* аккордеон превращаем в обычный список */
+  .footer-acc__btn{
+    width: auto;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    padding: 0;
+    cursor: default;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    font-weight: 500;
+    font-size: 17px;
+    margin: 0 0 10px;
+  }
+
+  /* стрелку прячем на десктопе */
+  .footer-acc__chev{
+    display: none;
+  }
+
+  /* тело всегда открыто */
+  .footer-acc__body{
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* кнопку "Подзвонити" скрываем (чтобы было как раньше) */
+  .footer-call{
+    display: none !important;
+  }
+
+  /* убираем карточный вид */
+  footer .column{
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+/* =========================
+   MOBILE: карточки + аккордеон
+   ========================= */
+@media (max-width: 768px){
+  footer{
+    padding: 18px 0 8px;
+    
+  }
+
+  footer .blocks{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* карточки */
+  footer .column{
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  /* чтобы текст не был фикс шириной на мобиле */
+  footer .blocks p{
+    width: auto;
+    margin: 10px 0 0;
+  }
+
+  /* кнопки аккордеона */
+  .footer-acc__btn{
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .footer-acc__chev{
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06);
+    display: grid;
+    place-items: center;
+    flex: 0 0 34px;
+    transition: transform .18s ease;
+  }
+
+  .footer-acc__body{
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .22s ease;
+  }
+
+  .footer-acc.is-open .footer-acc__body{
+    max-height: 500px;
+  }
+
+  .footer-acc.is-open .footer-acc__chev{
+    transform: rotate(180deg);
+  }
+
+  .footer-phone{
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .footer-call{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    border-radius: 14px;
+    background: #4f46e5;
+    color: #fff !important;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 10px 24px rgba(79,70,229,.30);
+  }
+
+  footer hr{
+    opacity: .12;
+    margin: 16px 0 10px;
+  }
+
+  footer > p{
+    opacity: .7;
+    font-size: 13px;
+    padding: 0 16px 12px;
+    text-align: center;
+  }
+}

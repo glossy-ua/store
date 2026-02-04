@@ -1,9 +1,20 @@
 .products-grid{
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 22px;
   margin: 40px 0 90px;
 }
+
+@media (max-width: 1200px){
+  .products-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+@media (max-width: 900px){
+  .products-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 520px){
+  .products-grid{ grid-template-columns: 1fr; }
+}
+
 
 .product-card{
   background: #fff;
@@ -179,62 +190,153 @@
   color: #ff4d6d;
 }
 
-/* ===== Popular slider on Home ===== */
-.popular{
-  position: relative;
-  display: grid;
-  grid-template-columns: 56px 1fr 56px;
-  gap: 18px;
-  align-items: center;
-  margin-top: 18px;
-}
-
-.popular__viewport{
-  overflow: hidden;
-}
-
-.popular__track{
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 22px;
-}
-
-.popular__nav{
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  border: 0;
-  background: #fff;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.10);
-  cursor: pointer;
-  font-size: 28px;
-}
-
-.popular__nav:disabled{
-  opacity: .35;
-  cursor: not-allowed;
-}
-
-/* адаптив: 2 карточки */
-@media (max-width: 900px){
-  .popular{
-    grid-template-columns: 48px 1fr 48px;
-  }
-  .popular__track{
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* адаптив: 1 карточка */
-@media (max-width: 520px){
-  .popular__track{
-    grid-template-columns: 1fr;
-  }
-}
 
 @media (max-width: 900px){
-  .products-grid{ grid-template-columns: repeat(2, 1fr); }
+  .product-card .fav-btn{
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
 }
+
+/* ===== Make cards more compact (mobile + optional) ===== */
+
+/* 1) Цена меньше */
+.product-card__price{
+  font-size: 24px; /* было 26 */
+}
+
+/* 2) Кнопка корзины меньше */
+.cart-btn{
+  width: 44px;     /* было 48 */
+  height: 44px;    /* было 48 */
+  border-radius: 12px;
+  font-size: 16px; /* было 18 */
+}
+
+/* 3) Чуть компактнее внутренние отступы */
+.product-card__body{
+  padding: 16px; /* было 18 */
+  gap: 8px;      /* было 10 */
+}
+
+.product-card__bottom{
+  gap: 10px; /* было 14 */
+}
+
+/* ===== Mobile: ещё ниже карточка ===== */
 @media (max-width: 520px){
-  .products-grid{ grid-template-columns: 1fr; }
+
+  /* убираем счетчик кол-ва */
+  .product-card__actions .qty{
+    display: none;
+  }
+
+  /* корзину прижимаем вправо */
+  .product-card__actions{
+    justify-content: flex-end;
+  }
+
+  /* уменьшаем цену сильнее */
+  .product-card__price{
+    font-size: 20px;
+  }
+
+  /* уменьшаем заголовок/код чуть-чуть */
+  .product-card__title{
+    font-size: 16px; /* было 18 */
+    line-height: 1.2;
+  }
+
+  .product-card__code{
+    font-size: 12px;
+  }
+
+  /* уменьшаем высоту картинки + паддинги */
+  .product-card__img{
+    height: 180px; /* было 240 */
+    padding: 14px; /* было 18 */
+  }
+
+  .product-card__body{
+    padding: 14px;
+  }
+
+  /* корзина ещё меньше на мобиле */
+  .cart-btn{
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  /* сердечко компактнее, чтоб не съедало место */
+  .product-card .fav-btn{
+    width: 38px;
+    height: 38px;
+    top: 10px;
+    right: 10px;
+    font-size: 18px;
+  }
 }
+
+/* ===== Mobile: price + cart in one row, less bottom air, bigger photo ===== */
+@media (max-width: 520px){
+
+  /* больше место под фото */
+  .product-card__img{
+    height: 240px;   /* было меньше — делаем больше */
+    padding: 12px;   /* меньше воздуха вокруг картинки */
+  }
+
+  /* меньше воздуха в тексте */
+  .product-card__body{
+    padding: 14px;
+    gap: 6px;
+  }
+
+  /* прячем счетчик qty */
+  .product-card__actions .qty{
+    display: none;
+  }
+
+  /* НИЗ карточки: цена слева, корзина справа */
+  .product-card__bottom{
+    gap: 8px; /* меньше воздуха */
+  }
+
+  /* делаем из actions "правую колонку" */
+  .product-card__actions{
+    justify-content: flex-end;
+  }
+
+  /* самое главное: bottom в одну линию */
+  .product-card__bottom{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;   /* переопределяем column */
+  }
+
+  /* цена чуть компактнее и без лишних переносов */
+  .product-card__price{
+    font-size: 20px;
+    line-height: 1.1;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  /* корзина компактнее */
+  .cart-btn{
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  /* убираем нижний воздух карточки (если он из-за bottom/padding) */
+  .product-card__body{
+    padding-bottom: 12px;
+  }
+}
+
