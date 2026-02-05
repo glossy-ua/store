@@ -13,7 +13,7 @@
   const lastNameInput = document.getElementById("lastNameInput");
   const phoneInput = document.getElementById("phoneInput");
   const cityInput = document.getElementById("cityInput");
-  const addressInput = document.getElementById("addressInput");
+  
 
   const ordersList = document.getElementById("ordersList");
   const ordersEmpty = document.getElementById("ordersEmpty");
@@ -86,7 +86,7 @@
     if (lastNameInput) lastNameInput.value = userObj.lastName || "";
     if (phoneInput) phoneInput.value = userObj.phone || "";
     if (cityInput) cityInput.value = userObj.city || "";
-    if (addressInput) addressInput.value = userObj.address || "";
+    
   }
 
   // ---------- AUTH GUARD ----------
@@ -333,7 +333,7 @@
       lastName: lastNameInput?.value.trim() || "",
       phone: phoneInput?.value.trim() || "",
       city: cityInput?.value.trim() || "",
-      address: addressInput?.value.trim() || "",
+      
     };
 
     const { error } = await sb.auth.updateUser({ data: { ...updated } });
@@ -385,7 +385,7 @@
       lastName: md.lastName || "",
       phone: md.phone || "",
       city: md.city || "",
-      address: md.address || "",
+      
     });
 
     await renderOrdersFromSupabase(user.id);
