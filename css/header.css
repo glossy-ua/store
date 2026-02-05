@@ -262,21 +262,49 @@
 
 /* ===== Mobile: auto-hide search on scroll ===== */
 @media (max-width: 768px){
-  /* делаем поиск "сворачиваемым" */
   .header-search{
-    overflow: hidden;
-    max-height: 60px;            /* хватает на инпут */
+    /* ВАЖНО: чтобы подсказки не обрезались */
+    overflow: visible;
+
+    max-height: 60px;
     opacity: 1;
     margin-top: 8px;
     transition: max-height .22s ease, opacity .18s ease, margin-top .22s ease;
     will-change: max-height, opacity, margin-top;
   }
 
-  /* когда прячем */
   .site-header.is-search-hidden .header-search{
     max-height: 0;
     opacity: 0;
     margin-top: 0;
     pointer-events: none;
   }
+
+  /* чтобы подсказки были поверх всего */
+  .search-suggest{
+    z-index: 5000;
+  }
 }
+
+
+/* ===== FIX: search suggest hidden on mobile ===== */
+.site-header,
+.header-inner{
+  overflow: visible;
+}
+
+.header-search{
+  position: relative;
+  z-index: 2000;
+}
+
+.search-suggest{
+  z-index: 3000;
+}
+
+@media (max-width: 768px){
+  .mmenu{ z-index: 1200; } /* у тебя так и есть */
+  .search-suggest{ z-index: 4000; } /* выше чем меню/оверлей */
+}
+
+.wrapper{ overflow-x: hidden; overflow-y: visible; }

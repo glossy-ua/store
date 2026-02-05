@@ -317,3 +317,31 @@
     opacity: .7;
   }
 }
+
+@media (max-width: 768px){
+  .cart-list{
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+@media (max-width: 768px){
+  .cart-actions{
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+@media (max-width: 768px){
+  .cart-total{
+    padding: 12px 14px;
+    margin: 18px 8px 0;
+
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 16px;
+
+    box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+  }
+}
+

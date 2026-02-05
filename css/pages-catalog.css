@@ -115,3 +115,9 @@
   padding: 10px;
 }
 
+@media (max-width: 768px){
+  .catalog{
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}

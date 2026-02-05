@@ -486,3 +486,9 @@
   }
 }
 
+@media (max-width: 768px){
+  .products-grid{
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+}

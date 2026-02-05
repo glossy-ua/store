@@ -262,3 +262,18 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 768px){
+  /* общий контейнер страницы */
+  .page{
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  /* сама белая панель с формой */
+  .auth-panel{
+    margin-left: 8px;
+    margin-right: 8px;
+    border-radius: 18px;
+  }
+}
