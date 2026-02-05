@@ -69,26 +69,57 @@
         <!-- ЛЕВО: форма -->
         <form id="checkoutForm" class="checkout-form">
           <h2>Дані отримувача</h2>
+<p id="checkoutMsg" class="auth-msg" style="display:none;"></p>
 
-          <label class="field">
-            <span>Імʼя</span>
-            <input name="firstName" type="text" required>
-          </label>
+         <label class="field">
+  <span>Імʼя</span>
+  <input id="coFirstName" name="firstName" type="text" required>
+  <div class="field-error" id="coFirstNameErr"></div>
+</label>
 
-          <label class="field">
-            <span>Телефон</span>
-            <input name="phone" type="tel" placeholder="+380..." required>
-          </label>
+<label class="field">
+  <span>Телефон</span>
+  <input id="coPhone" name="phone" type="tel" placeholder="+380..." required>
+  <div class="field-error" id="coPhoneErr"></div>
+</label>
 
-          <label class="field">
-            <span>Місто</span>
-            <input name="city" type="text" required>
-          </label>
+<label class="field">
+  <span>Email</span>
+  <input id="coEmail" name="email" type="email" placeholder="example@gmail.com" required>
+  <div class="field-error" id="coEmailErr"></div>
+</label>
 
-          <label class="field">
-            <span>Відділення / Пошта</span>
-            <input name="postOffice" type="text" placeholder="НП №..., Укрпошта..." required>
-          </label>
+<label class="field">
+  <span>Місто</span>
+  <input id="coCity" name="city" type="text" required>
+  <div class="field-error" id="coCityErr"></div>
+</label>
+
+<label class="field">
+  <span>Доставка</span>
+
+  <div class="delivery-row">
+    <select id="deliveryService" required>
+      <option value="">Оберіть службу</option>
+      <option value="nova_poshta">Нова Пошта</option>
+      <option value="ukrposhta">Укрпошта</option>
+      <option value="meest">Meest</option>
+    </select>
+
+    <input
+      id="deliveryOffice"
+      type="text"
+      inputmode="numeric"
+      placeholder="№ відділення"
+      required
+    >
+  </div>
+
+  <div class="field-error" id="coDeliveryErr"></div>
+</label>
+
+
+
 
           <label class="field">
             <span>Коментар (необовʼязково)</span>

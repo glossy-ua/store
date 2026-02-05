@@ -92,24 +92,29 @@
 
          <form id="contactForm" class="contacts-form">
   <div class="field">
-    <label for="cfName">Ім’я <span class="req">*</span></label>
-    <input id="cfName" type="text" required>
-  </div>
+  <label for="cfName">Ім’я <span class="req">*</span></label>
+  <input id="cfName" type="text" required>
+  <div class="field-error" id="cfNameErr"></div>
+</div>
 
-  <div class="field">
-    <label for="cfPhone">Телефон</label>
-    <input id="cfPhone" type="tel" placeholder="+380...">
-  </div>
+<div class="field">
+  <label for="cfPhone">Телефон</label>
+  <input id="cfPhone" type="tel" placeholder="+380...">
+  <div class="field-error" id="cfPhoneErr"></div>
+</div>
 
-  <div class="field">
-    <label for="cfEmail">Email <span class="req">*</span></label>
-    <input id="cfEmail" type="email" required>
-  </div>
+<div class="field">
+  <label for="cfEmail">Email <span class="req">*</span></label>
+  <input id="cfEmail" type="email" required>
+  <div class="field-error" id="cfEmailErr"></div>
+</div>
 
-  <div class="field field--message">
-    <label for="cfMessage">Повідомлення</label>
-    <textarea id="cfMessage" rows="6"></textarea>
-  </div>
+<div class="field field--message">
+  <label for="cfMessage">Повідомлення</label>
+  <textarea id="cfMessage" rows="6"></textarea>
+  <div class="field-error" id="cfMessageErr"></div>
+</div>
+
 
   <div class="contacts-actions">
     <button class="contacts-btn" type="submit">Відправити</button>
