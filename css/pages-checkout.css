@@ -221,3 +221,32 @@
    если нет, добавь: */
 .input-ok{ border-color: rgba(31,138,59,.7) !important; }
 .input-err{ border-color: rgba(192,57,43,.7) !important; }
+
+.field input.input-err,
+.delivery-row select.input-err,
+.delivery-row input.input-err {
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.12);
+}
+
+.field input.input-ok,
+.delivery-row select.input-ok,
+.delivery-row input.input-ok {
+  box-shadow: 0 0 0 3px rgba(31,138,59,0.10);
+}
+
+/* меньше расстояние между полями */
+.field{
+  margin-top: 8px;          /* было 12px */
+}
+
+/* меньше зазор между названием и input */
+.field span{
+  margin-bottom: 4px;       /* было 6px */
+}
+
+/* ошибка ближе к полю */
+.field-error{
+  margin-top: 3px;          /* было 6px */
+  min-height: 14px;         /* можно чуть меньше */
+  font-size: 12px;
+}
