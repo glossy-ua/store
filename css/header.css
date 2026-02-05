@@ -308,3 +308,20 @@
 }
 
 .wrapper{ overflow-x: hidden; overflow-y: visible; }
+
+/* ===== DESKTOP: подсказки поиска до правой грани корзины ===== */
+@media (min-width: 769px){
+
+  /* на сколько расширять вправо (примерно ширина блока иконок до правого края корзины) */
+  .header-search{
+    --suggest-extend: 180px; /* если не идеально — подгони 150–220 */
+  }
+
+  /* расширяем dropdown вправо */
+  .header-search .search-suggest{
+    left: 0;
+    right: calc(-1 * var(--suggest-extend));
+    width: auto;
+    max-width: none;
+  }
+}
