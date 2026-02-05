@@ -5,7 +5,6 @@
 (function () {
   // ---------- helpers ----------
   const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   function moneyToNumber(v) {
     const n = parseFloat(String(v).replace(",", ".").replace(/[^\d.]/g, ""));
@@ -22,9 +21,9 @@
     let s = String(raw || "").trim();
     s = s.replace(/[^\d+]/g, "");
 
-    if (/^0\d{9}$/.test(s)) return "+38" + s;        // 0XXXXXXXXX → +380XXXXXXXXX
-    if (/^380\d{9}$/.test(s)) return "+" + s;        // 380XXXXXXXXX → +380XXXXXXXXX
-    if (/^\+380\d{9}$/.test(s)) return s;            // ok
+    if (/^0\d{9}$/.test(s)) return "+38" + s;
+    if (/^380\d{9}$/.test(s)) return "+" + s;
+    if (/^\+380\d{9}$/.test(s)) return s;
     return "";
   }
 
@@ -32,8 +31,8 @@
     const norm = normalizeUaPhone(raw);
     if (!norm) return raw;
 
-    const digits = norm.replace(/\D/g, ""); // 380XXXXXXXXX
-    const x = digits.slice(3);              // 9 digits
+    const digits = norm.replace(/\D/g, "");
+    const x = digits.slice(3);
     const a = x.slice(0, 2);
     const b = x.slice(2, 5);
     const c = x.slice(5, 7);
@@ -56,10 +55,16 @@
     return "";
   }
 
-  // office: digits only 1..6 (можешь поменять)
   function validateOffice(value) {
     const v = String(value || "").trim();
     if (!/^\d{1,6}$/.test(v)) return "Тільки цифри (1–6)";
+    return "";
+  }
+
+  function validateEmail(value) {
+    const v = String(value || "").trim();
+    if (!v) return "Вкажи email";
+    if (!isEmailValid(v)) return "Невірний формат email";
     return "";
   }
 
@@ -125,16 +130,32 @@
     return uData.user;
   }
 
+  // ---------- email save ----------
+  async function updateUserEmailIfNeeded(newEmail, cachedUserEmail) {
+    const email = String(newEmail || "").trim().toLowerCase();
+    const current = String(cachedUserEmail || "").trim().toLowerCase();
+
+    if (!email || email === current) return { changed: false };
+    if (!isEmailValid(email)) return { changed: false, error: "Невірний формат email" };
+
+    const { data, error } = await sb.auth.updateUser({ email });
+    if (error) return { changed: false, error: error.message || "Не вдалося зберегти email" };
+
+    // IMPORTANT: Supabase пришлёт confirmation email (часто требует подтверждение)
+    return { changed: true, data };
+  }
+
   // ---------- autofill ----------
   async function autofillCheckoutFromSupabase() {
     const user = await requireSessionOrRedirect();
-    if (!user) return;
+    if (!user) return null;
 
     const md = user.user_metadata || {};
 
     const nameEl = $('[name="firstName"]');
     const phoneEl = $('[name="phone"]');
     const cityEl = $('[name="city"]');
+    const emailEl = $('[name="email"]');
 
     const serviceEl = $("#deliveryService");
     const officeEl = $("#deliveryOffice");
@@ -145,8 +166,13 @@
     if (phoneEl && !phoneEl.value) phoneEl.value = md.phone || "";
     if (cityEl && !cityEl.value) cityEl.value = md.city || "";
 
+    // email from user.email
+    if (emailEl && !emailEl.value) emailEl.value = (user.email || "");
+
     if (serviceEl && !serviceEl.value && md.delivery_service) serviceEl.value = md.delivery_service;
     if (officeEl && !officeEl.value && md.delivery_office) officeEl.value = md.delivery_office;
+
+    return user; // return user so we can know current email
   }
 
   // ---------- render summary ----------
@@ -294,18 +320,18 @@
     const json = await res.json().catch(() => ({}));
     if (!res.ok || !json.ok) {
       console.error("TG notify failed:", json);
-      // заказ не роняем
     }
   }
 
   // ---------- validation (live + submit) ----------
-  function setupValidation() {
+  function setupValidation(state) {
     const form = $("#checkoutForm");
     if (!form) return null;
 
     const nameEl = form.querySelector('[name="firstName"]');
     const phoneEl = form.querySelector('[name="phone"]');
     const cityEl = form.querySelector('[name="city"]');
+    const emailEl = form.querySelector('[name="email"]');
     const commentEl = form.querySelector('[name="comment"]');
 
     const serviceEl = $("#deliveryService");
@@ -314,6 +340,7 @@
     const nameErr = getErrEl("firstName");
     const phoneErr = getErrEl("phone");
     const cityErr = getErrEl("city");
+    const emailErr = getErrEl("email");
     const deliveryErr = getErrEl("delivery");
 
     // input restrictions
@@ -344,7 +371,6 @@
         setError(phoneEl, phoneErr, "Формат: 0XXXXXXXXX або +380XXXXXXXXX");
         return false;
       }
-      // форматируем мягко
       phoneEl.value = formatUaPhoneForInput(phoneEl.value);
       setError(phoneEl, phoneErr, "");
       return true;
@@ -362,11 +388,22 @@
       return !msg;
     }
 
+    function vEmail(live = true) {
+      const v = String(emailEl?.value || "").trim();
+      if (!v) {
+        if (live) { setError(emailEl, emailErr, ""); emailEl?.classList.remove("input-ok","input-err"); }
+        else setError(emailEl, emailErr, "Вкажи email");
+        return false;
+      }
+      const msg = validateEmail(v);
+      setError(emailEl, emailErr, msg);
+      return !msg;
+    }
+
     function vDelivery(live = true) {
       const s = String(serviceEl?.value || "").trim();
       const o = String(officeEl?.value || "").trim();
 
-      // служба
       if (!s) {
         if (live) {
           deliveryErr && (deliveryErr.textContent = "");
@@ -378,7 +415,6 @@
         return false;
       }
 
-      // номер
       const officeMsg = validateOffice(o);
       if (officeMsg) {
         serviceEl?.classList.remove("input-err");
@@ -389,7 +425,6 @@
         return false;
       }
 
-      // ok
       serviceEl?.classList.remove("input-err");
       officeEl?.classList.remove("input-err");
       serviceEl?.classList.add("input-ok");
@@ -397,6 +432,36 @@
       deliveryErr && (deliveryErr.textContent = "");
       return true;
     }
+
+    // --------- AUTO-SAVE EMAIL on blur ----------
+    // Сохраняем только если валидный и отличается от текущего user.email
+    let savingEmail = false;
+
+    emailEl?.addEventListener("blur", async () => {
+      // сначала валидация
+      if (!vEmail(false)) return;
+
+      // не спамим запросами
+      if (savingEmail) return;
+      savingEmail = true;
+
+      try {
+        const email = String(emailEl.value || "").trim();
+        const res = await updateUserEmailIfNeeded(email, state.userEmail);
+
+        if (res?.error) {
+          setError(emailEl, emailErr, res.error);
+        } else if (res.changed) {
+          // обновим кэш, чтобы дальше не пытался сохранять то же самое
+          state.userEmail = email;
+          // optional: можешь показать подсказку, но ты хотел возле поля — оставим пусто
+        }
+      } catch (e) {
+        setError(emailEl, emailErr, "Не вдалося зберегти email");
+      } finally {
+        savingEmail = false;
+      }
+    });
 
     // live handlers
     nameEl?.addEventListener("input", () => vName(true));
@@ -408,6 +473,8 @@
     cityEl?.addEventListener("input", () => vCity(true));
     cityEl?.addEventListener("blur", () => vCity(false));
 
+    emailEl?.addEventListener("input", () => vEmail(true));
+
     serviceEl?.addEventListener("change", () => vDelivery(false));
     officeEl?.addEventListener("input", () => vDelivery(true));
     officeEl?.addEventListener("blur", () => vDelivery(false));
@@ -417,6 +484,7 @@
         vName(false) &&
         vPhone(false) &&
         vCity(false) &&
+        vEmail(false) &&
         vDelivery(false);
 
       if (!ok) {
@@ -435,11 +503,22 @@
         name: String(nameEl?.value || "").trim(),
         phone: normalizeUaPhone(phoneEl?.value || "") || String(phoneEl?.value || "").trim(),
         city: String(cityEl?.value || "").trim(),
+        email: String(emailEl?.value || "").trim(),
         deliveryService: String(serviceEl?.value || "").trim(),
         deliveryOffice: String(officeEl?.value || "").trim(),
         comment: String(commentEl?.value || "").trim(),
       }),
-      validateAll
+      validateAll,
+      saveEmailIfChanged: async () => {
+        if (!emailEl) return;
+        if (!vEmail(false)) throw new Error("Перевір email");
+
+        const email = String(emailEl.value || "").trim();
+        const res = await updateUserEmailIfNeeded(email, state.userEmail);
+
+        if (res?.error) throw new Error(res.error);
+        if (res.changed) state.userEmail = email;
+      }
     };
   }
 
@@ -470,6 +549,10 @@
 
       try {
         await requireSessionOrRedirect();
+
+        // before order: ensure email saved (if changed)
+        await validationApi.saveEmailIfChanged();
+
         await syncCheckoutToUserMetadata(receiver);
 
         const orderId = await insertOrderToSupabase({ total, receiver, items });
@@ -494,10 +577,13 @@
 
   // ---------- init ----------
   document.addEventListener("DOMContentLoaded", async () => {
-    await autofillCheckoutFromSupabase();
+    const user = await autofillCheckoutFromSupabase();
     renderCheckoutSummary();
 
-    const validationApi = setupValidation();
+    // state with cached email
+    const state = { userEmail: user?.email || "" };
+
+    const validationApi = setupValidation(state);
     setupSubmit(validationApi);
   });
 })();
