@@ -214,3 +214,15 @@ padding: 0;
   display:none;
 }
 
+.field-error{
+  min-height: 16px;          /* чтобы не прыгала верстка */
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #c0392b;
+  opacity: .95;
+}
+
+.field-error.ok{
+  color: #1f8a3b;
+}

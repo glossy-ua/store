@@ -133,3 +133,91 @@
 .btn[type="submit"] {
   box-shadow: 0 10px 20px rgba(79,70,229,.35);
 }
+
+.delivery-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.delivery-row select,
+.delivery-row input{
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  padding: 0 14px;
+  outline: none;
+  background: #fff;
+}
+
+.delivery-row select:focus,
+.delivery-row input:focus{
+  border-color: #b8b8b8;
+  box-shadow: 0 0 0 3px rgba(0,0,0,.06);
+}
+
+@media (max-width: 520px){
+  .delivery-row{
+    grid-template-columns: 1fr; /* на мобиле столбиком */
+  }
+}
+
+/* ===== Delivery select — unified with inputs ===== */
+#deliveryService{
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  width: 100%;
+  height: 44px;
+
+  padding: 0 44px 0 14px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+
+  background:
+    #fff
+    url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%23777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 14px center;
+
+  font-size: 16px;
+  font-weight: 500;
+  color: #111;
+
+  cursor: pointer;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+
+/* hover — как у input */
+#deliveryService:hover{
+  border-color: #bcbcbc;
+}
+
+/* focus — фирменный */
+#deliveryService:focus{
+  outline: none;
+  border-color: #DC7000;
+  box-shadow: 0 0 0 3px rgba(220,112,0,0.15);
+}
+
+/* options (не везде поддерживается, но ок) */
+#deliveryService option{
+  font-size: 15px;
+}
+
+.field-error{
+  min-height: 16px;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #c0392b;
+  opacity: .95;
+}
+
+.field-error.ok{ color: #1f8a3b; }
+
+/* если в проекте уже есть .input-ok / .input-err — оставь,
+   если нет, добавь: */
+.input-ok{ border-color: rgba(31,138,59,.7) !important; }
+.input-err{ border-color: rgba(192,57,43,.7) !important; }
