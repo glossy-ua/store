@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -7,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Профіль</title>
   <link rel="stylesheet" href="css/main.css">
+
+  <!-- ✅ анти-мигание: скрываем страницу, пока profile.js проверяет сессию -->
+  <script>document.documentElement.classList.add('auth-check')</script>
+  <style>
+    html.auth-check body { visibility: hidden; }
+  </style>
 </head>
 
 <body>
@@ -27,42 +31,40 @@
           </ul>
         </nav>
 
-       <form id="searchForm" class="header-search" autocomplete="off">
-  <input type="text" id="searchInput" placeholder="Пошук..." autocomplete="off">
-  <div id="searchSuggest" class="search-suggest" hidden></div>
-</form>
+        <form id="searchForm" class="header-search" autocomplete="off">
+          <input type="text" id="searchInput" placeholder="Пошук..." autocomplete="off">
+          <div id="searchSuggest" class="search-suggest" hidden></div>
+        </form>
 
-         <div class="header-actions">
-          <a id="accountLink" class="icon-link" href="auth.html" title="Особистий кабінет">👤</a> 
-          <a class="icon-link" href="favorites.html" title="Закладки">
-            ❤ <span class="badge">0</span></a>
-          <a class="icon-link" href="cart.html" title="Кошик">
-            🛒 <span class="badge">0</span></a>
+        <div class="header-actions">
+          <a id="accountLink" class="icon-link" href="auth.html" title="Особистий кабінет">👤</a>
+          <a class="icon-link" href="favorites.html" title="Закладки">❤ <span class="badge">0</span></a>
+          <a class="icon-link" href="cart.html" title="Кошик">🛒 <span class="badge">0</span></a>
           <button id="burgerBtn" class="burger" type="button" aria-label="Меню">☰</button>
         </div>
       </div>
-      
-
     </header>
-<!-- MOBILE MENU DRAWER -->
-<div id="mmenu" class="mmenu" aria-hidden="true">
-  <div class="mmenu__overlay" data-mclose="1"></div>
 
-  <div class="mmenu__panel" role="dialog" aria-modal="true" aria-label="Меню">
-    <div class="mmenu__top">
-      <div style="font-weight:800; text-transform:uppercase;">Меню</div>
-      <button class="mmenu__close" type="button" data-mclose="1">✕</button>
+    <!-- MOBILE MENU DRAWER -->
+    <div id="mmenu" class="mmenu" aria-hidden="true">
+      <div class="mmenu__overlay" data-mclose="1"></div>
+
+      <div class="mmenu__panel" role="dialog" aria-modal="true" aria-label="Меню">
+        <div class="mmenu__top">
+          <div style="font-weight:800; text-transform:uppercase;">Меню</div>
+          <button class="mmenu__close" type="button" data-mclose="1">✕</button>
+        </div>
+
+        <nav class="mmenu__nav">
+          <a class="mmenu__link" href="index.html">Головна</a>
+          <a class="mmenu__link" href="catalog.html">Каталог</a>
+          <a class="mmenu__link" href="pay-delivery.html">Оплата та доставка</a>
+          <a class="mmenu__link" href="exchange-return.html">Обмін та повернення</a>
+          <a class="mmenu__link" href="contacts.html">Контакти</a>
+        </nav>
+      </div>
     </div>
 
-    <nav class="mmenu__nav">
-      <a class="mmenu__link" href="index.html">Головна</a>
-      <a class="mmenu__link" href="catalog.html">Каталог</a>
-      <a class="mmenu__link" href="pay-delivery.html">Оплата та доставка</a>
-      <a class="mmenu__link" href="exchange-return.html">Обмін та повернення</a>
-      <a class="mmenu__link" href="contacts.html">Контакти</a>
-    </nav>
-  </div>
-</div>
     <!-- CONTENT -->
     <main class="container page">
       <div class="lk-head">
@@ -96,8 +98,6 @@
             <label>Місто</label>
             <input id="cityInput" type="text" placeholder="Напр. Львів" required>
 
-            
-
             <button class="btn" type="submit">Зберегти</button>
           </form>
 
@@ -107,13 +107,9 @@
         <!-- Заказы -->
         <section class="lk-card">
           <h2>Мої замовлення</h2>
-
           <p id="ordersEmpty" class="muted" style="display:none;">Поки що немає замовлень.</p>
           <div id="ordersList" class="orders-list"></div>
         </section>
-
-     
-
       </div>
     </main>
 
@@ -129,10 +125,9 @@
           <h4>Популярні категорії</h4>
           <ul>
             <li><a href="catalog/microfiber.html">Мікрофібри</a></li>
-<li><a href="catalog/wheels.html">Колеса</a></li>
-<li><a href="catalog/other.html">Інше для мийки</a></li>
-<li><a href="catalog/interior.html">Для салону</a></li>
-
+            <li><a href="catalog/wheels.html">Колеса</a></li>
+            <li><a href="catalog/other.html">Інше для мийки</a></li>
+            <li><a href="catalog/interior.html">Для салону</a></li>
           </ul>
         </div>
 
@@ -142,9 +137,8 @@
             <li>Пн-Пт 09:00 - 18:00</li>
             <li>Сб-Нд 10:00 - 16:00</li>
           </ul>
-          
-          <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
 
+          <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
         </div>
       </div>
 
@@ -155,19 +149,11 @@
   </div>
 
   <!-- JS -->
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabaseClient.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
 
-<script src="js/store.js"></script>
-<script src="js/header.js"></script>
-<script src="js/profile.js"></script>
-
-
-
-
-  
-
-
-
+  <script src="js/store.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/profile.js"></script>
 </body>
 </html>
