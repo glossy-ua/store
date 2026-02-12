@@ -1,4 +1,4 @@
-// js/auth.js (Supabase auth + email confirm)
+// js/auth.js (Supabase auth + email confirm + UA errors)
 
 (() => {
   const sb = window.sb;
@@ -6,7 +6,39 @@
   function pageUrl(name){
     return location.pathname.includes('/catalog/') ? `../${name}` : name;
   }
+
   const REDIRECT_TO = new URL(pageUrl('auth.html'), window.location.href).toString();
+  const RESET_REDIRECT_TO = new URL(pageUrl('reset.html'), window.location.href).toString();
+
+  // ---------- UA translate ----------
+  function tAuthError(msg = "") {
+    const m = String(msg || "").trim();
+
+    // частые Supabase ошибки
+    const map = {
+      "Invalid login credentials": "Невірний email або пароль.",
+      "Email not confirmed": "Пошта не підтверджена.",
+      "User already registered": "Користувач з таким email вже існує.",
+      "Password should be at least 6 characters": "Пароль має містити мінімум 6 символів.",
+      "Signup requires a valid password": "Вкажи коректний пароль.",
+      "Invalid email or password": "Невірний email або пароль.",
+      "Invalid email": "Невірний формат email.",
+      "Email rate limit exceeded": "Забагато спроб. Спробуй пізніше.",
+      "Too many requests": "Забагато запитів. Спробуй пізніше."
+    };
+
+    if (map[m]) return map[m];
+
+    // мягкий фолбэк по ключевым словам
+    const low = m.toLowerCase();
+    if (low.includes("invalid login")) return "Невірний email або пароль.";
+    if (low.includes("email not confirmed")) return "Пошта не підтверджена.";
+    if (low.includes("rate limit") || low.includes("too many")) return "Забагато спроб. Спробуй пізніше.";
+    if (low.includes("password")) return "Помилка паролю. Перевір пароль і спробуй ще раз.";
+
+    // если вообще не распознали — покажем оригинал (но без англ. ужаса не получится всегда)
+    return m || "Сталася помилка. Спробуй ще раз.";
+  }
 
   // ---------- UI helpers ----------
   function showResend(email = "") {
@@ -71,7 +103,7 @@
       const { error } = await sb.auth.exchangeCodeForSession(window.location.href);
       if (error) {
         console.error(error);
-        showMsg("❌ Не вдалося підтвердити email", "err");
+        showMsg("❌ Не вдалося підтвердити email.", "err");
         return;
       }
 
@@ -117,6 +149,23 @@
     });
   }
 
+  // ---------- FORGOT PASSWORD ----------
+  async function onForgotPassword(e){
+    e.preventDefault();
+    hideMsg();
+
+    const email = document.getElementById("loginEmail")?.value?.trim().toLowerCase();
+    if (!email) return showMsg("Вкажи email у полі Email.");
+
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: RESET_REDIRECT_TO
+    });
+
+    if (error) return showMsg(tAuthError(error.message), "err");
+
+    showMsg("✅ Лист для скидання паролю надіслано. Перевір пошту.", "ok");
+  }
+
   // ---------- LOGIN ----------
   async function onLoginSubmit(e) {
     e.preventDefault();
@@ -128,7 +177,7 @@
     if (!email || !password) return showMsg("Вкажи email та пароль.");
 
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) return showMsg(error.message);
+    if (error) return showMsg(tAuthError(error.message), "err");
 
     const user = data?.user;
     if (!isEmailConfirmed(user)) {
@@ -136,12 +185,7 @@
       return showMsg("Пошта не підтверджена.", "err");
     }
 
-    // ✅ сохраняем и мерджим гостя в юзера
     saveUserToLocalStorage(user);
-    if (typeof window.mergeGuestToUser === "function") {
-      window.mergeGuestToUser(user.id);
-    }
-
     location.href = "profile.html";
   }
 
@@ -173,7 +217,7 @@
       }
     });
 
-    if (error) return showMsg(error.message);
+    if (error) return showMsg(tAuthError(error.message), "err");
 
     showMsg("✅ Ми надіслали лист для підтвердження email.", "ok");
     showResend(email);
@@ -194,7 +238,7 @@
       options: { emailRedirectTo: REDIRECT_TO }
     });
 
-    if (error) return showMsg(error.message);
+    if (error) return showMsg(tAuthError(error.message), "err");
     showMsg("✅ Лист надіслано ще раз.", "ok");
   }
 
@@ -204,17 +248,13 @@
     setupPasswordToggles();
     await handleConfirmRedirect();
 
+    const forgotBtn = document.getElementById("forgotBtn");
+    if (forgotBtn) forgotBtn.addEventListener("click", onForgotPassword);
+
     const { data } = await sb.auth.getSession();
     if (data?.session) {
       const { data: uData } = await sb.auth.getUser();
-      if (uData?.user) {
-        saveUserToLocalStorage(uData.user);
-
-        // ✅ на всякий случай тоже мерджим
-        if (typeof window.mergeGuestToUser === "function") {
-          window.mergeGuestToUser(uData.user.id);
-        }
-      }
+      if (uData?.user) saveUserToLocalStorage(uData.user);
       location.href = "profile.html";
       return;
     }
