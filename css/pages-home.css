@@ -60,7 +60,7 @@
   position: static;
 }
 
-/* ===== POPULAR / TRENDING ===== */
+/* ===== TRENDING / POPULAR ===== */
 .trending {
   margin: 40px auto 80px;
   position: relative;
@@ -71,6 +71,92 @@
   font-size: 34px;
   font-weight: 800;
   margin: 0 0 18px;
+}
+
+/* ===== POPULAR CAROUSEL WRAP ===== */
+.popular {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* viewport (mask) */
+.popular__viewport {
+  overflow: hidden;
+  width: 100%;
+   padding: 12px;
+  box-sizing: border-box;
+}
+
+/* ✅ ВОТ ЭТО ДОБАВИЛ: дефолт 4 */
+.popular__viewport { --popular-visible: 4; }
+
+/* track (slides row) */
+.popular__track {
+  display: flex;
+  gap: var(--popular-gap, 18px);
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+/* arrows */
+.popular__nav {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: #f2f2f2;
+  cursor: pointer;
+  font-size: 28px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.popular__nav:active {
+  transform: scale(0.98);
+}
+
+.popular__nav:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 👇 магия: ширина карточки = 1/4 или 1/1 */
+.popular__track .product-card {
+  flex: 0 0 calc(
+    (100% - (var(--popular-gap, 18px) * (var(--popular-visible, 4) - 1)))
+    / var(--popular-visible, 4)
+  );
+}
+
+/* ===== POPULAR: убрать тень, оставить контур при hover ===== */
+.popular__track .product-card{
+  box-shadow: none !important;        /* убрали тень */
+}
+
+/* контурная подсветка при наведении (без “падающей” тени) */
+.popular__track .product-card:hover{
+  box-shadow: none !important;
+  outline: 2px solid #6c63ff;         /* цвет контура */
+  outline-offset: 2px;                /* чтобы контур не съедал края */
+}
+
+/* если у тебя подсветка делается через класс active (например избранное/выбрано) */
+.popular__track .product-card:focus-within{
+  box-shadow: none !important;
+  outline: 2px solid #6c63ff;
+  outline-offset: 2px;
+}
+
+/* footer button under carousel */
+.popular-footer {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
 }
 
 .trending .see-all {
@@ -91,123 +177,32 @@
 .trending .see-all:hover {
   transform: scale(1.06);
 }
-/* ВАЖНО: только ОДНА версия popular */
-.popular{
-  display: grid;
-  grid-template-columns: 64px 1fr 64px;
-  gap: 16px;
-  align-items: center; /* <-- это и центрирует стрелки по карточке */
-  margin-top: 18px;
-}
 
-.popular__viewport{
-  overflow: hidden;
-  width: 100%;
-  min-width: 0; /* чтобы контент не рвал сетку */
-}
-
-.popular__track{
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 22px;
-}
-
-/* стрелки */
-.popular__nav{
-  width: 64px;
-  height: 64px;
-  border: 0;
-  border-radius: 18px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 40px;
-  line-height: 1;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.10);
-  display: grid;
-  place-items: center;
-}
-
-.popular__nav:disabled{
-  opacity: .4;
-  cursor: not-allowed;
-}
-
-/* кнопка "все" */
-.popular-footer{
-  display: flex;
-  justify-content: center;
-  margin-top: 18px;
-}
-
-/* ===== АДАПТИВ ===== */
-@media (max-width: 1200px) {
-  .popular__track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
+/* ===== MOBILE TWEAKS ===== */
 
 @media (max-width: 900px) {
-  .hero{
+  .hero {
+    padding-bottom: 60px;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    gap: 16px;
   }
 
-  .hero--info{ width: 100%; }
+  
 
-  .hero img{
-    width: 70%;
-    margin-top: 20px;
-  }
-}
-
-/* ===== MOBILE ===== */
-@media (max-width: 768px){
-  .popular{
-    grid-template-columns: 44px 1fr 44px;
-    gap: 10px;
+  .hero--info {
+    width: 100%;
+    padding-top: 24px;
   }
 
-  .popular__nav{
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    font-size: 22px;
-    opacity: .9;
-  }
-
-  /* JS показывает 1 карточку — поэтому одна колонка */
-  .popular__track{
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-}
-
-/* если прям очень маленькие экраны */
-@media (max-width: 380px){
-  .popular{
-    grid-template-columns: 38px 1fr 38px;
-  }
-  .popular__nav{
-    width: 38px;
-    height: 38px;
-    font-size: 20px;
-  }
-}
-
-@media (max-width: 768px){
-  .hero img{
-    display: none;
-  }
-}
-
-@media (max-width: 768px){
-  .hero--info h1{
+  .hero--info h1 {
     font-size: 47px;
     line-height: 1.1;
     text-align: center;
   }
 
-  .hero--info h3{
-    font-size: 22px;
+  .hero--info h3 {
+     font-size: 22px;
     line-height: 1.2;
     text-align: center;
   }
@@ -218,10 +213,41 @@
     text-align: center;
     margin: 20px 0;
   }
+
+  .hero img {
+    display: none;
+  }
+
+  .trending {
+    padding: 24px 0 60px;
+  }
+
+  .trending h3 {
+    font-size: 22px;
+    margin-bottom: 14px;
+  }
+
+  .popular__nav {
+    width: 40px;
+    height: 40px;
+    font-size: 26px;
+    border-radius: 12px;
+  }
+
+  .hero--info .btn{
+  display: flex;        /* было inline-flex */
+  width: fit-content;   /* чтобы не растягивалась на 100% */
+  margin: 0 auto;       /* ✅ центр */
 }
 
-/* POPULAR: не режем карточку */
-.popular__viewport{
-  overflow: visible;   /* было hidden */
+  /* ✅ ВОТ ЭТО ДОБАВИЛ: на мобиле 1 */
+  .popular__viewport { --popular-visible: 1; }
 }
 
+@media (max-width: 900px) {
+  .popular__track .product-card{
+    background: #fff;
+    border: 3px solid rgba(0,0,0,.08);   /* тонкая обводка */
+    border-radius: 22px;                /* если у тебя другая — подгони */
+  } 
+}
