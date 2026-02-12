@@ -1,5 +1,6 @@
 /* =========================
    store.js  (CLEAN, NO DUPES)
+   + MERGE guest -> user
    ========================= */
 
 // ===== JSON helpers =====
@@ -12,13 +13,13 @@ function setJSON(key, value) {
 }
 
 function getUid() {
-  // ты уже кладёшь это в auth.js: localStorage.setItem("sb_uid", user.id)
+  // auth.js кладёт: localStorage.setItem("sb_uid", user.id)
   const uid = localStorage.getItem("sb_uid");
   return (uid && uid.trim()) ? uid.trim() : "guest";
 }
 
-function k(base) {
-  return `${base}:${getUid()}`;
+function k(base, uid = getUid()) {
+  return `${base}:${uid}`;
 }
 
 // ✅ НОРМАЛИЗАЦИЯ ID (ДОЛЖНА БЫТЬ ГЛОБАЛЬНО)
@@ -27,23 +28,13 @@ function normId(v) {
   return String(v ?? '').trim().replace(/^0+/, '') || '0';
 }
 
-function getUserScopedKey(baseKey) {
-  // uid сохраняем при логине/регистрации (можно и без этого, но так проще)
-  const uid =
-    localStorage.getItem("sb_uid") ||
-    (window.sb ? null : null);
-
-  return uid ? `${baseKey}:${uid}` : `${baseKey}:guest`;
-}
-
 // ===== Favorites =====
-function getFavorites() {
-  return getJSON(k('favorites'), []);
+function getFavorites(uid) {
+  return getJSON(k('favorites', uid), []);
 }
-function setFavorites(arr) {
-  setJSON(k('favorites'), Array.isArray(arr) ? arr : []);
+function setFavorites(arr, uid) {
+  setJSON(k('favorites', uid), Array.isArray(arr) ? arr : []);
 }
-
 
 function isFav(id) {
   const nid = normId(id);
@@ -79,21 +70,19 @@ function updateFavBadge() {
 }
 
 // ===== Cart =====
-function getCart() {
-  return getJSON(k('cart'), []);
+function getCart(uid) {
+  return getJSON(k('cart', uid), []);
 }
-function setCart(arr) {
-  setJSON(k('cart'), Array.isArray(arr) ? arr : []);
+function setCart(arr, uid) {
+  setJSON(k('cart', uid), Array.isArray(arr) ? arr : []);
 }
-
-
 
 function addToCart(product, qty = 1) {
   const cart = getCart();
   const id = String(product.id || '').trim();
   const q = Number(qty) || 1;
 
-  // ✅ лучше тоже сравнивать через normId, чтобы "000001" == "1"
+  // ✅ сравнение через normId, чтобы "000001" == "1"
   const item = cart.find(p => normId(p.id) === normId(id));
 
   if (item) {
@@ -128,7 +117,77 @@ function updateCartBadge() {
     .forEach(b => b.textContent = count);
 }
 
+// ===== MERGE guest -> user =====
+function mergeGuestToUser(newUid) {
+  const uid = String(newUid || '').trim();
+  if (!uid || uid === 'guest') return;
 
+  const guestFav = getFavorites('guest');
+  const guestCart = getCart('guest');
+
+  if ((!guestFav || guestFav.length === 0) && (!guestCart || guestCart.length === 0)) return;
+
+  const userFav = getFavorites(uid);
+  const userCart = getCart(uid);
+
+  // FAV: union по normId
+  const favMap = new Map();
+  [...userFav, ...guestFav].forEach(p => {
+    const id = String(p?.id || '').trim();
+    if (!id) return;
+    favMap.set(normId(id), {
+      id,
+      title: p.title || '',
+      price: p.price || '',
+      img: p.img || '',
+      desc: p.desc || ''
+    });
+  });
+  const mergedFav = Array.from(favMap.values());
+
+  // CART: merge по normId, qty суммируем
+  const cartMap = new Map();
+  [...userCart, ...guestCart].forEach(p => {
+    const idRaw = String(p?.id || '').trim();
+    if (!idRaw) return;
+
+    const key = normId(idRaw);
+    const qty = Math.max(1, parseInt(p?.qty, 10) || 1);
+
+    if (!cartMap.has(key)) {
+      cartMap.set(key, {
+        id: idRaw,
+        title: p.title || '',
+        price: String(p.price || ''),
+        img: p.img || '',
+        desc: p.desc || '',
+        qty
+      });
+    } else {
+      const prev = cartMap.get(key);
+      prev.qty = (parseInt(prev.qty, 10) || 1) + qty;
+      // добиваем данные если пустые
+      prev.title = prev.title || p.title || '';
+      prev.price = prev.price || String(p.price || '');
+      prev.img = prev.img || p.img || '';
+      prev.desc = prev.desc || p.desc || '';
+      prev.id = prev.id || idRaw;
+      cartMap.set(key, prev);
+    }
+  });
+  const mergedCart = Array.from(cartMap.values());
+
+  setFavorites(mergedFav, uid);
+  setCart(mergedCart, uid);
+
+  // чистим гостя
+  localStorage.removeItem(k('favorites', 'guest'));
+  localStorage.removeItem(k('cart', 'guest'));
+
+  // UI
+  try { updateFavBadge(); } catch {}
+  try { updateCartBadge(); } catch {}
+}
 
 // ===== Price helper =====
 function formatPriceUAH(value) {
@@ -165,3 +224,14 @@ function animateAdded(btn, opts = {}) {
     if (text && !shouldKeepText) btn.textContent = oldText;
   }, duration);
 }
+
+// ===== expose (чтобы auth.js мог дернуть merge) =====
+window.mergeGuestToUser = mergeGuestToUser;
+window.normId = normId;
+window.isFav = isFav;
+window.toggleFav = toggleFav;
+window.addToCart = addToCart;
+window.updateFavBadge = updateFavBadge;
+window.updateCartBadge = updateCartBadge;
+window.getCart = getCart;
+window.getFavorites = getFavorites;

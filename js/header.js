@@ -218,9 +218,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('storage', (e) => {
-  if (e.key === 'favorites' && typeof updateFavBadge === 'function') updateFavBadge();
-  if (e.key === 'cart' && typeof updateCartBadge === 'function') updateCartBadge();
-  if (e.key === 'user') updateAccountLinks();
+  const key = e.key || '';
+
+  // ✅ ключи теперь favorites:UID / cart:UID
+  if (key.startsWith('favorites:') && typeof updateFavBadge === 'function') updateFavBadge();
+  if (key.startsWith('cart:') && typeof updateCartBadge === 'function') updateCartBadge();
+
+  if (key === 'user') updateAccountLinks();
+
+  // если в другой вкладке вошли/вышли
+  if (key === 'sb_uid') {
+    if (typeof updateFavBadge === 'function') updateFavBadge();
+    if (typeof updateCartBadge === 'function') updateCartBadge();
+    updateAccountLinks();
+  }
 });
 
 function markActiveMenuLinks(){
@@ -232,7 +243,6 @@ function markActiveMenuLinks(){
     a.classList.toggle('is-active', href === path);
   });
 
-  // если хочешь, можно и десктоп-меню подсвечивать так же
   document.querySelectorAll('.main-nav a').forEach(a => {
     const href = (a.getAttribute('href') || '').split('/').pop();
     const li = a.closest('li');
@@ -264,11 +274,9 @@ document.addEventListener('DOMContentLoaded', markActiveMenuLinks);
       return;
     }
 
-    // 1) показано
     header.classList.remove("is-search-hidden");
     H_SHOWN = header.offsetHeight;
 
-    // 2) скрыто (временно включаем класс, меряем, возвращаем назад)
     header.classList.add("is-search-hidden");
     H_HIDDEN = header.offsetHeight;
 
@@ -281,15 +289,12 @@ document.addEventListener('DOMContentLoaded', markActiveMenuLinks);
     hidden = nextHidden;
 
     header.classList.toggle("is-search-hidden", hidden);
-
-    // плавно анимируем отступ контента (body transition уже включен)
     document.body.style.paddingTop = (hidden ? H_HIDDEN : H_SHOWN) + "px";
   }
 
   function onScroll(){
     if (!mq.matches) return;
 
-    // если меню открыто — не прячем поиск
     if (mmenu && mmenu.classList.contains("is-open")){
       setHidden(false);
       return;
@@ -300,8 +305,8 @@ document.addEventListener('DOMContentLoaded', markActiveMenuLinks);
 
     if (Math.abs(dy) < 6) return;
 
-    if (dy > 0 && y > 80) setHidden(true);   // вниз
-    if (dy < 0) setHidden(false);            // вверх
+    if (dy > 0 && y > 80) setHidden(true);
+    if (dy < 0) setHidden(false);
 
     lastY = y;
   }
@@ -330,4 +335,3 @@ document.addEventListener('DOMContentLoaded', markActiveMenuLinks);
     else mq.addListener(onModeChange);
   });
 })();
-

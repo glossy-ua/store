@@ -2,11 +2,11 @@
 
 (() => {
   const sb = window.sb;
-  function pageUrl(name){
-  return location.pathname.includes('/catalog/') ? `../${name}` : name;
-}
-const REDIRECT_TO = new URL(pageUrl('auth.html'), window.location.href).toString();
 
+  function pageUrl(name){
+    return location.pathname.includes('/catalog/') ? `../${name}` : name;
+  }
+  const REDIRECT_TO = new URL(pageUrl('auth.html'), window.location.href).toString();
 
   // ---------- UI helpers ----------
   function showResend(email = "") {
@@ -136,7 +136,12 @@ const REDIRECT_TO = new URL(pageUrl('auth.html'), window.location.href).toString
       return showMsg("Пошта не підтверджена.", "err");
     }
 
+    // ✅ сохраняем и мерджим гостя в юзера
     saveUserToLocalStorage(user);
+    if (typeof window.mergeGuestToUser === "function") {
+      window.mergeGuestToUser(user.id);
+    }
+
     location.href = "profile.html";
   }
 
@@ -202,7 +207,14 @@ const REDIRECT_TO = new URL(pageUrl('auth.html'), window.location.href).toString
     const { data } = await sb.auth.getSession();
     if (data?.session) {
       const { data: uData } = await sb.auth.getUser();
-      if (uData?.user) saveUserToLocalStorage(uData.user);
+      if (uData?.user) {
+        saveUserToLocalStorage(uData.user);
+
+        // ✅ на всякий случай тоже мерджим
+        if (typeof window.mergeGuestToUser === "function") {
+          window.mergeGuestToUser(uData.user.id);
+        }
+      }
       location.href = "profile.html";
       return;
     }
