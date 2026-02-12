@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Скидання паролю</title>
+
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/pages-auth.css" />
+</head>
+
+<body>
+  <div class="wrapper">
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="logo" href="index.html">Glossy</a>
+
+        <div class="header-actions">
+          <a class="icon-link" href="auth.html" title="Вхід">👤</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container page">
+      <h1>Скидання паролю</h1>
+      <p class="muted">Введи новий пароль. Посилання дійсне обмежений час.</p>
+
+      <section class="panel auth-panel">
+        <div id="resetMsg" class="auth-msg" style="display:none;"></div>
+
+        <form id="resetForm" class="form auth-form" style="display:none;">
+          <label>
+            Новий пароль
+            <div class="pw-field">
+              <input id="newPass" type="password" minlength="6" placeholder="Новий пароль" required>
+              <button class="pw-toggle" type="button" data-toggle="#newPass" aria-label="Показати пароль">👁</button>
+            </div>
+          </label>
+
+          <label>
+            Повтори пароль
+            <div class="pw-field">
+              <input id="newPass2" type="password" minlength="6" placeholder="Повтори пароль" required>
+              <button class="pw-toggle" type="button" data-toggle="#newPass2" aria-label="Показати пароль">👁</button>
+            </div>
+          </label>
+
+          <button class="btn-primary auth-submit" type="submit">
+            Змінити пароль
+          </button>
+        </form>
+
+        <div id="resetLoading" class="muted" style="text-align:center;">
+          Перевіряю посилання…
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="blocks container">
+        <div class="column">
+          <span class="logo">Glossy</span>
+          <p>Understand & Care</p>
+        </div>
+
+        <div class="column">
+          <h4>Популярні категорії</h4>
+          <ul>
+            <li><a href="catalog/microfiber.html">Мікрофібри</a></li>
+            <li><a href="catalog/wheels.html">Колеса</a></li>
+            <li><a href="catalog/other.html">Інше для мийки</a></li>
+            <li><a href="catalog/interior.html">Для салону</a></li>
+          </ul>
+        </div>
+
+        <div class="column">
+          <h4>Контакти</h4>
+          <ul>
+            <li>Пн-Пт 09:00 - 18:00</li>
+            <li>Сб-Нд 10:00 - 16:00</li>
+          </ul>
+
+          <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
+        </div>
+      </div>
+
+      <hr>
+      <p>Glossy © 2026</p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/reset.js"></script>
+</body>
+</html>
