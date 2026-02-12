@@ -1,6 +1,7 @@
 /* =========================
    store.js  (CLEAN, NO DUPES)
    + MERGE guest -> user
+   + SAFE INPUT (string/object)
    ========================= */
 
 // ===== JSON helpers =====
@@ -13,7 +14,6 @@ function setJSON(key, value) {
 }
 
 function getUid() {
-  // auth.js кладёт: localStorage.setItem("sb_uid", user.id)
   const uid = localStorage.getItem("sb_uid");
   return (uid && uid.trim()) ? uid.trim() : "guest";
 }
@@ -22,10 +22,23 @@ function k(base, uid = getUid()) {
   return `${base}:${uid}`;
 }
 
-// ✅ НОРМАЛИЗАЦИЯ ID (ДОЛЖНА БЫТЬ ГЛОБАЛЬНО)
+// ✅ НОРМАЛИЗАЦИЯ ID
 function normId(v) {
-  // "000001" -> "1", " 00001 " -> "1"
   return String(v ?? '').trim().replace(/^0+/, '') || '0';
+}
+
+// ✅ приводим вход к объекту товара (даже если прилетела строка)
+function asProduct(input) {
+  if (input && typeof input === "object") return input;
+  return { id: String(input || "").trim() };
+}
+
+// ✅ безопасный id
+function safeId(input) {
+  const id = String(input ?? "").trim();
+  const nid = normId(id);
+  if (!id || !nid || nid === "0") return "";
+  return id;
 }
 
 // ===== Favorites =====
@@ -41,9 +54,12 @@ function isFav(id) {
   return getFavorites().some(p => normId(p.id) === nid);
 }
 
-function toggleFav(product) {
+function toggleFav(productOrId) {
+  const product = asProduct(productOrId);
   const favs = getFavorites();
-  const id = String(product.id || '').trim();
+
+  const id = safeId(product.id);
+  if (!id) return favs; // ✅ НЕ пушим пустышки
 
   const i = favs.findIndex(p => normId(p.id) === normId(id));
 
@@ -77,12 +93,15 @@ function setCart(arr, uid) {
   setJSON(k('cart', uid), Array.isArray(arr) ? arr : []);
 }
 
-function addToCart(product, qty = 1) {
+function addToCart(productOrId, qty = 1) {
+  const product = asProduct(productOrId);
   const cart = getCart();
-  const id = String(product.id || '').trim();
+
+  const id = safeId(product.id);
+  if (!id) return cart; // ✅ НЕ пушим пустышки
+
   const q = Number(qty) || 1;
 
-  // ✅ сравнение через normId, чтобы "000001" == "1"
   const item = cart.find(p => normId(p.id) === normId(id));
 
   if (item) {
@@ -91,7 +110,7 @@ function addToCart(product, qty = 1) {
     item.price = String(product.price || item.price || '');
     item.img = product.img || item.img || '';
     item.desc = product.desc || item.desc || '';
-    item.id = id; // сохраняем красивый оригинальный id
+    item.id = id;
   } else {
     cart.push({
       id,
@@ -130,10 +149,9 @@ function mergeGuestToUser(newUid) {
   const userFav = getFavorites(uid);
   const userCart = getCart(uid);
 
-  // FAV: union по normId
   const favMap = new Map();
   [...userFav, ...guestFav].forEach(p => {
-    const id = String(p?.id || '').trim();
+    const id = safeId(p?.id);
     if (!id) return;
     favMap.set(normId(id), {
       id,
@@ -145,10 +163,9 @@ function mergeGuestToUser(newUid) {
   });
   const mergedFav = Array.from(favMap.values());
 
-  // CART: merge по normId, qty суммируем
   const cartMap = new Map();
   [...userCart, ...guestCart].forEach(p => {
-    const idRaw = String(p?.id || '').trim();
+    const idRaw = safeId(p?.id);
     if (!idRaw) return;
 
     const key = normId(idRaw);
@@ -166,7 +183,6 @@ function mergeGuestToUser(newUid) {
     } else {
       const prev = cartMap.get(key);
       prev.qty = (parseInt(prev.qty, 10) || 1) + qty;
-      // добиваем данные если пустые
       prev.title = prev.title || p.title || '';
       prev.price = prev.price || String(p.price || '');
       prev.img = prev.img || p.img || '';
@@ -180,30 +196,18 @@ function mergeGuestToUser(newUid) {
   setFavorites(mergedFav, uid);
   setCart(mergedCart, uid);
 
-  // чистим гостя
   localStorage.removeItem(k('favorites', 'guest'));
   localStorage.removeItem(k('cart', 'guest'));
 
-  // UI
   try { updateFavBadge(); } catch {}
   try { updateCartBadge(); } catch {}
 }
 
-// ===== Price helper =====
-function formatPriceUAH(value) {
-  const num = parseFloat(String(value).replace(',', '.').replace(/[^\d.]/g, '')) || 0;
-  return num;
-}
-
-// ===== animateAdded (универсальная, НЕ ломает иконки) =====
+// ===== animateAdded =====
 function animateAdded(btn, opts = {}) {
   if (!btn) return;
 
-  const {
-    duration = 700,
-    text = null,
-    keepText = null
-  } = opts;
+  const { duration = 700, text = null, keepText = null } = opts;
 
   btn.classList.remove('btn-added');
   btn.removeAttribute('data-added');
@@ -225,7 +229,13 @@ function animateAdded(btn, opts = {}) {
   }, duration);
 }
 
-// ===== expose (чтобы auth.js мог дернуть merge) =====
+function formatPriceUAH(value) {
+  return parseFloat(String(value).replace(',', '.').replace(/[^\d.]/g, '')) || 0;
+}
+
+window.formatPriceUAH = formatPriceUAH;
+
+// ===== expose =====
 window.mergeGuestToUser = mergeGuestToUser;
 window.normId = normId;
 window.isFav = isFav;
@@ -235,3 +245,4 @@ window.updateFavBadge = updateFavBadge;
 window.updateCartBadge = updateCartBadge;
 window.getCart = getCart;
 window.getFavorites = getFavorites;
+window.animateAdded = animateAdded;

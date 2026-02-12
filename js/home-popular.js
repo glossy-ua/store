@@ -9,7 +9,7 @@
   if (!track || !viewport || !btnPrev || !btnNext) return;
 
   if (typeof window.fetchProducts !== "function") {
-    console.warn("[popular] fetchProducts() not found (js/db.js?)");
+    console.warn("[popular] fetchProducts() not found");
     return;
   }
 
@@ -25,6 +25,24 @@
       .replace(/'/g, "&#039;");
 
   const getVisible = () => (mq.matches ? 1 : 4);
+
+  function getProductFromCard(card) {
+    const priceNum = parseFloat(String(card.dataset.price ?? "0").replace(",", ".")) || 0;
+
+    return {
+      id: String(card.dataset.code || "").trim(),
+      title: String(card.dataset.title || "").trim(),
+      price: priceNum ? priceNum.toFixed(2) : String(card.dataset.price || "").trim(),
+      img: String(card.dataset.img || "").trim(),
+      desc: String(card.dataset.desc || "").trim(),
+    };
+  }
+
+  function setFavBtnState(btn, active) {
+    if (!btn) return;
+    btn.classList.toggle("active", !!active);
+    btn.textContent = active ? "♥️" : "♡";
+  }
 
   function cardHTML(p) {
     const priceNum = parseFloat(String(p.price ?? 0).replace(",", ".")) || 0;
@@ -77,7 +95,7 @@
 
   // ===== state =====
   let VISIBLE = getVisible();
-  let index = 0; // position in track (with clones)
+  let index = 0;
   let cardW = 0;
   let gap = 0;
   let isAnimating = false;
@@ -87,7 +105,6 @@
 
   function setCSSVars() {
     track.style.setProperty("--popular-visible", String(VISIBLE));
-    // gap берём из computed track gap, но если его нет - оставим дефолт
   }
 
   function setTransition(on) {
@@ -112,7 +129,6 @@
 
     cardW = first.getBoundingClientRect().width || 0;
 
-    // на всякий — если gap не задан в css, зафиксируем дефолт
     if (!gap) {
       gap = 18;
       track.style.setProperty("--popular-gap", "18px");
@@ -125,33 +141,25 @@
     try { window.updateFavBadge?.(); } catch {}
     try { window.updateCartBadge?.(); } catch {}
 
-    // подсветка избранного (если есть isFav)
     try {
       if (typeof window.isFav === "function") {
         track.querySelectorAll(".product-card").forEach((card) => {
           const id = card.dataset.code;
           const btn = card.querySelector(".fav-btn");
           if (!btn || !id) return;
-          const active = window.isFav(id);
-          btn.classList.toggle("active", !!active);
-          btn.textContent = active ? "♥️" : "♡";
+          setFavBtnState(btn, window.isFav(id));
         });
       }
     } catch {}
   }
 
-  // ===== modal fallback (если твой products.js не даёт функцию) =====
   function openModalFromCard(card) {
-    // если у тебя есть своя функция модалки — используем её
+    const p = getProductFromCard(card);
+    if (!p.id) return;
+
+    // если есть глобальная модалка — пусть она ведёт себя как в каталоге
     if (typeof window.openProductModal === "function") {
-      // пробуем передать объект
-      window.openProductModal({
-        id: card.dataset.code,
-        title: card.dataset.title,
-        price: card.dataset.price,
-        img: card.dataset.img,
-        desc: card.dataset.desc,
-      });
+      window.openProductModal(p);
       return;
     }
 
@@ -167,65 +175,63 @@
     const pmAdd = document.getElementById("pmAddToCart");
     const pmFav = document.getElementById("pmFav");
 
-    const id = card.dataset.code || "";
-    const title = card.dataset.title || "";
-    const price = card.dataset.price || "0";
-    const img = card.dataset.img || "";
-    const desc = card.dataset.desc || "";
-
-    if (pmImg) pmImg.src = img;
-    if (pmTitle) pmTitle.textContent = title;
-    if (pmCode) pmCode.textContent = id ? `Код: ${id}` : "";
-    if (pmPrice) pmPrice.textContent = `${price} грн.`;
-    if (pmDesc) pmDesc.textContent = desc;
+    if (pmImg) pmImg.src = p.img || "";
+    if (pmTitle) pmTitle.textContent = p.title || "";
+    if (pmCode) pmCode.textContent = p.id ? `Код: ${p.id}` : "";
+    if (pmPrice) pmPrice.textContent = `${p.price || "0"} грн.`;
+    if (pmDesc) pmDesc.textContent = p.desc || "Опис буде додано пізніше 🙂";
     if (pmQty) pmQty.value = "1";
 
-    // fav state
+    // ✅ важное: сразу выставили правильное сердце в модалке
     if (pmFav && typeof window.isFav === "function") {
-      const active = window.isFav(id);
-      pmFav.classList.toggle("active", !!active);
-      pmFav.textContent = active ? "♥️" : "♡";
+      setFavBtnState(pmFav, window.isFav(p.id));
     }
 
+    modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
 
+    const onKey = (e) => { if (e.key === "Escape") close(); };
+    const onClick = (e) => {
+      const t = e.target;
+      if (t?.dataset?.close === "1" || t?.closest?.("[data-close='1']")) close();
+    };
+
     const close = () => {
+      modal.classList.remove("open");
       modal.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
       modal.removeEventListener("click", onClick);
       document.removeEventListener("keydown", onKey);
     };
 
-    const onKey = (e) => { if (e.key === "Escape") close(); };
-
-    const onClick = (e) => {
-      const t = e.target;
-      if (t?.dataset?.close || t?.closest?.("[data-close='1']")) close();
-    };
-
     modal.addEventListener("click", onClick);
     document.addEventListener("keydown", onKey);
 
-    // кнопки в модалке
-    pmAdd?.onclick && (pmAdd.onclick = null);
-    pmAdd?.addEventListener("click", () => {
-      const q = Math.max(1, parseInt(pmQty?.value || "1", 10) || 1);
-      window.addToCart?.(id, q);
-      updateBadgesAndFavs();
-    });
+    // ✅ кнопка "в корзину" из модалки
+    if (pmAdd) {
+      pmAdd.onclick = () => {
+        const q = Math.max(1, parseInt(pmQty?.value || "1", 10) || 1);
+        window.addToCart?.(p, q);
+        window.updateCartBadge?.();
+        window.animateAdded?.(pmAdd, { duration: 700, text: "Додано", keepText: false });
+      };
+    }
 
-    pmFav?.onclick && (pmFav.onclick = null);
-    pmFav?.addEventListener("click", () => {
-      window.toggleFav?.(id);
-      updateBadgesAndFavs();
-      // синхроним кнопку в модалке
-      if (typeof window.isFav === "function") {
-        const active = window.isFav(id);
-        pmFav.classList.toggle("active", !!active);
-        pmFav.textContent = active ? "♥️" : "♡";
-      }
-    });
+    // ✅ ФИКС: избранное в модалке (после клика обновляем и модалку, и карточки)
+    if (pmFav) {
+      pmFav.onclick = (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        window.toggleFav?.(p);
+
+        const active = (typeof window.isFav === "function") ? window.isFav(p.id) : false;
+        setFavBtnState(pmFav, active);
+
+        updateBadgesAndFavs();
+      };
+    }
   }
 
   // ===== build loop =====
@@ -233,7 +239,6 @@
     VISIBLE = getVisible();
     setCSSVars();
 
-    // если товаров мало — без лупа
     if (products.length <= VISIBLE) {
       track.innerHTML = products.map(cardHTML).join("");
       index = 0;
@@ -308,7 +313,7 @@
     applyTranslate(translateFor(index));
   });
 
-  // ===== делегирование кликов (чтобы не ломалось при перерисовке) =====
+  // ===== clicks =====
   track.addEventListener("click", (e) => {
     const t = e.target;
     const card = t.closest?.(".product-card");
@@ -317,6 +322,7 @@
     // qty
     if (t.matches?.(".qty__btn")) {
       e.preventDefault();
+      e.stopPropagation();
       const action = t.dataset.action;
       const input = card.querySelector(".qty__input");
       if (!input) return;
@@ -326,11 +332,13 @@
       return;
     }
 
-    // fav
+    // fav on card
     if (t.closest?.(".fav-btn")) {
       e.preventDefault();
-      const id = card.dataset.code;
-      window.toggleFav?.(id);
+      e.stopPropagation();
+      const p = getProductFromCard(card);
+      if (!p.id) return;
+      window.toggleFav?.(p);
       updateBadgesAndFavs();
       return;
     }
@@ -338,26 +346,34 @@
     // cart
     if (t.closest?.(".cart-btn")) {
       e.preventDefault();
-      const id = card.dataset.code;
+      e.stopPropagation();
+      const p = getProductFromCard(card);
+      if (!p.id) return;
+
       const q = Math.max(1, parseInt(card.querySelector(".qty__input")?.value || "1", 10) || 1);
-      window.addToCart?.(id, q);
+      window.addToCart?.(p, q);
+      window.updateCartBadge?.();
+
+      window.animateAdded?.(t.closest(".cart-btn"), { duration: 700 });
+
       updateBadgesAndFavs();
       return;
     }
 
-    // open modal (клик по картинке/заголовку/карточке, но не по кнопкам)
+    // open modal
     if (
       t.closest?.(".product-card__img") ||
       t.closest?.(".product-card__title") ||
       t.closest?.(".product-card__body")
     ) {
-      // если кликнули по инпуту — не открываем
       if (t.matches?.("input, button")) return;
+      e.preventDefault();
+      e.stopPropagation();
       openModalFromCard(card);
     }
   });
 
-  // ===== autoplay pause =====
+  // ===== autoplay =====
   function stopAutoplay() {
     if (timer) clearInterval(timer);
     timer = null;
@@ -380,7 +396,7 @@
     startAutoplay();
   });
 
-  // ===== swipe (mobile) =====
+  // ===== swipe =====
   let x0 = null;
   viewport.addEventListener("pointerdown", (e) => { x0 = e.clientX; });
   viewport.addEventListener("pointerup", (e) => {

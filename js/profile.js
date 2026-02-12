@@ -4,6 +4,14 @@
 (() => {
   const sb = window.sb;
 
+  function pageUrl(name){
+    return location.pathname.includes('/catalog/') ? `../${name}` : name;
+  }
+
+  function showPage(){
+    document.documentElement.classList.remove('auth-check');
+  }
+
   // ---------- DOM ----------
   const profileTitle = document.getElementById("profileTitle");
   const profileSub = document.getElementById("profileSub");
@@ -13,7 +21,6 @@
   const lastNameInput = document.getElementById("lastNameInput");
   const phoneInput = document.getElementById("phoneInput");
   const cityInput = document.getElementById("cityInput");
-  
 
   const ordersList = document.getElementById("ordersList");
   const ordersEmpty = document.getElementById("ordersEmpty");
@@ -65,7 +72,6 @@
     return map[String(s || "new")] || "Нове";
   }
 
-  // для CSS-бейджа в шапке (order-status-badge st-*)
   function statusClass(s) {
     const st = String(s || "new");
     if (st === "ready") return "st-ready";
@@ -86,29 +92,47 @@
     if (lastNameInput) lastNameInput.value = userObj.lastName || "";
     if (phoneInput) phoneInput.value = userObj.phone || "";
     if (cityInput) cityInput.value = userObj.city || "";
-    
   }
 
-  // ---------- AUTH GUARD ----------
+  // ---------- AUTH GUARD (NO FLASH) ----------
   async function requireUser() {
-    if (!sb) {
-      alert("Supabase client не підключений (window.sb). Перевір supabaseClient.js та порядок підключення.");
+    try {
+      if (!sb) {
+        localStorage.removeItem("user");
+        localStorage.removeItem("sb_uid");
+        location.replace(pageUrl("auth.html"));
+        return null;
+      }
+
+      const { data: sess } = await sb.auth.getSession();
+      if (!sess?.session) {
+        // ✅ чистим “ложный логин”
+        localStorage.removeItem("user");
+        localStorage.removeItem("sb_uid");
+
+        // ✅ без мигания и без “назад на профиль”
+        location.replace(pageUrl("auth.html"));
+        return null;
+      }
+
+      const { data: uData, error } = await sb.auth.getUser();
+      if (error || !uData?.user) {
+        localStorage.removeItem("user");
+        localStorage.removeItem("sb_uid");
+        location.replace(pageUrl("auth.html"));
+        return null;
+      }
+
+      // ✅ только тут показываем страницу
+      showPage();
+      return uData.user;
+    } catch (e) {
+      console.error("[profile guard]", e);
+      localStorage.removeItem("user");
+      localStorage.removeItem("sb_uid");
+      location.replace(pageUrl("auth.html"));
       return null;
     }
-
-    const { data: sess } = await sb.auth.getSession();
-    if (!sess?.session) {
-      location.href = "auth.html";
-      return null;
-    }
-
-    const { data: uData, error } = await sb.auth.getUser();
-    if (error || !uData?.user) {
-      location.href = "auth.html";
-      return null;
-    }
-
-    return uData.user;
   }
 
   // ---------- ORDERS ----------
@@ -174,7 +198,7 @@
 
     const orders = await fetchOrdersFromSupabase(userId);
     ordersCache = orders;
-    window.__ordersCache = orders; // если где-то ещё используешь
+    window.__ordersCache = orders;
 
     if (!orders.length) {
       ordersEmpty.style.display = "block";
@@ -193,33 +217,31 @@
         const stCls = statusClass(o.status);
 
         const detailsHtml = items.length
-          ? items
-              .map((i) => {
-                const qty = parseInt(i.qty, 10) || 1;
-                const sum = i.sum ?? ((parseFloat(i.price) || 0) * qty);
+          ? items.map((i) => {
+              const qty = parseInt(i.qty, 10) || 1;
+              const sum = i.sum ?? ((parseFloat(i.price) || 0) * qty);
 
-                return `
-                  <div class="order-item">
-                    <div class="order-item__img">
-                      <img src="${escapeHtml(i.img || "")}" alt="${escapeHtml(i.title || "")}">
-                    </div>
+              return `
+                <div class="order-item">
+                  <div class="order-item__img">
+                    <img src="${escapeHtml(i.img || "")}" alt="${escapeHtml(i.title || "")}">
+                  </div>
 
-                    <div class="order-item__text">
-                      <div class="order-item__title">${escapeHtml(i.title || "")}</div>
+                  <div class="order-item__text">
+                    <div class="order-item__title">${escapeHtml(i.title || "")}</div>
 
-                      <div class="order-item__code-line">
-                        <span class="order-item__code-pill">Код: ${escapeHtml(i.id || "")}</span>
-                        <span>${money(i.price)} грн × ${qty}</span>
-                      </div>
-                    </div>
-
-                    <div class="order-item__sum">
-                      ${money(sum)} грн.
+                    <div class="order-item__code-line">
+                      <span class="order-item__code-pill">Код: ${escapeHtml(i.id || "")}</span>
+                      <span>${money(i.price)} грн × ${qty}</span>
                     </div>
                   </div>
-                `;
-              })
-              .join("")
+
+                  <div class="order-item__sum">
+                    ${money(sum)} грн.
+                  </div>
+                </div>
+              `;
+            }).join("")
           : `<p class="muted">Немає позицій у цьому замовленні.</p>`;
 
         return `
@@ -265,7 +287,7 @@
     const items = Array.isArray(order?.items) ? order.items : [];
     if (!items.length) return false;
 
-    const cart = typeof getCart === "function"
+    const cart = (typeof getCart === "function")
       ? getCart()
       : JSON.parse(localStorage.getItem("cart") || "[]");
 
@@ -333,7 +355,6 @@
       lastName: lastNameInput?.value.trim() || "",
       phone: phoneInput?.value.trim() || "",
       city: cityInput?.value.trim() || "",
-      
     };
 
     const { error } = await sb.auth.updateUser({ data: { ...updated } });
@@ -357,12 +378,11 @@
     localStorage.removeItem("user");
     localStorage.removeItem("sb_uid");
 
-    location.href = "auth.html";
+    location.replace(pageUrl("auth.html"));
   });
 
   // ---------- REALTIME (status sync) ----------
   function subscribeOrdersRealtime(userId) {
-    // Если админ меняет status в orders — прилетит UPDATE и мы перерисуем список
     rtChannel = sb
       .channel("orders-status-watch")
       .on(
@@ -374,9 +394,9 @@
   }
 
   // ---------- INIT ----------
-  document.addEventListener("DOMContentLoaded", async () => {
+  (async () => {
     const user = await requireUser();
-    if (!user) return;
+    if (!user) return; // уже редиректнули
 
     const md = user.user_metadata || {};
     fillProfile({
@@ -385,12 +405,14 @@
       lastName: md.lastName || "",
       phone: md.phone || "",
       city: md.city || "",
-      
     });
 
     await renderOrdersFromSupabase(user.id);
     subscribeOrdersRealtime(user.id);
-  });
+
+    // на всякий: если всё ок, а класс остался
+    showPage();
+  })();
 
   window.addEventListener("beforeunload", () => {
     try { if (rtChannel) sb.removeChannel(rtChannel); } catch {}

@@ -188,3 +188,6 @@ window.addEventListener('storage', (e) => {
   if (e.key === 'favorites') refreshFavButtons();
   if (e.key === 'cart') updateCartBadge();
 });
+
+// ✅ чтобы карусель могла открыть модалку без костылей
+window.openProductModal = openModal;
