@@ -157,7 +157,7 @@
     const p = getProductFromCard(card);
     if (!p.id) return;
 
-    // если есть глобальная модалка — пусть она ведёт себя как в каталоге
+    // если есть глобальная модалка (как в каталоге) — используем её
     if (typeof window.openProductModal === "function") {
       window.openProductModal(p);
       return;
@@ -189,8 +189,45 @@
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
 
-    // ✅ ФИКС: блокируем фон
+    // блокируем фон (если есть эти функции)
     window.lockBodyScroll?.();
+
+    // ====== FIX: qty +/- В МОДАЛКЕ (на главной products.js не подключен) ======
+    const onModalQty = (e) => {
+      const btn = e.target.closest(".qty__btn");
+      if (!btn) return;
+      if (!modal.contains(btn)) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const input = modal.querySelector("#pmQty");
+      if (!input) return;
+
+      const min = parseInt(input.getAttribute("min") || "1", 10) || 1;
+      let val = parseInt(input.value || String(min), 10);
+      if (!Number.isFinite(val) || val < min) val = min;
+
+      if (btn.dataset.action === "plus") val += 1;
+      if (btn.dataset.action === "minus") val = Math.max(min, val - 1);
+
+      input.value = String(val);
+    };
+
+    const onModalQtyInput = () => {
+      const input = modal.querySelector("#pmQty");
+      if (!input) return;
+
+      const min = parseInt(input.getAttribute("min") || "1", 10) || 1;
+      let val = parseInt(input.value || String(min), 10);
+      if (!Number.isFinite(val) || val < min) val = min;
+
+      input.value = String(val);
+    };
+
+    modal.addEventListener("click", onModalQty);
+    modal.querySelector("#pmQty")?.addEventListener("input", onModalQtyInput);
+    // =======================================================================
 
     const onKey = (e) => { if (e.key === "Escape") close(); };
     const onClick = (e) => {
@@ -202,8 +239,11 @@
       modal.classList.remove("open");
       modal.setAttribute("aria-hidden", "true");
 
-      // ✅ ФИКС: возвращаем фон
       window.unlockBodyScroll?.();
+
+      // снимаем обработчики
+      modal.removeEventListener("click", onModalQty);
+      modal.querySelector("#pmQty")?.removeEventListener("input", onModalQtyInput);
 
       modal.removeEventListener("click", onClick);
       document.removeEventListener("keydown", onKey);

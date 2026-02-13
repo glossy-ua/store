@@ -6,6 +6,15 @@
   // ---------- helpers ----------
   const $ = (sel, root = document) => root.querySelector(sel);
 
+  function esc(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   function moneyToNumber(v) {
     const n = parseFloat(String(v).replace(",", ".").replace(/[^\d.]/g, ""));
     return Number.isFinite(n) ? n : 0;
@@ -87,6 +96,11 @@
     return document.querySelector(`.field-error[data-err="${key}"]`);
   }
 
+  function money2(v) {
+    const n = Number(v) || 0;
+    return n.toFixed(2);
+  }
+
   // ---------- cart safe ----------
   function getCartSafe() {
     if (typeof window.getCart === "function") return window.getCart();
@@ -141,7 +155,6 @@
     const { data, error } = await sb.auth.updateUser({ email });
     if (error) return { changed: false, error: error.message || "Не вдалося зберегти email" };
 
-    // IMPORTANT: Supabase пришлёт confirmation email (часто требует подтверждение)
     return { changed: true, data };
   }
 
@@ -166,16 +179,15 @@
     if (phoneEl && !phoneEl.value) phoneEl.value = md.phone || "";
     if (cityEl && !cityEl.value) cityEl.value = md.city || "";
 
-    // email from user.email
     if (emailEl && !emailEl.value) emailEl.value = (user.email || "");
 
     if (serviceEl && !serviceEl.value && md.delivery_service) serviceEl.value = md.delivery_service;
     if (officeEl && !officeEl.value && md.delivery_office) officeEl.value = md.delivery_office;
 
-    return user; // return user so we can know current email
+    return user;
   }
 
-  // ---------- render summary ----------
+  // ---------- render summary (BEAUTY) ----------
   function renderCheckoutSummary() {
     const list = $("#checkoutList");
     const totalEl = $("#checkoutTotal");
@@ -211,20 +223,27 @@
 
     const total = items.reduce((acc, i) => acc + i.sum, 0);
 
+    // ✅ Рисуем как на скрине: .checkout-row / __img / __info / __title / __meta / __code / __line / __sum
     list.innerHTML = items.map(i => `
-      <article class="checkout-item">
-        <div class="checkout-item__img">
-          <img src="${i.img}" alt="${i.title}">
+      <div class="checkout-row">
+        <div class="checkout-row__img">
+          <img src="${esc(i.img)}" alt="${esc(i.title)}">
         </div>
-        <div class="checkout-item__body">
-          <div class="checkout-item__title">${i.title}</div>
-          <div class="muted">К-сть: ${i.qty}</div>
+
+        <div class="checkout-row__info">
+          <div class="checkout-row__title">${esc(i.title)}</div>
+
+          <div class="checkout-row__meta">
+            <span class="checkout-row__code">Код: ${esc(i.product_id)}</span>
+            <span class="checkout-row__line">${money2(i.price)} грн × ${i.qty}</span>
+          </div>
         </div>
-        <div class="checkout-item__sum"><strong>${i.sum.toFixed(2)} грн.</strong></div>
-      </article>
+
+        <div class="checkout-row__sum">${money2(i.sum)} грн.</div>
+      </div>
     `).join("");
 
-    totalEl.textContent = `${total.toFixed(2)} грн.`;
+    totalEl.textContent = `${money2(total)} грн.`;
 
     return { items, total };
   }
@@ -434,14 +453,11 @@
     }
 
     // --------- AUTO-SAVE EMAIL on blur ----------
-    // Сохраняем только если валидный и отличается от текущего user.email
     let savingEmail = false;
 
     emailEl?.addEventListener("blur", async () => {
-      // сначала валидация
       if (!vEmail(false)) return;
 
-      // не спамим запросами
       if (savingEmail) return;
       savingEmail = true;
 
@@ -452,9 +468,7 @@
         if (res?.error) {
           setError(emailEl, emailErr, res.error);
         } else if (res.changed) {
-          // обновим кэш, чтобы дальше не пытался сохранять то же самое
           state.userEmail = email;
-          // optional: можешь показать подсказку, но ты хотел возле поля — оставим пусто
         }
       } catch (e) {
         setError(emailEl, emailErr, "Не вдалося зберегти email");
@@ -550,9 +564,7 @@
       try {
         await requireSessionOrRedirect();
 
-        // before order: ensure email saved (if changed)
         await validationApi.saveEmailIfChanged();
-
         await syncCheckoutToUserMetadata(receiver);
 
         const orderId = await insertOrderToSupabase({ total, receiver, items });
@@ -580,7 +592,6 @@
     const user = await autofillCheckoutFromSupabase();
     renderCheckoutSummary();
 
-    // state with cached email
     const state = { userEmail: user?.email || "" };
 
     const validationApi = setupValidation(state);

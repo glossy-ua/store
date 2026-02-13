@@ -28,6 +28,7 @@
   const modal = document.getElementById("productModal");
   const admTitle = document.getElementById("admTitle");
   const admPrice = document.getElementById("admPrice");
+  const admStock = document.getElementById("admStock"); // ✅ NEW (optional)
   const admCategory = document.getElementById("admCategory");
   const admDesc = document.getElementById("admDesc");
   const admImg = document.getElementById("admImg");
@@ -52,10 +53,7 @@
   let existingImgUrl = "";
   let ordersLoadedOnce = false;
   let currentTab = "products";
-
   let allOrdersCache = [];
-
-  // categories cache
   let categoriesCache = []; // [{id, slug, title, sort, is_active}]
 
   // ---------- HELPERS ----------
@@ -77,6 +75,11 @@
 
   function safePrice(val) {
     const n = parseFloat(String(val ?? "").replace(",", ".").replace(/[^\d.]/g, ""));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function safeInt(val) {
+    const n = parseInt(String(val ?? "").replace(/[^\d-]/g, ""), 10);
     return Number.isFinite(n) ? n : 0;
   }
 
@@ -192,7 +195,6 @@
   // CATEGORIES
   // =========================
   async function loadCategories() {
-    // грузим только активные, сортируем sort затем title
     const { data, error } = await sb
       .from("categories")
       .select("id, slug, title, sort, is_active")
@@ -202,7 +204,6 @@
     if (error) {
       console.error("loadCategories error:", error);
       categoriesCache = [];
-      // не блокируем админку полностью, но покажем ошибку в модалке при открытии
       return;
     }
 
@@ -237,7 +238,7 @@
     const { data, error } = await sb
       .from("products")
       .select(`
-        id, title, price, img, desc, is_popular, is_active, created_at, updated_at,
+        id, title, price, stock, img, desc, is_popular, is_active, created_at, updated_at,
         category, category_id,
         categories:category_id ( id, slug, title )
       `)
@@ -257,6 +258,9 @@
 
     grid.innerHTML = items.map((p) => {
       const catTitle = p?.categories?.title || p?.category || "";
+      const st = safeInt(p?.stock);
+      const stText = `Stock: ${st}`;
+
       return `
         <article class="product-card">
           <div class="product-card__img">
@@ -264,7 +268,8 @@
           </div>
           <div class="product-card__body">
             <h3>${escHtml(p.title)}</h3>
-            <div>${escHtml(p.price)} грн</div>
+            <div>${money(p.price)} грн</div>
+            <div class="muted" style="margin-top:6px">${escHtml(stText)}</div>
             ${catTitle ? `<div class="muted" style="margin-top:6px">Категорія: ${escHtml(catTitle)}</div>` : ""}
 
             <div class="admin-actions">
@@ -294,6 +299,7 @@
 
     if (admTitle) admTitle.value = product?.title || "";
     if (admPrice) admPrice.value = product?.price ?? "";
+    if (admStock) admStock.value = safeInt(product?.stock ?? 0); // ✅ NEW
     if (admDesc) admDesc.value = product?.desc || "";
     if (admImg) admImg.value = product?.img || "";
     if (admActive) admActive.checked = product?.is_active ?? true;
@@ -311,7 +317,6 @@
       if (target) {
         admCategory.value = target.id;
       } else {
-        // если не нашли — выберем первую доступную
         if (categoriesCache.length) admCategory.value = categoriesCache[0].id;
       }
     }
@@ -423,7 +428,7 @@
     const { data, error } = await sb
       .from("products")
       .select(`
-        id, title, price, img, desc, is_popular, is_active, category, category_id
+        id, title, price, stock, img, desc, is_popular, is_active, category, category_id
       `)
       .eq("id", id)
       .single();
@@ -432,9 +437,6 @@
     openAdminModal(data);
   }
 
-  window.deleteProduct = deleteProduct;
-  window.editProduct = editProduct;
-
   admSave?.addEventListener("click", async () => {
     if (!admTitle || !admPrice || !admCategory || !admDesc || !admImg) return;
 
@@ -442,6 +444,7 @@
 
     const title = admTitle.value.trim();
     const price = safePrice(admPrice.value);
+    const stock = admStock ? Math.max(0, safeInt(admStock.value)) : undefined; // ✅ NEW
     const desc = admDesc.value.trim();
     const categoryId = (admCategory.value || "").trim();
 
@@ -466,7 +469,7 @@
     if (!img) return setErr("Вкажи фото або URL картинки");
 
     const cat = findCategoryById(categoryId);
-    const catSlug = cat?.slug || null; // для legacy поля category (text)
+    const catSlug = cat?.slug || null;
 
     const payload = {
       title,
@@ -474,13 +477,14 @@
       desc,
       img,
       category_id: categoryId,
-      // ✅ временно поддержим старое поле category=text (если оно есть в таблице)
-      // чтобы старые страницы каталога не сломались
       ...(catSlug ? { category: catSlug } : {}),
       is_active: !!admActive?.checked,
       is_popular: !!admPopular?.checked,
       updated_at: new Date().toISOString(),
     };
+
+    // ✅ добавляем stock только если поле есть в UI
+    if (typeof stock === "number") payload.stock = stock;
 
     let res;
     if (editingId) {
@@ -648,10 +652,14 @@
 
       if (error) throw error;
 
-      // обновим кеш + перерисуем по фильтру
       const o = allOrdersCache.find(x => x.id === orderId);
       if (o) o.status = newStatus;
       applyOrdersFilter();
+
+      // ✅ если заказ завершили — обновим товары, чтобы ты видел актуальный stock
+      if (newStatus === "done") {
+        await loadProducts();
+      }
 
     } catch (err) {
       console.error(err);
@@ -691,16 +699,10 @@
     hide(authBox);
     show(appBox);
 
-    // categories first (for select)
     await loadCategories();
-
-    // restore active tab
     setActiveTab(currentTab, { keep: true });
-
-    // products always
     await loadProducts();
 
-    // orders only if tab open (or already loaded)
     if (currentTab === "orders" && !ordersLoadedOnce) {
       ordersLoadedOnce = true;
       await loadOrders();
@@ -708,6 +710,5 @@
   }
 
   sb?.auth?.onAuthStateChange?.(() => { init(); });
-
   init();
 })();

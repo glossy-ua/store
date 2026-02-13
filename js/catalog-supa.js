@@ -15,17 +15,15 @@
     return;
   }
 
-  // ✅ ВСТАВЬ СВОИ ЗНАЧЕНИЯ:
   const SUPABASE_URL = "https://fxaleremdkamkimuyoai.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YWxlcmVtZGthbWtpbXV5b2FpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTM1MTUsImV4cCI6MjA4NTM4OTUxNX0.3oJ0LCLdsD8PnewKyITY_EseY0KK9uyvdNXiqk3fIxE";
 
-  if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes("ВСТАВЬ")) {
+  if (!SUPABASE_ANON_KEY) {
     show("❌ Не вставлен SUPABASE_ANON_KEY в catalog-supa.js");
     console.error("SUPABASE_ANON_KEY не вставлен");
     return;
   }
 
-  // supabase-js v2 даёт глобальный объект `supabase`
   if (!window.supabase?.createClient) {
     show("❌ Supabase SDK не підключився (cdn).");
     console.error("Нет window.supabase.createClient");
@@ -89,14 +87,12 @@
       </article>
     `).join("");
 
-    if (typeof updateFavBadge === "function") updateFavBadge();
-    if (typeof updateCartBadge === "function") updateCartBadge();
+    try { window.updateFavBadge?.(); } catch {}
+    try { window.updateCartBadge?.(); } catch {}
   }
 
   async function load() {
     show("Завантаження...");
-
-    console.log("[catalog-supa] category =", category);
 
     const { data, error } = await sb
       .from("products")
@@ -108,11 +104,9 @@
     if (error) {
       show("❌ Помилка Supabase. Дивись Console.");
       console.error("[catalog-supa] Supabase error:", error);
-      console.log("[catalog-supa] URL:", SUPABASE_URL);
       return;
     }
 
-    console.log("[catalog-supa] loaded:", data);
     render(data || []);
   }
 
