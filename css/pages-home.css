@@ -251,3 +251,51 @@
     border-radius: 22px;                /* если у тебя другая — подгони */
   } 
 }
+
+/* ===== POPULAR arrows: mobile position tweak ===== */
+@media (max-width: 900px) {
+  /* делаем стрелки абсолютными и ставим их внутрь блока, ближе к карточке */
+  .popular {
+    position: relative;
+  }
+
+  .popular__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+  }
+
+  /* ⬅️ подвинул ближе к карточке (было у края) */
+  .popular__nav--prev { left: 10px; }
+  .popular__nav--next { right: 10px; }
+}
+
+/* ===== POPULAR arrows: mobile (NO card stretching) ===== */
+@media (max-width: 900px) {
+  /* стрелки остаются в потоке → ширина карточки не раздувается */
+  .popular{
+    padding: 0 14px;   /* ← отодвинули от краёв экрана */
+    gap: 10px;         /* чуть аккуратнее на мобилке */
+  }
+
+  .popular__nav{
+    position: static;  /* на всякий: отменяем absolute */
+    transform: none;   /* чтобы не уехали */
+    flex: 0 0 40px;    /* фикс ширина как у тебя */
+  }
+
+  /* чтобы viewport не вылезал за padding */
+  .popular__viewport{
+    padding: 12px 0;   /* было 12px со всех сторон — так лучше в связке с padding у .popular */
+  }
+}
+
+/* ===== POPULAR: убрать синий контур на мобилке ===== */
+@media (max-width: 900px) {
+  .popular__track .product-card:hover,
+  .popular__track .product-card:focus-within{
+    outline: none !important;
+    outline-offset: 0 !important;
+  }
+}
