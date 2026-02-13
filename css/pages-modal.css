@@ -8,6 +8,9 @@
   inset: 0;
   z-index: 2000;
   display: none;
+
+  /* ✅ режем scroll chaining на контейнере */
+  overscroll-behavior: none;
 }
 
 .pmodal.open{
@@ -21,6 +24,9 @@
   background: rgba(0,0,0,.35);
   z-index: 1;
   pointer-events: auto;
+
+  /* ✅ чтобы свайпы по overlay не тянули страницу */
+  touch-action: none;
 }
 
 /* диалог поверх overlay */
@@ -29,8 +35,17 @@
   z-index: 2;
 
   width: min(980px, calc(100vw - 40px));
-  max-height: calc(100vh - 40px);
+
+  /* ✅ dvh лучше для мобильных браузеров */
+  max-height: calc(100dvh - 40px);
   overflow: auto;
+
+  /* ✅ iOS smooth scroll внутри */
+  -webkit-overflow-scrolling: touch;
+
+  /* ✅ запрет прокидывания скролла наружу */
+  overscroll-behavior: contain;
+
   margin: 20px auto;
 
   background: #fff;
@@ -39,6 +54,9 @@
   padding: 22px;
 
   pointer-events: auto;
+
+  /* ✅ разрешаем вертикальные свайпы внутри диалога */
+  touch-action: pan-y;
 }
 
 /* закрыть */
@@ -122,6 +140,9 @@
 .pmodal__text{
   line-height: 1.55;
   color:#333;
+
+  /* ✅ на всякий случай: чтобы длинный текст не дергал фон */
+  overscroll-behavior: contain;
 }
 
 /* mobile */
@@ -147,7 +168,7 @@
    (рядом с "В кошик", без красного фона)
    ========================= */
 .pmodal #pmFav{
-  position: static;     /* важно: не absolute */
+  position: static;
   opacity: 1;
   transform: none;
 
@@ -157,8 +178,8 @@
   border: 0;
   cursor: pointer;
 
-  background: #f2f2f2;  /* фон всегда серый */
-  color: #111;          /* сердце обычное */
+  background: #f2f2f2;
+  color: #111;
   font-size: 20px;
 
   display: grid;
@@ -172,16 +193,13 @@
   transform: translateY(-1px);
 }
 
-/* активное состояние: красим ТОЛЬКО сердечко */
 .pmodal #pmFav.active{
-  background: #f2f2f2;  /* фон НЕ красный */
-  color: #ff4d6d;       /* красим символ сердца */
+  background: #f2f2f2;
+  color: #ff4d6d;
 }
 
 /* =========================
    SUCCESS ANIMATION ✓
-   (универсальная: работает для cart-btn / pmAddToCart / add-to-cart)
-   Нужно: btn.classList.add('btn-added'); btn.dataset.added='1';
    ========================= */
 .btn-added{
   position: relative;
@@ -227,25 +245,22 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: nowrap;        /* не переносить на новую строку */
+    flex-wrap: nowrap;
   }
 
-  /* qty не должен растягиваться */
   .pmodal__actions .qty{
     flex: 0 0 auto;
   }
 
-  /* кнопка "В кошик" занимает свободное место */
   .pmodal__actions .btn-primary,
   .pmodal__actions #pmAddToCart{
     flex: 1 1 auto;
-    min-width: 0;             /* важно, чтобы текст не ломал layout */
+    min-width: 0;
     white-space: nowrap;
     padding-left: 14px;
     padding-right: 14px;
   }
 
-  /* сердечко фиксированной ширины, всегда справа */
   .pmodal__actions .fav-btn,
   .pmodal__actions .pm-fav{
     flex: 0 0 44px;
@@ -253,6 +268,6 @@
     height: 44px;
     display: grid;
     place-items: center;
-    margin-left: auto;        /* прижимаем к правому краю */
+    margin-left: auto;
   }
 }
