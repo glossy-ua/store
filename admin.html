@@ -92,11 +92,26 @@
           <label class="muted">Назва</label>
           <input id="admTitle" class="qty__input" type="text" placeholder="Напр. Мікрофібра для сушки" style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-            <div>
-              <label class="muted">Ціна (грн)</label>
-              <input id="admPrice" class="qty__input" type="number" min="0" step="0.01" placeholder="250" style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
-            </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
+  <div>
+    <label class="muted">Ціна (грн)</label>
+    <input id="admPrice" class="qty__input" type="number" min="0" step="0.01" placeholder="250"
+      style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
+  </div>
+
+  <div class="adm-field">
+    <label class="adm-label">Категорія</label>
+    <select id="admCategory" class="adm-select"></select>
+  </div>
+
+  <div>
+  <label class="muted">Залишок (шт)</label>
+  <input id="admStock" class="qty__input" type="number" min="0" step="1" placeholder="0"
+    style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
+</div>
+
+</div>
+
 
             <div class="adm-field">
   <label class="adm-label">Категорія</label>
