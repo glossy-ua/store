@@ -227,3 +227,39 @@
 .admin-actions button[data-del]:hover{
   background: #fee2e2;
 }
+
+/* ===== Admin product cards: actions pinned to bottom ===== */
+
+#productsGrid .product-card{
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#productsGrid .product-card__img{
+  flex: 0 0 auto;
+}
+
+/* тело карточки растягиваем по высоте */
+#productsGrid .product-card__body{
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  padding-bottom: 14px;
+}
+
+/* кнопки — всегда внизу */
+#productsGrid .admin-actions{
+  margin-top: auto;               /* 👈 ключ: прижимает вниз */
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,.06); /* легкая линия отделения */
+}
+
+/* если хочешь по центру снизу — включи это вместо justify-content:flex-start */
+#productsGrid .admin-actions{
+  justify-content: center;        /* или flex-start */
+}

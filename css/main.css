@@ -188,3 +188,36 @@ footer .column a[href^="tel"]:hover{
   margin-bottom: 6px;
 }
 
+/* ===== STOCK BADGE ===== */
+.product-card__img { position: relative; }
+
+.stock-badge{
+  position:absolute;
+  left:10px;
+  top:10px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+  background:#fff;
+  border:1px solid rgba(0,0,0,.08);
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+}
+
+.stock-badge.in{
+  color:#0f7a2a;
+}
+
+.stock-badge.out{
+  color:#b42318;
+  background:#fff5f5;
+  border-color:rgba(180,35,24,.18);
+}
+
+.product-card.is-out{
+  opacity:.75;
+}
+.product-card.is-out .cart-btn{
+  cursor:not-allowed;
+  opacity:.6;
+}
