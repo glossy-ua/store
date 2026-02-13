@@ -26,17 +26,22 @@
     return n.toFixed(2);
   }
 
-  // ✅ такие же ключи/URL как в catalog-supa.js
-  const SUPABASE_URL = "https://fxaleremdkamkimuyoai.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YWxlcmVtZGthbWtpbXV5b2FpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTM1MTUsImV4cCI6MjA4NTM4OTUxNX0.3oJ0LCLdsD8PnewKyITY_EseY0KK9uyvdNXiqk3fIxE";
-
-  if (!window.supabase?.createClient) {
-    show("❌ Supabase SDK не підключився (cdn).");
-    console.error("Нет window.supabase.createClient");
+  // ✅ Берём готовый клиент, чтобы не плодить ключи
+  const sb = window.sb;
+  if (!sb) {
+    show("❌ Supabase клієнт не ініціалізований (window.sb). Перевір supabaseClient.js");
+    console.error("[search-supa] window.sb not found");
     return;
   }
 
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  function escapeForOr(term) {
+    // В .or строке запятая — разделитель условий, скобки тоже могут ломать
+    return String(term)
+      .replace(/\\/g, "\\\\")
+      .replace(/,/g, "\\,")
+      .replace(/\(/g, "\\(")
+      .replace(/\)/g, "\\)");
+  }
 
   function render(items) {
     if (!items.length) {
@@ -82,8 +87,8 @@
       </article>
     `).join("");
 
-    if (typeof updateFavBadge === "function") updateFavBadge();
-    if (typeof updateCartBadge === "function") updateCartBadge();
+    try { window.updateFavBadge?.(); } catch {}
+    try { window.updateCartBadge?.(); } catch {}
   }
 
   async function load() {
@@ -96,15 +101,16 @@
     show("Завантаження...");
     if (meta) meta.innerHTML = `Запит: <b>${esc(qRaw)}</b>`;
 
-    // ВАЖНО: экранируем % и , для .or строки, чтобы не сломать синтаксис
-    const q = qRaw.replace(/[%]/g, "\\%").replace(/,/g, "\\,");
+    const q = escapeForOr(qRaw);
 
+    // ✅ правильный синтаксис для PostgREST: ilike.*term*
     const { data, error } = await sb
       .from("products")
-      .select("id,title,price,img,desc,is_active,created_at")
+      .select("id,title,price,img,desc,created_at")
       .eq("is_active", true)
-      .or(`title.ilike.%${q}%,desc.ilike.%${q}%`)
-      .order("created_at", { ascending: false });
+      .or(`title.ilike.*${q}*,desc.ilike.*${q}*`)
+      .order("created_at", { ascending: false })
+      .limit(60);
 
     if (error) {
       show("❌ Помилка Supabase. Дивись Console.");

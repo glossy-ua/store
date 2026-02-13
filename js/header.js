@@ -7,7 +7,6 @@ function getUserSafe() {
 
 function pageUrl(name){
   const p = location.pathname;
-  // если мы внутри /catalog/ — поднимаемся на уровень выше
   if (p.includes('/catalog/')) return `../${name}`;
   return name;
 }
@@ -69,13 +68,14 @@ function initSearch(formId, inputId, boxId){
     if (q) window.location.href = `${pageUrl('search.html')}?q=${encodeURIComponent(q)}`;
   });
 
-  // автоподстановка q в инпут
   const params = new URLSearchParams(window.location.search);
   const qParam = params.get('q');
   if (qParam) searchInput.value = qParam;
 
-  const SUPABASE_URL = "https://fxaleremdkamkimuyoai.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YWxlcmVtZGthbWtpbXV5b2FpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MTM1MTUsImV4cCI6MjA4NTM4OTUxNX0.3oJ0LCLdsD8PnewKyITY_EseY0KK9uyvdNXiqk3fIxE";
+  const sb = window.sb;
+  if (!sb) {
+    console.warn("[header] window.sb not found, suggest disabled");
+  }
 
   let suggestTimer = null;
   let activeIndex = -1;
@@ -116,27 +116,33 @@ function initSearch(formId, inputId, boxId){
     suggestBox.hidden = false;
   }
 
+  function escapeForOr(term) {
+    return String(term)
+      .replace(/\\/g, "\\\\")
+      .replace(/,/g, "\\,")
+      .replace(/\(/g, "\\(")
+      .replace(/\)/g, "\\)");
+  }
+
   async function fetchSuggest(q){
+    if (!sb) return [];
     if (!q || q.length < 2) return [];
-    const safe = q.replace(/%/g, "\\%").replace(/,/g, "\\,");
 
-    const url =
-      `${SUPABASE_URL}/rest/v1/products` +
-      `?select=id,title,price,img,created_at` +
-      `&is_active=eq.true` +
-      `&or=(title.ilike.*${encodeURIComponent(safe)}*,desc.ilike.*${encodeURIComponent(safe)}*)` +
-      `&order=created_at.desc.nullslast` +
-      `&limit=6`;
+    const safe = escapeForOr(q);
 
-    const res = await fetch(url, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      }
-    });
+    const { data, error } = await sb
+      .from("products")
+      .select("id,title,price,img,created_at")
+      .eq("is_active", true)
+      .or(`title.ilike.*${safe}*,desc.ilike.*${safe}*`)
+      .order("created_at", { ascending: false })
+      .limit(6);
 
-    if (!res.ok) return [];
-    return await res.json();
+    if (error) {
+      console.warn("[header] suggest error:", error);
+      return [];
+    }
+    return data || [];
   }
 
   function setActive(idx){
@@ -209,8 +215,8 @@ function initSearch(formId, inputId, boxId){
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (typeof updateFavBadge === 'function') updateFavBadge();
-  if (typeof updateCartBadge === 'function') updateCartBadge();
+  try { window.updateFavBadge?.(); } catch {}
+  try { window.updateCartBadge?.(); } catch {}
 
   updateAccountLinks();
   initMobileMenu();
@@ -220,13 +226,11 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('storage', (e) => {
   const key = e.key || '';
 
-  // ✅ ключи теперь favorites:UID / cart:UID
   if (key.startsWith('favorites:') && typeof updateFavBadge === 'function') updateFavBadge();
   if (key.startsWith('cart:') && typeof updateCartBadge === 'function') updateCartBadge();
 
   if (key === 'user') updateAccountLinks();
 
-  // если в другой вкладке вошли/вышли
   if (key === 'sb_uid') {
     if (typeof updateFavBadge === 'function') updateFavBadge();
     if (typeof updateCartBadge === 'function') updateCartBadge();
@@ -250,7 +254,6 @@ function markActiveMenuLinks(){
     li.classList.toggle('active', href === path);
   });
 }
-
 document.addEventListener('DOMContentLoaded', markActiveMenuLinks);
 
 /* ===== Auto-hide search on scroll (mobile) — smooth (no jump) ===== */
@@ -264,8 +267,8 @@ document.addEventListener('DOMContentLoaded', markActiveMenuLinks);
   let ticking = false;
   let hidden = false;
 
-  let H_SHOWN = 0;  // высота шапки с поиском
-  let H_HIDDEN = 0; // высота шапки без поиска
+  let H_SHOWN = 0;
+  let H_HIDDEN = 0;
 
   function measureHeights(){
     if (!mq.matches) {
@@ -335,3 +338,13 @@ document.addEventListener('DOMContentLoaded', markActiveMenuLinks);
     else mq.addListener(onModeChange);
   });
 })();
+
+suggestBox.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  const item = e.target.closest('.search-suggest__item');
+  if (!item) return;
+  const i = Number(item.dataset.i);
+  const p = lastItems[i];
+  if (!p) return;
+  window.location.href = `${pageUrl('search.html')}?q=${encodeURIComponent(p.title)}`;
+});
