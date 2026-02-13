@@ -35,7 +35,6 @@ function openModal(product) {
   if (pmTitle) pmTitle.textContent = product.title || "";
   if (pmCode) pmCode.textContent = product.id ? `Код: ${product.id}` : "";
 
-  // цена: если уже строка "250.00" — покажем красиво
   if (pmPrice) {
     const n = (typeof formatPriceUAH === "function")
       ? formatPriceUAH(product.price)
@@ -43,7 +42,6 @@ function openModal(product) {
     pmPrice.textContent = n ? `${n.toFixed(2)} грн.` : "";
   }
 
-  // desc может быть HTML — покажем корректно
   if (pmDesc) {
     const hasTags = /<\/?[a-z][\s\S]*>/i.test(product.desc || "");
     pmDesc[hasTags ? "innerHTML" : "textContent"] = product.desc || "Опис буде додано пізніше 🙂";
@@ -58,14 +56,21 @@ function openModal(product) {
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
-  document.body.style.overflow = "hidden";
+
+  // ✅ ФИКС: блокируем фон
+  if (typeof window.lockBodyScroll === "function") window.lockBodyScroll();
+  else document.body.style.overflow = "hidden";
 }
 
 function closeModal() {
   if (!modal) return;
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
+
+  // ✅ ФИКС: возвращаем фон
+  if (typeof window.unlockBodyScroll === "function") window.unlockBodyScroll();
+  else document.body.style.overflow = "";
+
   currentProduct = null;
 }
 
@@ -134,7 +139,6 @@ function renderCart() {
 
 // ===== Click handlers =====
 document.addEventListener("click", (e) => {
-  // qty +/- and remove
   const plusBtn = e.target.closest(".plus");
   const minusBtn = e.target.closest(".minus");
   const removeBtn = e.target.closest(".cart-item__remove");
@@ -146,7 +150,6 @@ document.addEventListener("click", (e) => {
     const id = String(card.dataset.id || "");
     let cart = (typeof getCart === "function") ? getCart() : [];
 
-    // ✅ сравнение через normId (если есть)
     const same = (a, b) => (typeof normId === "function")
       ? normId(a) === normId(b)
       : String(a) === String(b);
@@ -163,7 +166,6 @@ document.addEventListener("click", (e) => {
     return;
   }
 
-  // open modal on cart-item click
   const cartItem = e.target.closest(".cart-item");
   if (cartItem) {
     if (e.target.closest(".cart-qty-btn, .cart-item__remove, input, button")) return;
@@ -180,12 +182,10 @@ document.addEventListener("click", (e) => {
     return;
   }
 
-  // close modal overlay/x
   if (modal?.classList.contains("open") && (e.target?.dataset?.close === "1" || e.target?.closest?.("[data-close='1']"))) {
     closeModal();
   }
 
-  // запрет перехода на checkout если пусто
   const checkoutLink = e.target.closest('.cart-actions a[href="checkout.html"]');
   if (checkoutLink) {
     const cart = (typeof getCart === "function") ? getCart() : [];

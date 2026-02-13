@@ -235,14 +235,90 @@ function formatPriceUAH(value) {
 
 window.formatPriceUAH = formatPriceUAH;
 
-// ===== expose =====
-window.mergeGuestToUser = mergeGuestToUser;
-window.normId = normId;
-window.isFav = isFav;
-window.toggleFav = toggleFav;
-window.addToCart = addToCart;
-window.updateFavBadge = updateFavBadge;
-window.updateCartBadge = updateCartBadge;
-window.getCart = getCart;
-window.getFavorites = getFavorites;
-window.animateAdded = animateAdded;
+
+// ===== scroll lock for modals (no layout shift + header safe) =====
+(function () {
+  let locked = false;
+  let savedY = 0;
+
+  const prev = {
+    body: {
+      position: "",
+      top: "",
+      left: "",
+      right: "",
+      width: "",
+      paddingRight: "",
+    },
+    header: {
+      paddingRight: "",
+    }
+  };
+
+  function getScrollbarWidth() {
+    return Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+  }
+
+  function lockBodyScroll() {
+    if (locked) return;
+    locked = true;
+
+    savedY = window.scrollY || document.documentElement.scrollTop || 0;
+
+    const header = document.querySelector(".site-header");
+    const sbw = getScrollbarWidth();
+
+    // сохраняем текущие инлайны
+    prev.body.paddingRight = document.body.style.paddingRight;
+    prev.body.position = document.body.style.position;
+    prev.body.top = document.body.style.top;
+    prev.body.left = document.body.style.left;
+    prev.body.right = document.body.style.right;
+    prev.body.width = document.body.style.width;
+
+    if (header) prev.header.paddingRight = header.style.paddingRight;
+
+    // 1) компенсация скроллбара (body + header)
+    if (sbw > 0) {
+      const bodyPR = parseFloat(getComputedStyle(document.body).paddingRight) || 0;
+      document.body.style.paddingRight = (bodyPR + sbw) + "px";
+
+      if (header) {
+        const headerPR = parseFloat(getComputedStyle(header).paddingRight) || 0;
+        header.style.paddingRight = (headerPR + sbw) + "px";
+      }
+    }
+
+    // 2) фиксируем body
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${savedY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+
+  function unlockBodyScroll() {
+    if (!locked) return;
+    locked = false;
+
+    const header = document.querySelector(".site-header");
+
+    // возвращаем body
+    document.body.style.position = prev.body.position;
+    document.body.style.top = prev.body.top;
+    document.body.style.left = prev.body.left;
+    document.body.style.right = prev.body.right;
+    document.body.style.width = prev.body.width;
+    document.body.style.paddingRight = prev.body.paddingRight;
+
+    // возвращаем header
+    if (header) header.style.paddingRight = prev.header.paddingRight;
+
+    requestAnimationFrame(() => {
+      window.scrollTo(0, savedY);
+    });
+  }
+
+  window.lockBodyScroll = lockBodyScroll;
+  window.unlockBodyScroll = unlockBodyScroll;
+})();

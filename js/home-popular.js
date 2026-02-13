@@ -182,14 +182,15 @@
     if (pmDesc) pmDesc.textContent = p.desc || "Опис буде додано пізніше 🙂";
     if (pmQty) pmQty.value = "1";
 
-    // ✅ важное: сразу выставили правильное сердце в модалке
     if (pmFav && typeof window.isFav === "function") {
       setFavBtnState(pmFav, window.isFav(p.id));
     }
 
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+
+    // ✅ ФИКС: блокируем фон
+    window.lockBodyScroll?.();
 
     const onKey = (e) => { if (e.key === "Escape") close(); };
     const onClick = (e) => {
@@ -200,7 +201,10 @@
     const close = () => {
       modal.classList.remove("open");
       modal.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
+
+      // ✅ ФИКС: возвращаем фон
+      window.unlockBodyScroll?.();
+
       modal.removeEventListener("click", onClick);
       document.removeEventListener("keydown", onKey);
     };
@@ -208,7 +212,6 @@
     modal.addEventListener("click", onClick);
     document.addEventListener("keydown", onKey);
 
-    // ✅ кнопка "в корзину" из модалки
     if (pmAdd) {
       pmAdd.onclick = () => {
         const q = Math.max(1, parseInt(pmQty?.value || "1", 10) || 1);
@@ -218,7 +221,6 @@
       };
     }
 
-    // ✅ ФИКС: избранное в модалке (после клика обновляем и модалку, и карточки)
     if (pmFav) {
       pmFav.onclick = (ev) => {
         ev.preventDefault();
@@ -319,7 +321,6 @@
     const card = t.closest?.(".product-card");
     if (!card) return;
 
-    // qty
     if (t.matches?.(".qty__btn")) {
       e.preventDefault();
       e.stopPropagation();
@@ -332,7 +333,6 @@
       return;
     }
 
-    // fav on card
     if (t.closest?.(".fav-btn")) {
       e.preventDefault();
       e.stopPropagation();
@@ -343,7 +343,6 @@
       return;
     }
 
-    // cart
     if (t.closest?.(".cart-btn")) {
       e.preventDefault();
       e.stopPropagation();
@@ -360,7 +359,6 @@
       return;
     }
 
-    // open modal
     if (
       t.closest?.(".product-card__img") ||
       t.closest?.(".product-card__title") ||
