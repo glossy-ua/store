@@ -7,8 +7,7 @@
 
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/pages-products.css">
-  <link rel="stylesheet" href="css/pages-modal.css"><!-- если у тебя есть -->
-  
+  <link rel="stylesheet" href="css/pages-modal.css">
 </head>
 
 <body>
@@ -28,14 +27,13 @@
           </ul>
         </nav>
 
-       <form id="searchForm" class="header-search" autocomplete="off">
-  <input type="text" id="searchInput" placeholder="Пошук..." autocomplete="off">
-  <div id="searchSuggest" class="search-suggest" hidden></div>
-</form>
+        <form id="searchForm" class="header-search" autocomplete="off">
+          <input type="text" id="searchInput" placeholder="Пошук..." autocomplete="off">
+          <div id="searchSuggest" class="search-suggest" hidden></div>
+        </form>
 
-
-         <div class="header-actions">
-          <a id="accountLink" class="icon-link" href="auth.html" title="Особистий кабінет">👤</a> 
+        <div class="header-actions">
+          <a id="accountLink" class="icon-link" href="auth.html" title="Особистий кабінет">👤</a>
           <a class="icon-link" href="favorites.html" title="Закладки">
             ❤ <span class="badge">0</span></a>
           <a class="icon-link" href="cart.html" title="Кошик">
@@ -43,30 +41,27 @@
           <button id="burgerBtn" class="burger" type="button" aria-label="Меню">☰</button>
         </div>
       </div>
-      
-
     </header>
-<!-- MOBILE MENU DRAWER -->
-<div id="mmenu" class="mmenu" aria-hidden="true">
-  <div class="mmenu__overlay" data-mclose="1"></div>
 
-  <div class="mmenu__panel" role="dialog" aria-modal="true" aria-label="Меню">
-    <div class="mmenu__top">
-      <div style="font-weight:800; text-transform:uppercase;">Меню</div>
-      <button class="mmenu__close" type="button" data-mclose="1">✕</button>
+    <!-- MOBILE MENU DRAWER -->
+    <div id="mmenu" class="mmenu" aria-hidden="true">
+      <div class="mmenu__overlay" data-mclose="1"></div>
+
+      <div class="mmenu__panel" role="dialog" aria-modal="true" aria-label="Меню">
+        <div class="mmenu__top">
+          <div style="font-weight:800; text-transform:uppercase;">Меню</div>
+          <button class="mmenu__close" type="button" data-mclose="1">✕</button>
+        </div>
+
+        <nav class="mmenu__nav">
+          <a class="mmenu__link" href="index.html">Головна</a>
+          <a class="mmenu__link" href="catalog.html">Каталог</a>
+          <a class="mmenu__link" href="pay-delivery.html">Оплата та доставка</a>
+          <a class="mmenu__link" href="exchange-return.html">Обмін та повернення</a>
+          <a class="mmenu__link" href="contacts.html">Контакти</a>
+        </nav>
+      </div>
     </div>
-
-    <nav class="mmenu__nav">
-      <a class="mmenu__link" href="index.html">Головна</a>
-      <a class="mmenu__link" href="catalog.html">Каталог</a>
-      <a class="mmenu__link" href="pay-delivery.html">Оплата та доставка</a>
-      <a class="mmenu__link" href="exchange-return.html">Обмін та повернення</a>
-      <a class="mmenu__link" href="contacts.html">Контакти</a>
-    </nav>
-  </div>
-</div>
-    <!-- (опционально) ВСТАВЬ СВОЙ HEADER как в index.html, чтобы поиск был везде -->
-    <!-- header ... -->
 
     <main class="container page">
       <h1>Результати пошуку</h1>
@@ -74,53 +69,87 @@
       <div id="productsGrid" class="products-grid"></div>
     </main>
 
-    <!-- (опционально) footer ... -->
-     <!-- PRODUCT MODAL -->
-<div id="productModal" class="pmodal" aria-hidden="true">
-  <div class="pmodal__overlay" data-close="1"></div>
+    <!-- PRODUCT MODAL -->
+    <div id="productModal" class="pmodal" aria-hidden="true">
+      <div class="pmodal__overlay" data-close="1"></div>
 
-  <div class="pmodal__dialog" role="dialog" aria-modal="true" aria-label="Товар">
-    <button class="pmodal__close" type="button" data-close="1">✕</button>
+      <div class="pmodal__dialog" role="dialog" aria-modal="true" aria-label="Товар">
+        <button class="pmodal__close" type="button" data-close="1">✕</button>
 
-    <div class="pmodal__top">
-      <div class="pmodal__img">
-        <img id="pmImg" src="" alt="">
-      </div>
-
-      <div class="pmodal__info">
-        <h2 id="pmTitle" class="pmodal__title"></h2>
-        <div class="pmodal__meta muted" id="pmCode"></div>
-
-        <div class="pmodal__priceRow">
-          <div class="pmodal__price" id="pmPrice"></div>
-        </div>
-
-        <div class="pmodal__actions">
-          <div class="qty">
-            <button class="qty__btn" data-action="minus" type="button">—</button>
-            <input id="pmQty" class="qty__input" type="number" min="1" value="1">
-            <button class="qty__btn" data-action="plus" type="button">+</button>
+        <div class="pmodal__top">
+          <div class="pmodal__img">
+            <img id="pmImg" src="" alt="">
           </div>
 
-          <button id="pmAddToCart" class="btn-primary" type="button">В кошик</button>
-          <button id="pmFav" class="fav-btn" type="button" title="В обране">♡</button>
+          <div class="pmodal__info">
+            <h2 id="pmTitle" class="pmodal__title"></h2>
+            <div class="pmodal__meta muted" id="pmCode"></div>
+
+            <div class="pmodal__priceRow">
+              <div class="pmodal__price" id="pmPrice"></div>
+            </div>
+
+            <div class="pmodal__actions">
+              <div class="qty">
+                <button class="qty__btn" data-action="minus" type="button">—</button>
+                <input id="pmQty" class="qty__input" type="number" min="1" value="1">
+                <button class="qty__btn" data-action="plus" type="button">+</button>
+              </div>
+
+              <button id="pmAddToCart" class="btn-primary" type="button">В кошик</button>
+              <button id="pmFav" class="fav-btn" type="button" title="В обране">♡</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pmodal__about">
+          <h3>Все про товар</h3>
+          <div id="pmDesc" class="pmodal__text"></div>
         </div>
       </div>
     </div>
 
-    <div class="pmodal__about">
-      <h3>Все про товар</h3>
-      <div id="pmDesc" class="pmodal__text"></div>
-    </div>
-  </div>
-</div>
-
-
   </div>
 
+  <footer>
+      <div class="blocks container">
+        <div class="column">
+          <span class="logo">Glossy</span>
+          <p>Understand & Care</p>
+        </div>
+
+        <div class="column">
+          <h4>Популярні категорії</h4>
+          <ul>
+            <li><a href="catalog/microfiber.html">Мікрофібри</a></li>
+            <li><a href="catalog/wheels.html">Колеса</a></li>
+            <li><a href="catalog/other.html">Інше для мийки</a></li>
+            <li><a href="catalog/interior.html">Для салону</a></li>
+          </ul>
+        </div>
+
+        <div class="column">
+          <h4>Контакти</h4>
+          <ul>
+            <li>Пн-Пт 09:00 - 18:00</li>
+            <li>Сб-Нд 10:00 - 16:00</li>
+          </ul>
+
+          <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
+        </div>
+      </div>
+
+      <hr>
+      <p>Glossy © 2026</p>
+    </footer>
+    
   <script src="js/store.js"></script>
-  <script src="js/header.js"></script>
+
+  <!-- Supabase SDK должен быть ДО supabaseClient.js -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+
+  <script src="js/header.js"></script>
   <script src="js/search-supa.js"></script>
   <script src="js/products.js"></script>
 </body>
