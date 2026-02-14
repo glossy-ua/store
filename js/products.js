@@ -10,7 +10,8 @@ function getProductFromCard(card) {
     title: card.dataset.title || card.querySelector('.product-card__title')?.innerText?.trim() || '',
     price: card.dataset.price || card.querySelector('.product-card__price')?.innerText?.trim() || '',
     img: card.dataset.img || card.querySelector('.product-card__img img')?.getAttribute('src') || '',
-    desc: card.dataset.desc || ''
+    desc: card.dataset.desc || '',
+    imgs: String(card.dataset.imgs || '')
   };
 }
 
@@ -34,6 +35,11 @@ const pmAddToCart = $('#pmAddToCart');
 let currentProduct = null;
 
 function openModal(product) {
+  // ✅ if new gallery modal exists, use it
+  if (typeof window.openProductModal === "function" && window.openProductModal !== openModal) {
+    window.openProductModal(product);
+    return;
+  }
   if (!modal) return;
   currentProduct = product;
 
@@ -159,6 +165,7 @@ document.addEventListener('keydown', (e) => {
 
 // ===== modal fav =====
 document.addEventListener('click', (e) => {
+  if (document.getElementById('pmThumbs')) return; // new gallery modal handles this
   if (!e.target.closest('#pmFav')) return;
   if (!currentProduct) return;
 
@@ -169,6 +176,7 @@ document.addEventListener('click', (e) => {
 
 // ===== modal add to cart =====
 document.addEventListener('click', (e) => {
+  if (document.getElementById('pmThumbs')) return; // new gallery modal handles this
   if (!e.target.closest('#pmAddToCart')) return;
   if (!currentProduct) return;
 
@@ -188,6 +196,3 @@ window.addEventListener('storage', (e) => {
   if (e.key === 'favorites') refreshFavButtons();
   if (e.key === 'cart') updateCartBadge();
 });
-
-// ✅ чтобы карусель могла открыть модалку без костылей
-window.openProductModal = openModal;

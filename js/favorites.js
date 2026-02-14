@@ -34,7 +34,8 @@ function getProductFromFavCard(card) {
     title: card.dataset.title || '',
     price: card.dataset.price || '',
     img: card.dataset.img || '',
-    desc: card.dataset.desc || ''
+    desc: card.dataset.desc || '',
+    imgs: String(card.dataset.imgs || '')
   };
 }
 
@@ -63,7 +64,8 @@ function renderFavorites() {
       data-img="${escapeAttr(normalizeImg(p.img))}"
       data-desc="${escapeAttr(p.desc)}">
 
-      <button class="fav-btn active" type="button" title="Убрать из избранного">♥️</button>
+      
+      data-imgs="${escapeAttr(JSON.stringify(p.imgs || []))}"><button class="fav-btn active" type="button" title="Убрать из избранного">♥️</button>
 
       <div class="product-card__img">
         <img src="${escapeAttr(normalizeImg(p.img))}" alt="${escapeAttr(p.title)}">
@@ -106,6 +108,11 @@ const pmAddToCart = $('#pmAddToCart');
 let currentProduct = null;
 
 function openModal(product) {
+  // ✅ if new gallery modal exists, use it
+  if (typeof window.openProductModal === "function" && window.openProductModal !== openModal) {
+    window.openProductModal(product);
+    return;
+  }
   if (!modal) return;
   currentProduct = product;
 
@@ -233,6 +240,7 @@ document.addEventListener('click', (e) => {
 
 // modal fav
 document.addEventListener('click', (e) => {
+  if (document.getElementById('pmThumbs')) return; // new gallery modal handles this
   if (!e.target.closest('#pmFav')) return;
   if (!currentProduct) return;
 
@@ -245,6 +253,7 @@ document.addEventListener('click', (e) => {
 
 // modal add to cart
 document.addEventListener('click', (e) => {
+  if (document.getElementById('pmThumbs')) return; // new gallery modal handles this
   if (!e.target.closest('#pmAddToCart')) return;
   if (!currentProduct) return;
 

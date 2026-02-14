@@ -59,6 +59,7 @@
         data-price="${esc(p.price)}"
         data-img="${esc(p.img)}"
         data-desc="${esc(p.desc || '')}"
+        data-imgs="${esc(JSON.stringify(p.imgs || []))}"
       >
         <button class="fav-btn" type="button" title="В обране">♡</button>
 
@@ -96,7 +97,7 @@
 
     const { data, error } = await sb
       .from("products")
-      .select("id,title,price,img,desc,category,is_active,created_at")
+      .select("id,title,price,img,imgs,desc,category,is_active,created_at")
       .eq("is_active", true)
       .eq("category", category)
       .order("created_at", { ascending: false });
