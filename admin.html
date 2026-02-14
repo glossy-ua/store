@@ -4,10 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — Glossy</title>
+
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/pages-products.css">
   <link rel="stylesheet" href="css/pages-modal.css">
   <link rel="stylesheet" href="css/pages-admin.css">
+  <link rel="stylesheet" href="css/pages-admin-orders.css">
 </head>
 
 <body>
@@ -25,15 +27,16 @@
   <main class="container page">
     <h1>Адмін-панель</h1>
 
-    <!-- Auth (hidden by default) -->
+    <!-- AUTH -->
     <div id="adminAuth" hidden>
       <h3>Вхід</h3>
-      <input id="email" placeholder="Email">
-      <input id="password" type="password" placeholder="Пароль">
+      <input id="email" placeholder="Email" autocomplete="username">
+      <input id="password" type="password" placeholder="Пароль" autocomplete="current-password">
       <button id="loginBtn" class="btn" type="button">Увійти</button>
+      <p class="muted" style="margin-top:10px">Доступ тільки для admin_users</p>
     </div>
 
-    <!-- App (hidden by default) -->
+    <!-- APP -->
     <div id="adminApp" hidden>
       <div class="admin-tabs">
         <button id="tabProducts" class="btn btn-light is-active" type="button">Товари</button>
@@ -42,7 +45,88 @@
 
       <!-- PRODUCTS -->
       <section id="productsSection">
-        <button id="addProductBtn" class="btn-primary" type="button">➕ Додати товар</button>
+        <div class="adm-filters">
+          <div class="adm-field">
+            <label class="adm-label">Пошук</label>
+            <input id="prodSearch" class="adm-input" type="text" placeholder="Назва або код…">
+          </div>
+
+          <div class="adm-field">
+            <label class="adm-label">Категорія</label>
+            <select id="prodCategoryFilter" class="adm-select">
+              <option value="all">Всі</option>
+            </select>
+          </div>
+
+          <div class="adm-field">
+            <label class="adm-label">Активність</label>
+            <select id="prodActiveFilter" class="adm-select">
+              <option value="all">Всі</option>
+              <option value="active">Тільки активні</option>
+              <option value="inactive">Тільки неактивні</option>
+            </select>
+          </div>
+
+          <div class="adm-field">
+            <label class="adm-label">Популярні</label>
+            <select id="prodPopularFilter" class="adm-select">
+              <option value="all">Всі</option>
+              <option value="popular">Тільки popular</option>
+              <option value="not_popular">Без popular</option>
+            </select>
+          </div>
+
+          <div class="adm-field adm-field--row">
+            <label class="adm-label">Low stock</label>
+            <div class="adm-row">
+              <label class="adm-check">
+                <input id="prodLowStock" type="checkbox">
+                <span>Показати</span>
+              </label>
+              <input id="prodLowStockN" class="adm-input adm-input--sm" type="number" min="0" step="1" value="3" title="Поріг (<=)">
+            </div>
+          </div>
+
+          <div class="adm-field">
+            <label class="adm-label">Сортування</label>
+            <select id="prodSort" class="adm-select">
+              <option value="new">Спочатку нові</option>
+              <option value="old">Спочатку старі</option>
+              <option value="price_asc">Ціна ↑</option>
+              <option value="price_desc">Ціна ↓</option>
+              <option value="stock_asc">Stock ↑</option>
+              <option value="stock_desc">Stock ↓</option>
+              <option value="title_asc">Назва A→Я</option>
+              <option value="title_desc">Назва Я→A</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="adm-toolbar" id="prodToolbar" hidden>
+          <label class="adm-check">
+            <input id="prodSelectAll" type="checkbox">
+            <span><strong id="prodSelectedCount">0</strong> вибрано</span>
+          </label>
+
+          <div class="adm-toolbar__actions">
+            <button id="bulkActivate" class="btn" type="button">Active</button>
+            <button id="bulkDeactivate" class="btn" type="button">Inactive</button>
+            <button id="bulkPopular" class="btn" type="button">Popular</button>
+            <button id="bulkUnpopular" class="btn" type="button">Не popular</button>
+            <button id="bulkDelete" class="btn danger" type="button">Видалити</button>
+          </div>
+        </div>
+
+        <div class="adm-products-head">
+          <button id="addProductBtn" class="btn-primary" type="button">➕ Додати товар</button>
+
+          <div class="adm-pager">
+            <button id="prodPrev" class="btn" type="button">‹</button>
+            <div class="muted"><span id="prodPage">1</span> / <span id="prodPages">1</span></div>
+            <button id="prodNext" class="btn" type="button">›</button>
+          </div>
+        </div>
+
         <div id="productsGrid" class="products-grid"></div>
       </section>
 
@@ -60,6 +144,14 @@
               <option value="cancelled">Скасовані</option>
             </select>
           </label>
+
+          <label>
+            Пошук:
+            <input id="orderSearch" class="adm-input" type="text" placeholder="ID / імʼя / телефон / місто">
+          </label>
+
+          <button id="ordersRefresh" class="btn" type="button">Оновити</button>
+          <button id="ordersExport" class="btn" type="button">Експорт CSV</button>
         </div>
 
         <div id="ordersGrid" class="orders-grid"></div>
@@ -67,7 +159,7 @@
     </div>
   </main>
 
-  <!-- PRODUCT MODAL (form add/edit) -->
+  <!-- PRODUCT MODAL (add/edit) -->
   <div id="productModal" class="pmodal" aria-hidden="true">
     <div class="pmodal__overlay" data-close="1"></div>
 
@@ -80,18 +172,18 @@
         </div>
 
         <div class="pmodal__info">
-          <h2 class="pmodal__title">Товар</h2>
+          <h2 class="pmodal__title" id="admModalTitle">Товар</h2>
 
           <div class="pmodal__about" style="margin-top:10px">
-            <label class="muted">Назва</label>
-            <input id="admTitle" class="qty__input" type="text" placeholder="Напр. Мікрофібра для сушки"
-              style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
+            <div class="adm-field">
+              <label class="adm-label">Назва</label>
+              <input id="admTitle" class="adm-input" type="text" placeholder="Напр. Мікрофібра для сушки">
+            </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
-              <div>
-                <label class="muted">Ціна (грн)</label>
-                <input id="admPrice" class="qty__input" type="number" min="0" step="0.01" placeholder="250"
-                  style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
+            <div class="adm-grid3">
+              <div class="adm-field">
+                <label class="adm-label">Ціна (грн)</label>
+                <input id="admPrice" class="adm-input" type="number" min="0" step="0.01" placeholder="250">
               </div>
 
               <div class="adm-field">
@@ -99,55 +191,56 @@
                 <select id="admCategory" class="adm-select"></select>
               </div>
 
-              <div>
-                <label class="muted">Залишок (шт)</label>
-                <input id="admStock" class="qty__input" type="number" min="0" step="1" placeholder="0"
-                  style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
+              <div class="adm-field">
+                <label class="adm-label">Залишок (шт)</label>
+                <input id="admStock" class="adm-input" type="number" min="0" step="1" placeholder="0">
               </div>
             </div>
 
-            <label class="muted" style="display:block;margin-top:12px">Опис</label>
-            <textarea id="admDesc" placeholder="Опис..."
-              style="width:100%;min-height:90px;border:1px solid #e1e1e1;border-radius:14px;padding:12px 14px;resize:vertical"></textarea>
-
-            <label class="muted" style="display:block;margin-top:12px">Фото (Storage) — головне</label>
-
-            <!-- main dropzone -->
-            <div id="admDrop" class="adm-drop">
-              <div class="adm-drop__inner">
-                <div class="adm-drop__title">Перетягни фото сюди</div>
-                <div class="adm-drop__sub">або натисни кнопку</div>
-                <button id="admPick" type="button" class="btn">Завантажити фото</button>
-                <input id="admFile" type="file" accept="image/*" hidden>
-              </div>
+            <div class="adm-field" style="margin-top:12px">
+              <label class="adm-label">Опис</label>
+              <textarea id="admDesc" class="adm-textarea" placeholder="Опис..."></textarea>
             </div>
 
-            <!-- fallback URL -->
-            <label class="muted" style="display:block;margin-top:12px">Або URL (опційно)</label>
-            <input id="admImg" type="text" placeholder="https://...jpg"
-              style="width:100%;height:44px;border:1px solid #e1e1e1;border-radius:14px;padding:0 14px">
+            <div class="adm-field" style="margin-top:12px">
+              <label class="adm-label">Фото (Storage)</label>
 
-            <!-- additional photos -->
-            <label class="muted" style="display:block;margin-top:12px">Додаткові фото (галерея)</label>
-
-            <div id="admDropMore" class="adm-drop">
-              <div class="adm-drop__inner">
-                <div class="adm-drop__title">Перетягни фото сюди</div>
-                <div class="adm-drop__sub">або натисни кнопку</div>
-                <button id="admPickMore" type="button" class="btn">Додати фото</button>
-                <input id="admFilesMore" type="file" accept="image/*" multiple hidden>
+              <div id="admDrop" class="adm-drop">
+                <div class="adm-drop__inner">
+                  <div class="adm-drop__title">Перетягни фото сюди</div>
+                  <div class="adm-drop__sub">або натисни кнопку</div>
+                  <button id="admPick" type="button" class="btn">Завантажити фото</button>
+                  <input id="admFile" type="file" accept="image/*" hidden>
+                </div>
               </div>
+
+              <label class="adm-label" style="display:block;margin-top:12px">Або URL (опційно)</label>
+              <input id="admImg" class="adm-input" type="text" placeholder="https://...jpg">
+            
+
+          
+          <label class="muted" style="display:block;margin-top:12px">Додаткові фото (галерея)</label>
+
+          <div id="admDropMore" class="adm-drop">
+            <div class="adm-drop__inner">
+              <div class="adm-drop__title">Перетягни фото сюди</div>
+              <div class="adm-drop__sub">або натисни кнопку</div>
+              <button id="admPickMore" type="button" class="btn">Додати фото</button>
+              <input id="admFilesMore" type="file" accept="image/*" multiple hidden>
             </div>
+          </div>
 
-            <div id="admImgsList" class="adm-imgs-list" aria-label="Gallery thumbnails"></div>
+          <div id="admImgsList" class="adm-gallery" aria-label="Галерея фото"></div>
+          <div class="muted" style="margin-top:8px">⭐ — зробити головним • ✕ — видалити. Перше фото в списку — головне.</div>
+</div>
 
-            <div style="display:flex;gap:16px;margin-top:12px;align-items:center">
-              <label style="display:flex;gap:8px;align-items:center">
+            <div class="adm-row" style="gap:16px;margin-top:12px;align-items:center">
+              <label class="adm-check">
                 <input id="admActive" type="checkbox" checked>
                 <span>Active</span>
               </label>
 
-              <label style="display:flex;gap:8px;align-items:center">
+              <label class="adm-check">
                 <input id="admPopular" type="checkbox">
                 <span>Popular</span>
               </label>
@@ -164,6 +257,8 @@
       </div>
     </div>
   </div>
+
+  <div id="adminToast" class="adm-toast" hidden></div>
 
   <footer>
     <div class="blocks container">
@@ -188,7 +283,6 @@
           <li>Пн-Пт 09:00 - 18:00</li>
           <li>Сб-Нд 10:00 - 16:00</li>
         </ul>
-
         <p><a href="tel:+380636969378">+380 63 696 93 78</a></p>
       </div>
     </div>
@@ -196,6 +290,7 @@
     <hr>
     <p>Glossy © 2026</p>
   </footer>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
