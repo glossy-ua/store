@@ -1,208 +1,313 @@
 // js/product-modal.js
-// Universal product modal with image gallery (arrows + swipe, looped)
+function $(sel) { return document.querySelector(sel); }
 
-(() => {
-  const modal = document.getElementById("productModal");
-  if (!modal) return;
+const modal = $('#productModal');
+const pmImg = $('#pmImg');
+const pmThumbs = $('#pmThumbs');
+const pmPrev = $('#pmPrev');
+const pmNext = $('#pmNext');
 
-  const overlay = modal.querySelector("[data-close]") || modal.querySelector(".pmodal__overlay");
-  const closeBtn = modal.querySelector(".pmodal__close,[data-close-btn]");
+const pmTitle = $('#pmTitle');
+const pmCode = $('#pmCode');
+const pmPrice = $('#pmPrice');
+const pmDesc = $('#pmDesc');
+const pmFav = $('#pmFav');
+const pmQty = $('#pmQty');
+const pmAddToCart = $('#pmAddToCart');
 
-  const imgWrap =
-    modal.querySelector(".pmodal__img") ||
-    modal.querySelector(".pm-img") ||
-    modal;
+let currentProduct = null;
 
-  const imgEl =
-    modal.querySelector("#pmImg") ||
-    modal.querySelector("[data-pm-img]") ||
-    imgWrap.querySelector("img");
+// gallery state
+let galleryUrls = [];
+let galleryIndex = 0;
 
-  const titleEl =
-    modal.querySelector("#pmTitle") ||
-    modal.querySelector("[data-pm-title]");
+function escHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-  const priceEl =
-    modal.querySelector("#pmPrice") ||
-    modal.querySelector("[data-pm-price]");
+function safePrice(val) {
+  const n = parseFloat(String(val ?? "").replace(",", ".").replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
 
-  const descEl =
-    modal.querySelector("#pmDesc") ||
-    modal.querySelector("[data-pm-desc]");
+function setFavBtnState(btn, active) {
+  if (!btn) return;
+  btn.classList.toggle('active', !!active);
+  btn.textContent = active ? '♥️' : '♡';
+}
 
-  // Create nav buttons if missing
-  let prevBtn = modal.querySelector(".pm-nav--prev");
-  let nextBtn = modal.querySelector(".pm-nav--next");
+function safeParseJson(s) {
+  try { return JSON.parse(s); } catch { return null; }
+}
 
-  function ensureNav() {
-    if (!prevBtn) {
-      prevBtn = document.createElement("button");
-      prevBtn.type = "button";
-      prevBtn.className = "pm-nav pm-nav--prev";
-      prevBtn.setAttribute("aria-label", "Previous photo");
-      prevBtn.innerHTML = "‹";
-      imgWrap.appendChild(prevBtn);
-    }
-    if (!nextBtn) {
-      nextBtn = document.createElement("button");
-      nextBtn.type = "button";
-      nextBtn.className = "pm-nav pm-nav--next";
-      nextBtn.setAttribute("aria-label", "Next photo");
-      nextBtn.innerHTML = "›";
-      imgWrap.appendChild(nextBtn);
-    }
+function normalizeImgs(p) {
+  const arr =
+    Array.isArray(p?.imgs) ? p.imgs :
+    (typeof p?.imgs === "string" ? safeParseJson(p.imgs) : null);
+
+  const urls = (arr && Array.isArray(arr) ? arr : [])
+    .map(x => String(x || "").trim())
+    .filter(Boolean);
+
+  const main = String(p?.img || "").trim();
+  if (main && !urls.includes(main)) urls.unshift(main);
+
+  return urls.length ? urls : (main ? [main] : []);
+}
+
+function renderGallery(urls, startUrl = "") {
+  galleryUrls = Array.isArray(urls) ? urls : [];
+  galleryIndex = 0;
+
+  if (!galleryUrls.length) {
+    if (pmImg) pmImg.src = "";
+    if (pmThumbs) { pmThumbs.innerHTML = ""; pmThumbs.style.display = "none"; }
+    if (pmPrev) pmPrev.disabled = true;
+    if (pmNext) pmNext.disabled = true;
+    return;
   }
 
-  // Thumbs
-  let thumbs = modal.querySelector("#pmThumbs") || modal.querySelector(".pm-thumbs");
-  function ensureThumbs() {
-    if (!thumbs) {
-      thumbs = document.createElement("div");
-      thumbs.className = "pm-thumbs";
-      // try place under image
-      const afterImg = imgWrap.parentElement || imgWrap;
-      afterImg.insertAdjacentElement("afterend", thumbs);
-    }
+  if (startUrl) {
+    const i = galleryUrls.indexOf(startUrl);
+    if (i >= 0) galleryIndex = i;
   }
 
-  function normalizeImgs(p) {
-    const out = [];
-    const push = (u) => {
-      const s = String(u || "").trim();
-      if (!s) return;
-      if (!out.includes(s)) out.push(s);
-    };
+  setMainImage(galleryIndex);
+  renderThumbs();
+  syncNav();
+}
 
-    if (p) {
-      if (p.img) push(p.img);
-      if (p.image) push(p.image);
-      if (p.images && Array.isArray(p.images)) p.images.forEach(push);
+function setMainImage(i) {
+  if (!galleryUrls.length) return;
 
-      const v = p.imgs ?? p.gallery ?? p.photos;
-      if (Array.isArray(v)) v.forEach(push);
-      else if (typeof v === "string") {
-        const s = v.trim();
-        if (s) {
-          try {
-            const j = JSON.parse(s);
-            if (Array.isArray(j)) j.forEach(push);
-            else push(s);
-          } catch {
-            // comma-separated fallback
-            s.split(",").map(x => x.trim()).filter(Boolean).forEach(push);
-          }
-        }
-      }
-    }
-    return out;
+  // ✅ круг
+  galleryIndex = (i + galleryUrls.length) % galleryUrls.length;
+  const url = galleryUrls[galleryIndex];
+
+  if (pmImg) {
+    pmImg.src = url;
+    pmImg.alt = currentProduct?.title || "";
   }
 
-  let imgs = [];
-  let idx = 0;
-
-  function setIndex(next) {
-    if (!imgs.length) return;
-    const n = imgs.length;
-    idx = ((next % n) + n) % n;
-
-    if (imgEl) imgEl.src = imgs[idx];
-
-    if (thumbs) {
-      thumbs.querySelectorAll("button[data-i]").forEach((b) => {
-        b.classList.toggle("is-active", parseInt(b.dataset.i, 10) === idx);
-      });
-    }
-  }
-
-  function renderThumbs() {
-    ensureThumbs();
-    if (!thumbs) return;
-
-    if (imgs.length <= 1) {
-      thumbs.innerHTML = "";
-      return;
-    }
-
-    thumbs.innerHTML = imgs.map((u, i) => `
-      <button type="button" class="pm-thumb ${i === idx ? "is-active" : ""}" data-i="${i}">
-        <img src="${u}" alt="">
-      </button>
-    `).join("");
-
-    thumbs.querySelectorAll("button[data-i]").forEach((b) => {
-      b.addEventListener("click", () => setIndex(parseInt(b.dataset.i, 10)));
+  if (pmThumbs) {
+    pmThumbs.querySelectorAll('.pm-thumb').forEach((b, idx) => {
+      b.classList.toggle('is-active', idx === galleryIndex);
     });
   }
 
-  function open() {
-    modal.setAttribute("aria-hidden", "false");
-    modal.classList.add("open");
-    document.body.classList.add("modal-open");
+  syncNav();
+}
+
+function renderThumbs() {
+  if (!pmThumbs) return;
+
+  if (galleryUrls.length <= 1) {
+    pmThumbs.innerHTML = "";
+    pmThumbs.style.display = "none";
+    return;
   }
 
-  function close() {
-    modal.setAttribute("aria-hidden", "true");
-    modal.classList.remove("open");
-    document.body.classList.remove("modal-open");
+  pmThumbs.style.display = "";
+  pmThumbs.innerHTML = galleryUrls.map((url, idx) => `
+    <button class="pm-thumb ${idx === galleryIndex ? "is-active" : ""}" type="button" data-idx="${idx}">
+      <img src="${escHtml(url)}" alt="">
+    </button>
+  `).join("");
+}
+
+function syncNav() {
+  const multi = galleryUrls.length > 1;
+  if (pmPrev) pmPrev.disabled = !multi;
+  if (pmNext) pmNext.disabled = !multi;
+}
+
+function setDesc(desc) {
+  if (!pmDesc) return;
+  const text = String(desc || "").trim();
+  if (!text) {
+    pmDesc.textContent = "Опис буде додано пізніше 🙂";
+    return;
   }
+  const hasTags = /<\/?[a-z][\s\S]*>/i.test(text);
+  pmDesc[hasTags ? "innerHTML" : "textContent"] = text;
+}
 
-  overlay?.addEventListener("click", close);
-  closeBtn?.addEventListener("click", close);
+// open/close
+function openModal(product) {
+  if (!modal) return;
 
-  document.addEventListener("keydown", (e) => {
-    if (!modal.classList.contains("open")) return;
-    if (e.key === "Escape") close();
-    if (e.key === "ArrowLeft") setIndex(idx - 1);
-    if (e.key === "ArrowRight") setIndex(idx + 1);
+  currentProduct = product || null;
+  if (!currentProduct) return;
+
+  const priceNum = safePrice(currentProduct.priceNum ?? currentProduct.price);
+  const priceText = priceNum ? `${priceNum.toFixed(2)} грн.` : (currentProduct.priceText || "");
+
+  if (pmTitle) pmTitle.textContent = currentProduct.title || '';
+  if (pmCode) pmCode.textContent = currentProduct.id ? `Код: ${currentProduct.id}` : '';
+  if (pmPrice) pmPrice.textContent = priceText || '';
+  setDesc(currentProduct.desc);
+  if (pmQty) pmQty.value = 1;
+
+  // ✅ gallery
+  const urls = normalizeImgs(currentProduct);
+  renderGallery(urls, currentProduct.img || "");
+
+  // fav
+  if (typeof window.isFav === "function") setFavBtnState(pmFav, window.isFav(currentProduct.id));
+
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+
+  window.lockBodyScroll?.();
+}
+
+function closeModal() {
+  if (!modal) return;
+
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+
+  window.unlockBodyScroll?.();
+
+  currentProduct = null;
+  galleryUrls = [];
+  galleryIndex = 0;
+  if (pmThumbs) { pmThumbs.innerHTML = ""; pmThumbs.style.display = "none"; }
+}
+
+window.openProductModal = openModal;
+
+// overlay / x close
+document.addEventListener('click', (e) => {
+  if (!modal?.classList.contains('open')) return;
+  if (e.target?.dataset?.close === '1') closeModal();
+});
+
+// ESC + arrows
+document.addEventListener('keydown', (e) => {
+  if (!modal?.classList.contains('open')) return;
+
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowLeft') setMainImage(galleryIndex - 1);
+  if (e.key === 'ArrowRight') setMainImage(galleryIndex + 1);
+});
+
+// thumbs click
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.pm-thumb');
+  if (!btn || !modal?.classList.contains('open')) return;
+  const idx = parseInt(btn.dataset.idx, 10);
+  if (!Number.isFinite(idx)) return;
+  setMainImage(idx);
+});
+
+// prev/next click
+pmPrev?.addEventListener('click', () => setMainImage(galleryIndex - 1));
+pmNext?.addEventListener('click', () => setMainImage(galleryIndex + 1));
+
+/* ✅ SWIPE (по кругу) */
+(function initModalSwipe(){
+  // пробуем найти галерею в модалке
+  const galleryEl = document.querySelector('#productModal .pm-gallery') || pmImg?.closest?.('.pm-gallery');
+  if (!galleryEl) return;
+
+  let x0 = null;
+  let y0 = null;
+  let active = false;
+
+  galleryEl.addEventListener('pointerdown', (e) => {
+    if (!modal?.classList.contains('open')) return;
+    active = true;
+    x0 = e.clientX;
+    y0 = e.clientY;
+    try { galleryEl.setPointerCapture(e.pointerId); } catch {}
   });
 
-  // Swipe (pointer)
-  let startX = null;
-  let startY = null;
+  galleryEl.addEventListener('pointerup', (e) => {
+    if (!active) return;
+    active = false;
 
-  function onPointerDown(e) {
-    if (!modal.classList.contains("open")) return;
-    startX = e.clientX;
-    startY = e.clientY;
-  }
-  function onPointerUp(e) {
-    if (startX == null) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    startX = null;
-    startY = null;
+    if (!modal?.classList.contains('open')) return;
 
-    // ignore vertical scroll gestures
+    const dx = e.clientX - (x0 ?? e.clientX);
+    const dy = e.clientY - (y0 ?? e.clientY);
+    x0 = null; y0 = null;
+
+    // если больше вертикально — это скролл, не листаем
     if (Math.abs(dy) > Math.abs(dx)) return;
 
-    if (dx > 40) setIndex(idx - 1);
-    else if (dx < -40) setIndex(idx + 1);
-  }
+    if (Math.abs(dx) < 30) return;
 
-  imgWrap.addEventListener("pointerdown", onPointerDown);
-  imgWrap.addEventListener("pointerup", onPointerUp);
-  imgWrap.addEventListener("pointercancel", () => { startX = null; startY = null; });
+    if (dx < 0) setMainImage(galleryIndex + 1);
+    else setMainImage(galleryIndex - 1);
+  });
 
-  ensureNav();
-  prevBtn?.addEventListener("click", () => setIndex(idx - 1));
-  nextBtn?.addEventListener("click", () => setIndex(idx + 1));
-
-  // PUBLIC API
-  function openProductModal(product) {
-    const p = product || {};
-
-    imgs = normalizeImgs(p);
-    idx = 0;
-
-    if (titleEl && p.title != null) titleEl.textContent = String(p.title);
-    if (priceEl && p.price != null) priceEl.textContent = String(p.price);
-    if (descEl && p.desc != null) descEl.textContent = String(p.desc);
-
-    if (imgEl) imgEl.src = imgs[0] || "";
-
-    renderThumbs();
-    open();
-  }
-
-  window.openProductModal = openProductModal;
+  galleryEl.addEventListener('pointercancel', () => {
+    active = false;
+    x0 = null; y0 = null;
+  });
 })();
+
+// qty +/- inside modal
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.qty__btn');
+  if (!btn) return;
+  if (!modal?.classList.contains('open')) return;
+  if (!btn.closest('.pmodal')) return;
+
+  const wrap = btn.closest('.qty');
+  const input = wrap?.querySelector('input');
+  if (!input) return;
+
+  let val = parseInt(input.value, 10) || 1;
+  if (btn.dataset.action === 'plus') val++;
+  if (btn.dataset.action === 'minus') val = Math.max(1, val - 1);
+  input.value = val;
+});
+
+// modal fav
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#pmFav')) return;
+  if (!currentProduct) return;
+
+  const prod = {
+    id: currentProduct.id,
+    title: currentProduct.title,
+    price: String(safePrice(currentProduct.priceNum ?? currentProduct.price) || currentProduct.price || ""),
+    img: currentProduct.img,
+    desc: currentProduct.desc || "",
+    imgs: normalizeImgs(currentProduct),
+  };
+
+  window.toggleFav?.(prod);
+  if (typeof window.isFav === "function") setFavBtnState(pmFav, window.isFav(currentProduct.id));
+  window.refreshFavButtons?.();
+  window.updateFavBadge?.();
+});
+
+// modal add to cart
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#pmAddToCart')) return;
+  if (!currentProduct) return;
+
+  const qty = Math.max(1, parseInt(pmQty?.value, 10) || 1);
+
+  const prod = {
+    id: currentProduct.id,
+    title: currentProduct.title,
+    price: String(safePrice(currentProduct.priceNum ?? currentProduct.price) || currentProduct.price || ""),
+    img: currentProduct.img,
+    desc: currentProduct.desc || "",
+    imgs: normalizeImgs(currentProduct),
+  };
+
+  window.addToCart?.(prod, qty);
+  window.updateCartBadge?.();
+
+  window.animateAdded?.(pmAddToCart, { duration: 700, text: "Додано", keepText: false });
+});
