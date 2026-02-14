@@ -273,34 +273,36 @@
 }
 
 
-/* ===== MODAL GALLERY (multi-photo) ===== */
+/* ===== GALLERY ===== */
 .pm-gallery{
   position: relative;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #f6f6f6;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.pm-gallery img{
+.pm-gallery #pmImg{
   width: 100%;
   height: auto;
   display: block;
-  object-fit: contain;
-  max-height: 420px;
+  border-radius: 14px;
 }
 .pm-nav{
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  border: none;
   width: 38px;
   height: 38px;
   border-radius: 999px;
-  border: 0;
-  background: rgba(255,255,255,.85);
-  box-shadow: 0 6px 20px rgba(0,0,0,.12);
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 22px;
+  line-height: 1;
   user-select: none;
 }
 .pm-nav:disabled{
@@ -311,22 +313,22 @@
 .pm-nav--next{ right: 10px; }
 
 .pm-thumbs{
+  margin-top: 10px;
   display: flex;
   gap: 8px;
-  margin-top: 10px;
-  overflow-x: auto;
-  padding-bottom: 2px;
+  flex-wrap: wrap;
 }
 .pm-thumb{
-  border: 1px solid rgba(0,0,0,.12);
-  border-radius: 10px;
+  border: none;
   padding: 0;
-  background: #fff;
-  cursor: pointer;
-  flex: 0 0 auto;
-  width: 62px;
-  height: 62px;
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
   overflow: hidden;
+  cursor: pointer;
+  background: transparent;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+  opacity: .8;
 }
 .pm-thumb img{
   width: 100%;
@@ -334,6 +336,8 @@
   object-fit: cover;
   display: block;
 }
-.pm-thumb.is-active{
-  border-color: rgba(0,0,0,.45);
+.pm-thumb.active{
+  opacity: 1;
+  outline: 2px solid rgba(0,0,0,0.35);
+  outline-offset: 2px;
 }
