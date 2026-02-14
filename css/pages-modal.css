@@ -273,19 +273,13 @@
 }
 
 
-/* =========================
-   Modal Gallery (multi images)
-   ========================= */
-
-.pmodal__img{ position: relative; }
-
+/* ===== MODAL GALLERY (multi-photo) ===== */
 .pm-gallery{
   position: relative;
   border-radius: 14px;
   overflow: hidden;
   background: #f6f6f6;
 }
-
 .pm-gallery img{
   width: 100%;
   height: auto;
@@ -293,68 +287,53 @@
   object-fit: contain;
   max-height: 420px;
 }
-
 .pm-nav{
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  border: none;
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  border: 0;
+  background: rgba(255,255,255,.85);
+  box-shadow: 0 6px 20px rgba(0,0,0,.12);
   cursor: pointer;
-  font-size: 24px;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
 }
-
 .pm-nav:disabled{
   opacity: .35;
   cursor: default;
 }
-
 .pm-nav--prev{ left: 10px; }
 .pm-nav--next{ right: 10px; }
 
 .pm-thumbs{
-  margin-top: 10px;
   display: flex;
   gap: 8px;
-  overflow: auto;
-  padding-bottom: 4px;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding-bottom: 2px;
 }
-
 .pm-thumb{
-  flex: 0 0 auto;
-  width: 64px;
-  height: 64px;
-  border: 1px solid rgba(0,0,0,0.12);
+  border: 1px solid rgba(0,0,0,.12);
   border-radius: 10px;
   padding: 0;
   background: #fff;
-  overflow: hidden;
   cursor: pointer;
+  flex: 0 0 auto;
+  width: 62px;
+  height: 62px;
+  overflow: hidden;
 }
-
 .pm-thumb img{
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-
 .pm-thumb.is-active{
-  outline: 2px solid #111;
-  border-color: transparent;
-}
-
-@media (max-width: 600px){
-  .pm-nav{ width: 36px; height: 36px; }
-  .pm-thumb{ width: 56px; height: 56px; }
-  .pm-gallery img{ max-height: 320px; }
+  border-color: rgba(0,0,0,.45);
 }
