@@ -216,7 +216,23 @@
 
               <label class="adm-label" style="display:block;margin-top:12px">Або URL (опційно)</label>
               <input id="admImg" class="adm-input" type="text" placeholder="https://...jpg">
+            
+
+          
+          <label class="muted" style="display:block;margin-top:12px">Додаткові фото (галерея)</label>
+
+          <div id="admDropMore" class="adm-drop">
+            <div class="adm-drop__inner">
+              <div class="adm-drop__title">Перетягни фото сюди</div>
+              <div class="adm-drop__sub">або натисни кнопку</div>
+              <button id="admPickMore" type="button" class="btn">Додати фото</button>
+              <input id="admFilesMore" type="file" accept="image/*" multiple hidden>
             </div>
+          </div>
+
+          <div id="admImgsList" class="adm-gallery" aria-label="Галерея фото"></div>
+          <div class="muted" style="margin-top:8px">⭐ — зробити головним • ✕ — видалити. Перше фото в списку — головне.</div>
+</div>
 
             <div class="adm-row" style="gap:16px;margin-top:12px;align-items:center">
               <label class="adm-check">
