@@ -1,125 +1,208 @@
-// product-modal.js
-function $(sel) { return document.querySelector(sel); }
+// js/product-modal.js
+// Universal product modal with image gallery (arrows + swipe, looped)
 
-const modal = $('#productModal');
-const pmImg = $('#pmImg');
-const pmTitle = $('#pmTitle');
-const pmCode = $('#pmCode');
-const pmPrice = $('#pmPrice');
-const pmDesc = $('#pmDesc');
-const pmFav = $('#pmFav');
-const pmQty = $('#pmQty');
-const pmAddToCart = $('#pmAddToCart');
-
-let currentProduct = null;
-
-function getCardProduct(card) {
-  const id = String(card.dataset.code || '');
-  const title = card.dataset.title || card.querySelector('.product-card__title')?.innerText?.trim() || '';
-  const img = card.dataset.img || card.querySelector('.product-card__img img')?.getAttribute('src') || '';
-  const desc = card.dataset.desc || '';
-
-  // price: data-price у тебя "250.00" → красиво покажем "250.00 грн."
-  const rawPrice = card.dataset.price || card.querySelector('.product-card__price')?.innerText?.trim() || '0';
-  const num = parseFloat(String(rawPrice).replace(',', '.').replace(/[^\d.]/g, '')) || 0;
-  const priceText = num.toFixed(2) + ' грн.';
-
-  return { id, title, img, desc, priceText, priceNum: num };
-}
-
-function setFavBtnState(btn, active) {
-  if (!btn) return;
-  btn.classList.toggle('active', active);
-  btn.textContent = active ? '♥' : '♡';
-}
-
-function openModal(product) {
+(() => {
+  const modal = document.getElementById("productModal");
   if (!modal) return;
 
-  currentProduct = product;
+  const overlay = modal.querySelector("[data-close]") || modal.querySelector(".pmodal__overlay");
+  const closeBtn = modal.querySelector(".pmodal__close,[data-close-btn]");
 
-  if (pmImg) { pmImg.src = product.img || ''; pmImg.alt = product.title || ''; }
-  if (pmTitle) pmTitle.textContent = product.title || '';
-  if (pmCode) pmCode.textContent = product.id ? `Код: ${product.id}` : '';
-  if (pmPrice) pmPrice.textContent = product.priceText || '';
-  if (pmDesc) pmDesc.textContent = product.desc || 'Опис буде додано пізніше 🙂';
-  if (pmQty) pmQty.value = 1;
+  const imgWrap =
+    modal.querySelector(".pmodal__img") ||
+    modal.querySelector(".pm-img") ||
+    modal;
 
-  setFavBtnState(pmFav, isFav(product.id));
+  const imgEl =
+    modal.querySelector("#pmImg") ||
+    modal.querySelector("[data-pm-img]") ||
+    imgWrap.querySelector("img");
 
-  modal.classList.add('open');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-}
+  const titleEl =
+    modal.querySelector("#pmTitle") ||
+    modal.querySelector("[data-pm-title]");
 
-function closeModal() {
-  if (!modal) return;
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-  currentProduct = null;
-}
+  const priceEl =
+    modal.querySelector("#pmPrice") ||
+    modal.querySelector("[data-pm-price]");
 
-// Открытие: клик по карточке, кроме интерактивных элементов
-document.addEventListener('click', (e) => {
-  const card = e.target.closest('.product-card');
-  if (!card) return;
+  const descEl =
+    modal.querySelector("#pmDesc") ||
+    modal.querySelector("[data-pm-desc]");
 
-  // если клик по кнопкам/инпутам/qty — НЕ открываем
-  if (e.target.closest('.fav-btn, .cart-btn, .qty, input, button')) return;
+  // Create nav buttons if missing
+  let prevBtn = modal.querySelector(".pm-nav--prev");
+  let nextBtn = modal.querySelector(".pm-nav--next");
 
-  const product = getCardProduct(card);
-  if (!product.id) return;
+  function ensureNav() {
+    if (!prevBtn) {
+      prevBtn = document.createElement("button");
+      prevBtn.type = "button";
+      prevBtn.className = "pm-nav pm-nav--prev";
+      prevBtn.setAttribute("aria-label", "Previous photo");
+      prevBtn.innerHTML = "‹";
+      imgWrap.appendChild(prevBtn);
+    }
+    if (!nextBtn) {
+      nextBtn = document.createElement("button");
+      nextBtn.type = "button";
+      nextBtn.className = "pm-nav pm-nav--next";
+      nextBtn.setAttribute("aria-label", "Next photo");
+      nextBtn.innerHTML = "›";
+      imgWrap.appendChild(nextBtn);
+    }
+  }
 
-  openModal(product);
-});
+  // Thumbs
+  let thumbs = modal.querySelector("#pmThumbs") || modal.querySelector(".pm-thumbs");
+  function ensureThumbs() {
+    if (!thumbs) {
+      thumbs = document.createElement("div");
+      thumbs.className = "pm-thumbs";
+      // try place under image
+      const afterImg = imgWrap.parentElement || imgWrap;
+      afterImg.insertAdjacentElement("afterend", thumbs);
+    }
+  }
 
-// Закрытие: overlay / крестик
-document.addEventListener('click', (e) => {
-  if (!modal || !modal.classList.contains('open')) return;
-  if (e.target?.dataset?.close === '1') closeModal();
-});
+  function normalizeImgs(p) {
+    const out = [];
+    const push = (u) => {
+      const s = String(u || "").trim();
+      if (!s) return;
+      if (!out.includes(s)) out.push(s);
+    };
 
-// ESC
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && modal?.classList.contains('open')) closeModal();
-});
+    if (p) {
+      if (p.img) push(p.img);
+      if (p.image) push(p.image);
+      if (p.images && Array.isArray(p.images)) p.images.forEach(push);
 
-// Сердечко в модалке
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#pmFav')) return;
-  if (!currentProduct) return;
+      const v = p.imgs ?? p.gallery ?? p.photos;
+      if (Array.isArray(v)) v.forEach(push);
+      else if (typeof v === "string") {
+        const s = v.trim();
+        if (s) {
+          try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) j.forEach(push);
+            else push(s);
+          } catch {
+            // comma-separated fallback
+            s.split(",").map(x => x.trim()).filter(Boolean).forEach(push);
+          }
+        }
+      }
+    }
+    return out;
+  }
 
-  toggleFav({
-    id: currentProduct.id,
-    title: currentProduct.title,
-    price: String(currentProduct.priceNum || ''),
-    img: currentProduct.img
+  let imgs = [];
+  let idx = 0;
+
+  function setIndex(next) {
+    if (!imgs.length) return;
+    const n = imgs.length;
+    idx = ((next % n) + n) % n;
+
+    if (imgEl) imgEl.src = imgs[idx];
+
+    if (thumbs) {
+      thumbs.querySelectorAll("button[data-i]").forEach((b) => {
+        b.classList.toggle("is-active", parseInt(b.dataset.i, 10) === idx);
+      });
+    }
+  }
+
+  function renderThumbs() {
+    ensureThumbs();
+    if (!thumbs) return;
+
+    if (imgs.length <= 1) {
+      thumbs.innerHTML = "";
+      return;
+    }
+
+    thumbs.innerHTML = imgs.map((u, i) => `
+      <button type="button" class="pm-thumb ${i === idx ? "is-active" : ""}" data-i="${i}">
+        <img src="${u}" alt="">
+      </button>
+    `).join("");
+
+    thumbs.querySelectorAll("button[data-i]").forEach((b) => {
+      b.addEventListener("click", () => setIndex(parseInt(b.dataset.i, 10)));
+    });
+  }
+
+  function open() {
+    modal.setAttribute("aria-hidden", "false");
+    modal.classList.add("open");
+    document.body.classList.add("modal-open");
+  }
+
+  function close() {
+    modal.setAttribute("aria-hidden", "true");
+    modal.classList.remove("open");
+    document.body.classList.remove("modal-open");
+  }
+
+  overlay?.addEventListener("click", close);
+  closeBtn?.addEventListener("click", close);
+
+  document.addEventListener("keydown", (e) => {
+    if (!modal.classList.contains("open")) return;
+    if (e.key === "Escape") close();
+    if (e.key === "ArrowLeft") setIndex(idx - 1);
+    if (e.key === "ArrowRight") setIndex(idx + 1);
   });
 
-  setFavBtnState(pmFav, isFav(currentProduct.id));
-  // обновим сердца на карточках
-  if (typeof refreshFavButtons === 'function') refreshFavButtons();
-});
+  // Swipe (pointer)
+  let startX = null;
+  let startY = null;
 
-// Добавить в корзину из модалки
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#pmAddToCart')) return;
-  if (!currentProduct) return;
+  function onPointerDown(e) {
+    if (!modal.classList.contains("open")) return;
+    startX = e.clientX;
+    startY = e.clientY;
+  }
+  function onPointerUp(e) {
+    if (startX == null) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    startX = null;
+    startY = null;
 
-  const qty = Math.max(1, parseInt(pmQty?.value) || 1);
+    // ignore vertical scroll gestures
+    if (Math.abs(dy) > Math.abs(dx)) return;
 
-  addToCart({
-    id: currentProduct.id,
-    title: currentProduct.title,
-    price: String(currentProduct.priceNum || 0),
-    img: currentProduct.img
-  }, qty);
+    if (dx > 40) setIndex(idx - 1);
+    else if (dx < -40) setIndex(idx + 1);
+  }
 
-  updateCartBadge();
+  imgWrap.addEventListener("pointerdown", onPointerDown);
+  imgWrap.addEventListener("pointerup", onPointerUp);
+  imgWrap.addEventListener("pointercancel", () => { startX = null; startY = null; });
 
-  const btn = pmAddToCart;
-  const old = btn.textContent;
-  btn.textContent = '✅ Додано';
-  setTimeout(() => (btn.textContent = old), 700);
-});
+  ensureNav();
+  prevBtn?.addEventListener("click", () => setIndex(idx - 1));
+  nextBtn?.addEventListener("click", () => setIndex(idx + 1));
+
+  // PUBLIC API
+  function openProductModal(product) {
+    const p = product || {};
+
+    imgs = normalizeImgs(p);
+    idx = 0;
+
+    if (titleEl && p.title != null) titleEl.textContent = String(p.title);
+    if (priceEl && p.price != null) priceEl.textContent = String(p.price);
+    if (descEl && p.desc != null) descEl.textContent = String(p.desc);
+
+    if (imgEl) imgEl.src = imgs[0] || "";
+
+    renderThumbs();
+    open();
+  }
+
+  window.openProductModal = openProductModal;
+})();
