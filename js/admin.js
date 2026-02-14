@@ -72,7 +72,12 @@
   const admPick = document.getElementById("admPick");
   const admFile = document.getElementById("admFile");
 
-  // ---------- DOM (orders) ----------
+  
+  const admDropMore = document.getElementById("admDropMore");
+  const admPickMore = document.getElementById("admPickMore");
+  const admFilesMore = document.getElementById("admFilesMore");
+  const admImgsList = document.getElementById("admImgsList");
+// ---------- DOM (orders) ----------
   const ordersGrid = document.getElementById("ordersGrid");
   const orderStatusFilter = document.getElementById("orderStatusFilter");
   const orderSearch = document.getElementById("orderSearch");
@@ -84,7 +89,9 @@
   let selectedFile = null;
   let existingImgUrl = "";
 
-  let ordersLoadedOnce = false;
+  
+  let galleryItems = []; // [{url, file?, objectUrl?, isNew?}]
+let ordersLoadedOnce = false;
   let currentTab = "products";
   let allOrdersCache = [];
   let categoriesCache = []; // [{id, slug, title, sort, is_active}]
@@ -133,6 +140,113 @@
   function previewFromFile(file) {
     if (!file) return;
     setPreview(URL.createObjectURL(file));
+  }
+
+  function parseImgsField(v) {
+    if (!v) return [];
+    if (Array.isArray(v)) return v.filter(Boolean);
+    if (typeof v === "string") {
+      const s = v.trim();
+      if (!s) return [];
+      try {
+        const parsed = JSON.parse(s);
+        return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+      } catch {
+        // allow comma-separated fallback
+        if (s.includes(",")) return s.split(",").map(x => x.trim()).filter(Boolean);
+        return [];
+      }
+    }
+    return [];
+  }
+
+  function revokeObjectUrl(it) {
+    if (it?.objectUrl) {
+      try { URL.revokeObjectURL(it.objectUrl); } catch {}
+      it.objectUrl = "";
+    }
+  }
+
+  function clearGallery() {
+    galleryItems.forEach(revokeObjectUrl);
+    galleryItems = [];
+    renderGallery();
+  }
+
+  function uniqUrls(urls) {
+    const out = [];
+    const set = new Set();
+    for (const u of urls) {
+      const s = String(u || "").trim();
+      if (!s || set.has(s)) continue;
+      set.add(s);
+      out.push(s);
+    }
+    return out;
+  }
+
+  function ensureMainFirst() {
+    // first item is main; also keep admImg in sync
+    const main = galleryItems[0]?.url || "";
+    if (admImg) admImg.value = main && !galleryItems[0]?.isNew ? main : (admImg.value || "");
+    setPreview(main || "");
+  }
+
+  function setAsMain(idx) {
+    const i = Number(idx);
+    if (!Number.isFinite(i) || i < 0 || i >= galleryItems.length) return;
+    if (i === 0) return;
+    const [it] = galleryItems.splice(i, 1);
+    galleryItems.unshift(it);
+    renderGallery();
+    ensureMainFirst();
+  }
+
+  function removeFromGallery(idx) {
+    const i = Number(idx);
+    if (!Number.isFinite(i) || i < 0 || i >= galleryItems.length) return;
+    const [it] = galleryItems.splice(i, 1);
+    revokeObjectUrl(it);
+    renderGallery();
+    ensureMainFirst();
+  }
+
+  function renderGallery() {
+    if (!admImgsList) return;
+    if (!galleryItems.length) {
+      admImgsList.innerHTML = "";
+      return;
+    }
+    admImgsList.innerHTML = galleryItems.map((it, idx) => {
+      const isMain = idx === 0;
+      const url = escHtml(it.url || "");
+      return `
+        <div class="adm-thumb ${isMain ? "is-main" : ""}" data-idx="${idx}">
+          ${isMain ? `<div class="adm-thumb__badge">MAIN</div>` : ""}
+          <img src="${url}" alt="">
+          <div class="adm-thumb__bar">
+            <button type="button" class="adm-thumb__btn" data-action="main" data-idx="${idx}" title="Зробити головним">⭐</button>
+            <button type="button" class="adm-thumb__btn" data-action="remove" data-idx="${idx}" title="Видалити">✕</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function addFilesToGallery(files) {
+    const list = Array.from(files || []).filter(Boolean);
+    if (!list.length) return;
+
+    list.forEach((file) => {
+      const objectUrl = URL.createObjectURL(file);
+      galleryItems.push({ url: objectUrl, file, objectUrl, isNew: true });
+    });
+
+    renderGallery();
+    if (galleryItems.length === list.length) {
+      // gallery was empty before
+      ensureMainFirst();
+    }
   }
 
   function fmtDate(dt) {
@@ -333,7 +447,7 @@
     const { data, error } = await sb
       .from("products")
       .select(`
-        id, title, price, stock, img, desc, is_popular, is_active, created_at, updated_at,
+        id, title, price, stock, img, imgs, desc, is_popular, is_active, created_at, updated_at,
         category, category_id,
         categories:category_id ( id, slug, title )
       `)
@@ -545,9 +659,20 @@
       }
     }
 
-    setPreview((admImg?.value || "").trim());
+    
+    // init gallery from product: prefer product.imgs, always ensure main is first
+    clearGallery();
+    const mainUrl = (product?.img || "").trim();
+    const extra = parseImgsField(product?.imgs);
+    const urls = uniqUrls([mainUrl, ...extra]);
+    galleryItems = urls.map(u => ({ url: u, isNew: false }));
+    renderGallery();
 
-    modal.setAttribute("aria-hidden", "false");
+    // preview main
+    const first = galleryItems[0]?.url || "";
+    setPreview(first);
+    if (admImg) admImg.value = first || "";
+modal.setAttribute("aria-hidden", "false");
     modal.classList.add("open");
 
     // lock background if available (you already have helpers in store.js, but admin may not load it)
@@ -576,13 +701,23 @@
 
   admImg?.addEventListener("input", () => {
     const url = (admImg.value || "").trim();
-    if (url) {
-      selectedFile = null;
-      setPreview(url);
+    if (!url) return;
+
+    // manual URL => becomes main, and clears pending file for main
+    selectedFile = null;
+
+    // if url exists in gallery, move it to front; else unshift
+    const idx = galleryItems.findIndex(it => String(it.url || "").trim() === url);
+    if (idx >= 0) {
+      setAsMain(idx);
+    } else {
+      galleryItems.unshift({ url, isNew: false });
+      renderGallery();
+      ensureMainFirst();
     }
   });
 
-  addBtn?.addEventListener("click", () => openAdminModal(null));
+addBtn?.addEventListener("click", () => openAdminModal(null));
 
   // dropzone
   admPick?.addEventListener("click", () => admFile?.click());
@@ -590,11 +725,24 @@
   admFile?.addEventListener("change", () => {
     const f = admFile.files?.[0];
     if (!f) return;
+
+    // main photo via file => put as first in gallery
     selectedFile = f;
-    previewFromFile(f);
+
+    // remove existing temp main preview if any
+    const tmpIdx = galleryItems.findIndex(it => it.__mainTmp);
+    if (tmpIdx >= 0) removeFromGallery(tmpIdx);
+
+    const objectUrl = URL.createObjectURL(f);
+    galleryItems.unshift({ url: objectUrl, file: f, objectUrl, isNew: true, __mainTmp: true });
+    renderGallery();
+    setPreview(objectUrl);
+
+    // clear URL field (поки фото не завантажено)
+    if (admImg) admImg.value = "";
   });
 
-  ["dragenter", "dragover"].forEach((ev) => {
+["dragenter", "dragover"].forEach((ev) => {
     admDrop?.addEventListener(ev, (e) => {
       e.preventDefault();
       admDrop.classList.add("is-drag");
@@ -610,6 +758,7 @@
   admDrop?.addEventListener("drop", (e) => {
     const f = e.dataTransfer?.files?.[0];
     if (!f) return;
+
     selectedFile = f;
 
     if (admFile) {
@@ -618,10 +767,56 @@
       admFile.files = dt.files;
     }
 
-    previewFromFile(f);
+    // main photo => first in gallery
+    const tmpIdx = galleryItems.findIndex(it => it.__mainTmp);
+    if (tmpIdx >= 0) removeFromGallery(tmpIdx);
+
+    const objectUrl = URL.createObjectURL(f);
+    galleryItems.unshift({ url: objectUrl, file: f, objectUrl, isNew: true, __mainTmp: true });
+    renderGallery();
+    setPreview(objectUrl);
+    if (admImg) admImg.value = "";
   });
 
-  function extFromName(name = "") {
+// ===== MULTI-PHOTO GALLERY =====
+  admPickMore?.addEventListener("click", () => admFilesMore?.click());
+
+  admFilesMore?.addEventListener("change", () => {
+    const files = admFilesMore.files;
+    if (!files || !files.length) return;
+    addFilesToGallery(files);
+    // allow picking same file again later
+    admFilesMore.value = "";
+  });
+
+  ["dragenter", "dragover"].forEach((ev) => {
+    admDropMore?.addEventListener(ev, (e) => {
+      e.preventDefault();
+      admDropMore.classList.add("is-drag");
+    });
+  });
+  ["dragleave", "drop"].forEach((ev) => {
+    admDropMore?.addEventListener(ev, (e) => {
+      e.preventDefault();
+      admDropMore.classList.remove("is-drag");
+    });
+  });
+
+  admDropMore?.addEventListener("drop", (e) => {
+    const files = e.dataTransfer?.files;
+    if (!files || !files.length) return;
+    addFilesToGallery(files);
+  });
+
+  admImgsList?.addEventListener("click", (e) => {
+    const btn = e.target?.closest?.("[data-action]");
+    if (!btn) return;
+    const act = btn.dataset.action;
+    const idx = btn.dataset.idx;
+    if (act === "main") setAsMain(idx);
+    if (act === "remove") removeFromGallery(idx);
+  });
+function extFromName(name = "") {
     const m = String(name).toLowerCase().match(/\.(png|jpg|jpeg|webp|gif)$/);
     return m ? m[1] : "jpg";
   }
@@ -660,7 +855,7 @@
   async function editProduct(id) {
     const { data, error } = await sb
       .from("products")
-      .select(`id, title, price, stock, img, desc, is_popular, is_active, category, category_id`)
+      .select(`id, title, price, stock, img, imgs, desc, is_popular, is_active, category, category_id`)
       .eq("id", id)
       .single();
 
@@ -687,20 +882,40 @@
 
     if (!img && editingId && existingImgUrl) img = existingImgUrl;
 
+    
+    // ===== upload gallery files (main + extra) =====
+    const productId = editingId || String(Date.now());
+
+    // if user typed main URL but gallery is empty — init gallery from it
+    if (!galleryItems.length && img) {
+      galleryItems = [{ url: img, isNew: false }];
+      renderGallery();
+    }
+
+    // upload in order, replacing object URLs with public URLs
     try {
-      if (selectedFile) {
-        const pid = editingId || String(Date.now());
-        img = await uploadToStorage(selectedFile, pid);
-        admImg.value = img;
+      for (const it of galleryItems) {
+        if (it?.file) {
+          const publicUrl = await uploadToStorage(it.file, productId);
+          revokeObjectUrl(it);
+          it.url = publicUrl;
+          it.file = null;
+          it.isNew = false;
+          if (it.__mainTmp) it.__mainTmp = false;
+        }
       }
     } catch (e) {
       console.error(e);
       return setErr(`Upload error: ${e?.message || e}`);
     }
 
-    if (!img) return setErr("Вкажи фото або URL картинки");
+    // final urls
+    const imgs = uniqUrls(galleryItems.map(it => it.url));
+    const mainImg = imgs[0] || img || "";
 
-    const cat = findCategoryById(categoryId);
+    img = mainImg;
+    if (!img) return setErr("Вкажи фото або URL картинки");
+const cat = findCategoryById(categoryId);
     const catSlug = cat?.slug || null;
 
     const payload = {
@@ -720,7 +935,7 @@
     if (editingId) {
       res = await sb.from("products").update(payload).eq("id", editingId).select("*").single();
     } else {
-      const id = String(Date.now());
+      const id = productId;
       res = await sb.from("products").insert([{ id, ...payload, created_at: new Date().toISOString() }]).select("*").single();
     }
 
