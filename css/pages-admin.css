@@ -1,159 +1,69 @@
-#adminAuth {
-  max-width: 320px;
+/* css/pages-admin.css */
+
+/* FIX: чтобы hidden всегда реально скрывал */
+[hidden] { display: none !important; }
+
+#adminAuth{
+  max-width: 360px;
   margin: 60px auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 
-#adminAuth input {
-  padding: 10px;
-  border-radius: 8px;
+#adminAuth input{
+  padding: 10px 12px;
+  border-radius: 10px;
   border: 1px solid #ccc;
 }
 
-#addProductBtn {
-  margin: 20px 0;
-}
+#addProductBtn{ margin: 10px 0; }
 
-.admin-actions {
-  display: flex;
-  gap: 10px;
+/* ---------- common admin ui ---------- */
+.adm-field{ display:grid; gap:6px; }
+.adm-label{ font-size:12px; color:#777; }
+.adm-input{
+  width:100%;
+  height:44px;
+  border:1px solid #e1e1e1;
+  border-radius:14px;
+  padding:0 14px;
+  outline:none;
 }
-
-/* FIX: чтобы hidden всегда реально скрывал */
-[hidden] { 
-  display: none !important; 
+.adm-input:focus{
+  border-color:#dc7000;
+  box-shadow:0 0 0 4px rgba(220,112,0,.12);
 }
+.adm-input--sm{ height:40px; width:84px; padding:0 12px; border-radius:12px; }
 
-.adm-drop{
-  border: 2px dashed rgba(0,0,0,.18);
-  border-radius: 16px;
-  padding: 14px;
-  background: rgba(0,0,0,.02);
-  margin-top: 8px;
+.adm-textarea{
+  width:100%;
+  min-height: 100px;
+  border:1px solid #e1e1e1;
+  border-radius:14px;
+  padding: 12px 14px;
+  resize: vertical;
+  outline:none;
 }
-
-.adm-drop.is-drag{
-  border-color: rgba(75,60,255,.6);
-  background: rgba(75,60,255,.06);
-}
-
-.adm-drop__inner{
-  display: grid;
-  gap: 6px;
-  justify-items: start;
-}
-
-.adm-drop__title{
-  font-weight: 800;
-}
-
-.adm-drop__sub{
-  opacity: .7;
-}
-
-.admin-tabs{
-  display:flex;
-  gap:12px;
-  margin:16px 0 22px;
-}
-
-.admin-tabs .btn-light{
-  border:1px solid rgba(0,0,0,.12);
-  background:#fff;
-}
-
-.admin-tabs .is-active{
-  border-color:#DC7000;
-  box-shadow:0 0 0 3px rgba(220,112,0,.12);
-}
-
-.orders-grid{
-  display:grid;
-  gap:14px;
-}
-
-.order-card{
-  background:#fff;
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-}
-
-.order-card-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
-}
-
-.order-card-meta{
-  margin-top:12px;
-  display:grid;
-  grid-template-columns:140px 1fr;
-  gap:8px 12px;
-}
-
-.order-card-items{
-  margin-top:14px;
-  border-top:1px solid rgba(0,0,0,.08);
-  padding-top:12px;
-  display:grid;
-  gap:10px;
-}
-
-.order-item-row{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-}
-
-.order-status{
-  height:40px;
-  border-radius:12px;
-  border:1px solid rgba(0,0,0,.12);
-  padding:0 12px;
-}
-
-.oa-item__code{
-  display:inline-block;
-  margin-left:10px;
-  padding:4px 10px;
-  border:1px solid #eee;
-  border-radius:999px;
-  font-size:12px;
-  color:#666;
-  background:#fafafa;
-  vertical-align:middle;
-}
-
-/* ===== Admin modal fields ===== */
-.pmodal__about .adm-field {
-  display: grid;
-  gap: 6px;
-}
-
-.pmodal__about .adm-label {
-  font-size: 12px;
-  color: #777;
+.adm-textarea:focus{
+  border-color:#dc7000;
+  box-shadow:0 0 0 4px rgba(220,112,0,.12);
 }
 
 /* красивый select как input */
-.pmodal__about .adm-select {
-  width: 100%;
-  height: 44px;
-  padding: 0 44px 0 14px; /* место под стрелку */
-  border: 1px solid #e1e1e1;
-  border-radius: 14px;
-  background: #fff;
-  outline: none;
-  font-size: 14px;
-  appearance: none;        /* убираем системную стрелку */
-  -webkit-appearance: none;
-  -moz-appearance: none;
+.adm-select{
+  width:100%;
+  height:44px;
+  padding:0 44px 0 14px;
+  border:1px solid #e1e1e1;
+  border-radius:14px;
+  background:#fff;
+  outline:none;
+  font-size:14px;
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
 
-  /* кастомная стрелка */
   background-image:
     linear-gradient(45deg, transparent 50%, #777 50%),
     linear-gradient(135deg, #777 50%, transparent 50%),
@@ -162,104 +72,261 @@
     calc(100% - 20px) 18px,
     calc(100% - 14px) 18px,
     0 0;
-  background-size:
-    6px 6px,
-    6px 6px,
-    100% 100%;
-  background-repeat: no-repeat;
+  background-size: 6px 6px, 6px 6px, 100% 100%;
+  background-repeat:no-repeat;
+}
+.adm-select:focus{
+  border-color:#dc7000;
+  box-shadow:0 0 0 4px rgba(220,112,0,.12);
 }
 
-.pmodal__about .adm-select:focus {
-  border-color: #dc7000;
-  box-shadow: 0 0 0 4px rgba(220,112,0,.12);
+.adm-row{ display:flex; gap:10px; align-items:center; }
+.adm-check{ display:flex; gap:10px; align-items:center; cursor:pointer; user-select:none; }
+.adm-check input{ width:18px; height:18px; }
+
+.adm-grid3{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+@media (max-width: 820px){
+  .adm-grid3{ grid-template-columns: 1fr; }
 }
 
-.pmodal__about .adm-select:disabled {
-  opacity: .6;
-  cursor: not-allowed;
-  background-color: #f7f7f7;
+/* ---------- filters ---------- */
+.adm-filters{
+  display:grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr 1fr;
+  gap:12px;
+  margin: 18px 0 14px;
+  align-items:end;
+}
+.adm-field--row .adm-row{ justify-content:space-between; }
+@media (max-width: 1100px){
+  .adm-filters{ grid-template-columns: 1fr 1fr 1fr; }
+}
+@media (max-width: 680px){
+  .adm-filters{ grid-template-columns: 1fr; }
 }
 
-
-/* ===== Admin product action buttons ===== */
-.admin-actions{
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
+/* ---------- toolbar ---------- */
+.adm-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding: 12px 14px;
+  background:#fff;
+  border:1px solid #ececec;
+  border-radius:16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.05);
+  margin: 10px 0 14px;
+}
+.adm-toolbar__actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.btn.danger{
+  border-color:#fee2e2 !important;
+  background:#fef2f2 !important;
+  color:#dc2626 !important;
 }
 
+/* ---------- pager ---------- */
+.adm-products-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.adm-pager{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* ---------- dropzone ---------- */
+.adm-drop{
+  border:2px dashed rgba(0,0,0,.18);
+  border-radius:16px;
+  padding:14px;
+  background: rgba(0,0,0,.02);
+  margin-top:8px;
+}
+.adm-drop.is-drag{
+  border-color: rgba(75,60,255,.6);
+  background: rgba(75,60,255,.06);
+}
+.adm-drop__inner{ display:grid; gap:6px; justify-items:start; }
+.adm-drop__title{ font-weight:800; }
+.adm-drop__sub{ opacity:.7; }
+
+/* ---------- tabs ---------- */
+.admin-tabs{
+  display:flex;
+  gap:12px;
+  margin:16px 0 22px;
+  justify-content:center;
+}
+.admin-tabs .btn-light{
+  border:1px solid rgba(0,0,0,.12);
+  background:#fff;
+}
+.admin-tabs .is-active{
+  border-color:#DC7000;
+  box-shadow:0 0 0 3px rgba(220,112,0,.12);
+}
+
+/* ---------- product cards + actions ---------- */
+#productsGrid .product-card{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+
+#productsGrid .product-card__body{
+  display:flex;
+  flex-direction:column;
+  flex:1 1 auto;
+  padding-bottom:14px;
+}
+
+/* pinned bottom buttons */
+#productsGrid .admin-actions{
+  margin-top:auto;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  padding-top:12px;
+  border-top:1px solid rgba(0,0,0,.06);
+}
+
+/* action buttons */
 .admin-actions button{
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid #e6e6e6;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  border:1px solid #e6e6e6;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:16px;
   transition: all .15s ease;
 }
-
-/* hover */
 .admin-actions button:hover{
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(0,0,0,.08);
 }
-
-/* edit */
 .admin-actions button[data-edit]{
-  color: #2563eb;           /* синий */
-  border-color: #dbeafe;
-  background: #eff6ff;
+  color:#2563eb;
+  border-color:#dbeafe;
+  background:#eff6ff;
 }
-.admin-actions button[data-edit]:hover{
-  background: #dbeafe;
-}
-
-/* delete */
+.admin-actions button[data-edit]:hover{ background:#dbeafe; }
 .admin-actions button[data-del]{
-  color: #dc2626;           /* красный */
-  border-color: #fee2e2;
-  background: #fef2f2;
+  color:#dc2626;
+  border-color:#fee2e2;
+  background:#fef2f2;
 }
-.admin-actions button[data-del]:hover{
-  background: #fee2e2;
-}
+.admin-actions button[data-del]:hover{ background:#fee2e2; }
 
-/* ===== Admin product cards: actions pinned to bottom ===== */
-
-#productsGrid .product-card{
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-#productsGrid .product-card__img{
-  flex: 0 0 auto;
-}
-
-/* тело карточки растягиваем по высоте */
-#productsGrid .product-card__body{
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  padding-bottom: 14px;
+/* ---------- new admin product ui bits ---------- */
+.admin-card{ position:relative; }
+.admin-card__select{
+  position:absolute;
+  top:10px;
+  left:10px;
+  z-index:2;
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(6px);
+  border:1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  padding:6px 8px;
 }
 
-/* кнопки — всегда внизу */
-#productsGrid .admin-actions{
-  margin-top: auto;               /* 👈 ключ: прижимает вниз */
-  display: flex;
-  gap: 10px;
-  align-items: center;
+.adm-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top: 6px;
+}
+.adm-price{ font-weight:700; }
+.adm-stock{ font-size:13px; color:#555; }
 
-  padding-top: 12px;
-  border-top: 1px solid rgba(0,0,0,.06); /* легкая линия отделения */
+.pill{
+  display:inline-flex;
+  min-width: 32px;
+  justify-content:center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border:1px solid #eee;
+  font-size:12px;
+  font-weight:700;
+  background:#fafafa;
+}
+.pill-green{ color:#166534; border-color:#dcfce7; background:#f0fdf4; }
+.pill-orange{ color:#9a3412; border-color:#ffedd5; background:#fff7ed; }
+.pill-red{ color:#991b1b; border-color:#fee2e2; background:#fef2f2; }
+
+.adm-quick{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top: 10px;
+  align-items:center;
+}
+.btn-mini{
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border:1px solid rgba(0,0,0,.12);
+  background:#fff;
+  cursor:pointer;
+  font-size: 12px;
+}
+.btn-mini.is-on{
+  border-color:#dc7000;
+  box-shadow:0 0 0 3px rgba(220,112,0,.12);
 }
 
-/* если хочешь по центру снизу — включи это вместо justify-content:flex-start */
-#productsGrid .admin-actions{
-  justify-content: center;        /* или flex-start */
+.adm-stock-edit{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding: 6px;
+  border:1px solid rgba(0,0,0,.10);
+  border-radius: 14px;
+  background: #fff;
 }
+.adm-stock-edit input{
+  width: 70px;
+  height: 32px;
+  border: 1px solid rgba(0,0,0,.10);
+  border-radius: 10px;
+  padding: 0 10px;
+  outline:none;
+}
+.adm-stock-edit input:focus{
+  border-color:#dc7000;
+  box-shadow:0 0 0 3px rgba(220,112,0,.12);
+}
+
+/* toast */
+.adm-toast{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px rgba(0,0,0,.18);
+  max-width: 320px;
+  font-weight: 600;
+}
+.adm-toast.ok{ border-color: rgba(34,197,94,.35); }
+.adm-toast.info{ border-color: rgba(59,130,246,.35); }
