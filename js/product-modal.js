@@ -180,14 +180,17 @@ async function openModal(product) {
 
   // if we don't have gallery data in this context (favorites/cart/popular), fetch full product from Supabase
   let merged = { ...input, id: pid };
-  const hasImgs = Array.isArray(merged.imgs) ? merged.imgs.length : (typeof merged.imgs === "string" && merged.imgs.trim().length);
+
+  const hasImgs =
+    (Array.isArray(merged.imgs) && merged.imgs.length > 0) ||
+    (typeof merged.imgs === "string" && merged.imgs.trim().length > 0);
+
   if (!hasImgs || !merged.desc || !merged.img) {
     const full = await fetchProductById(pid);
-    if (full) merged = { ...full, ...merged };
+    if (full) merged = { ...merged, ...full }; // ✅ база важнее
   }
 
-
-  currentProduct = product || null;
+  currentProduct = merged; // ✅ ВОТ ЭТО чинит перелистывание
   if (!currentProduct) return;
 
   const priceNum = safePrice(currentProduct.priceNum ?? currentProduct.price);
