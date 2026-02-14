@@ -133,11 +133,18 @@
   async function requireSessionOrRedirect() {
     const { data: sess } = await sb.auth.getSession();
     if (!sess?.session) {
+      // ✅ запоминаем, куда вернуться после логина
+      try { window.setPostAuthRedirect?.(location.href); } catch {
+        try { localStorage.setItem("post_auth_redirect", location.href); } catch {}
+      }
       location.href = "auth.html";
       return null;
     }
     const { data: uData, error } = await sb.auth.getUser();
     if (error || !uData?.user) {
+      try { window.setPostAuthRedirect?.(location.href); } catch {
+        try { localStorage.setItem("post_auth_redirect", location.href); } catch {}
+      }
       location.href = "auth.html";
       return null;
     }
@@ -223,7 +230,6 @@
 
     const total = items.reduce((acc, i) => acc + i.sum, 0);
 
-    // ✅ Рисуем как на скрине: .checkout-row / __img / __info / __title / __meta / __code / __line / __sum
     list.innerHTML = items.map(i => `
       <div class="checkout-row">
         <div class="checkout-row__img">
@@ -362,7 +368,6 @@
     const emailErr = getErrEl("email");
     const deliveryErr = getErrEl("delivery");
 
-    // input restrictions
     phoneEl?.addEventListener("input", () => {
       phoneEl.value = phoneEl.value.replace(/[^\d+\s()-]/g, "");
     });
@@ -452,7 +457,6 @@
       return true;
     }
 
-    // --------- AUTO-SAVE EMAIL on blur ----------
     let savingEmail = false;
 
     emailEl?.addEventListener("blur", async () => {
@@ -477,7 +481,6 @@
       }
     });
 
-    // live handlers
     nameEl?.addEventListener("input", () => vName(true));
     nameEl?.addEventListener("blur", () => vName(false));
 

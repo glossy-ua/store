@@ -2,9 +2,11 @@
    store.js  (CLEAN, NO DUPES)
    + MERGE guest -> user
    + SAFE INPUT (string/object)
+   + POST-AUTH REDIRECT helpers
+   + (optional) Supabase auth sync
    ========================= */
 
-// ===== JSON helpers =====
+/* ===== JSON helpers ===== */
 function getJSON(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
   catch { return fallback; }
@@ -22,18 +24,33 @@ function k(base, uid = getUid()) {
   return `${base}:${uid}`;
 }
 
-// ✅ НОРМАЛИЗАЦИЯ ID
+/* ===== Post-auth redirect ===== */
+function setPostAuthRedirect(url) {
+  try {
+    const u = String(url || location.href);
+    localStorage.setItem("post_auth_redirect", u);
+  } catch {}
+}
+function popPostAuthRedirect() {
+  try {
+    const v = localStorage.getItem("post_auth_redirect") || "";
+    if (v) localStorage.removeItem("post_auth_redirect");
+    return v;
+  } catch { return ""; }
+}
+
+/* ✅ НОРМАЛИЗАЦИЯ ID */
 function normId(v) {
   return String(v ?? '').trim().replace(/^0+/, '') || '0';
 }
 
-// ✅ приводим вход к объекту товара (даже если прилетела строка)
+/* ✅ приводим вход к объекту товара (даже если прилетела строка) */
 function asProduct(input) {
   if (input && typeof input === "object") return input;
   return { id: String(input || "").trim() };
 }
 
-// ✅ безопасный id
+/* ✅ безопасный id */
 function safeId(input) {
   const id = String(input ?? "").trim();
   const nid = normId(id);
@@ -41,7 +58,7 @@ function safeId(input) {
   return id;
 }
 
-// ===== Favorites =====
+/* ===== Favorites ===== */
 function getFavorites(uid) {
   return getJSON(k('favorites', uid), []);
 }
@@ -85,7 +102,7 @@ function updateFavBadge() {
     .forEach(b => b.textContent = count);
 }
 
-// ===== Cart =====
+/* ===== Cart ===== */
 function getCart(uid) {
   return getJSON(k('cart', uid), []);
 }
@@ -136,7 +153,8 @@ function updateCartBadge() {
     .forEach(b => b.textContent = count);
 }
 
-// ===== MERGE guest -> user =====
+/* ===== MERGE guest -> user =====
+   Важно: после мержа чистим guest, чтобы при логауте не "возвращалось" */
 function mergeGuestToUser(newUid) {
   const uid = String(newUid || '').trim();
   if (!uid || uid === 'guest') return;
@@ -196,6 +214,7 @@ function mergeGuestToUser(newUid) {
   setFavorites(mergedFav, uid);
   setCart(mergedCart, uid);
 
+  // ✅ критично: чистим гостевые ключи
   localStorage.removeItem(k('favorites', 'guest'));
   localStorage.removeItem(k('cart', 'guest'));
 
@@ -203,7 +222,7 @@ function mergeGuestToUser(newUid) {
   try { updateCartBadge(); } catch {}
 }
 
-// ===== animateAdded =====
+/* ===== animateAdded ===== */
 function animateAdded(btn, opts = {}) {
   if (!btn) return;
 
@@ -232,11 +251,9 @@ function animateAdded(btn, opts = {}) {
 function formatPriceUAH(value) {
   return parseFloat(String(value).replace(',', '.').replace(/[^\d.]/g, '')) || 0;
 }
-
 window.formatPriceUAH = formatPriceUAH;
 
-
-// ===== scroll lock for modals (no layout shift + header safe) =====
+/* ===== scroll lock for modals (no layout shift + header safe) ===== */
 (function () {
   let locked = false;
   let savedY = 0;
@@ -322,3 +339,58 @@ window.formatPriceUAH = formatPriceUAH;
   window.lockBodyScroll = lockBodyScroll;
   window.unlockBodyScroll = unlockBodyScroll;
 })();
+
+/* ===== Optional: sync with Supabase auth changes =====
+   Это страховка: если где-то произошёл SIGNED_IN, мы:
+   - сохраняем sb_uid
+   - делаем merge guest -> user (один раз, гостевые ключи потом пустые)
+*/
+(function initSupabaseAuthSync(){
+  try {
+    const sb = window.sb;
+    if (!sb?.auth?.onAuthStateChange) return;
+
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user?.id) {
+        const uid = session.user.id;
+        localStorage.setItem("sb_uid", uid);
+        try { mergeGuestToUser(uid); } catch {}
+      }
+
+      if (event === "SIGNED_OUT") {
+        // чистим только маркеры сессии (user key остаётся в localStorage под uid, но недоступен без sb_uid)
+        localStorage.removeItem("sb_uid");
+        localStorage.removeItem("user");
+      }
+    });
+  } catch {}
+})();
+
+/* ===== expose ===== */
+window.getJSON = getJSON;
+window.setJSON = setJSON;
+window.getUid = getUid;
+window.k = k;
+
+window.normId = normId;
+window.asProduct = asProduct;
+window.safeId = safeId;
+
+window.getFavorites = getFavorites;
+window.setFavorites = setFavorites;
+window.isFav = isFav;
+window.toggleFav = toggleFav;
+window.updateFavBadge = updateFavBadge;
+
+window.getCart = getCart;
+window.setCart = setCart;
+window.addToCart = addToCart;
+window.getCartCount = getCartCount;
+window.updateCartBadge = updateCartBadge;
+
+window.mergeGuestToUser = mergeGuestToUser;
+
+window.animateAdded = animateAdded;
+
+window.setPostAuthRedirect = setPostAuthRedirect;
+window.popPostAuthRedirect = popPostAuthRedirect;

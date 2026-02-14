@@ -193,6 +193,14 @@ document.addEventListener("click", (e) => {
     if (count <= 0) {
       e.preventDefault();
       alert("Ваша корзина пуста.");
+      return;
+    }
+
+    // ✅ если не залогинен — запомним куда вернуться (а дальше checkout сам кинет на auth)
+    if (!localStorage.getItem("sb_uid")) {
+      try { window.setPostAuthRedirect?.(new URL("checkout.html", location.href).toString()); } catch {
+        try { localStorage.setItem("post_auth_redirect", location.origin + location.pathname.replace(/[^/]*$/, "") + "checkout.html"); } catch {}
+      }
     }
   }
 });

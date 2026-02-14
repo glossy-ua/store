@@ -1,4 +1,6 @@
 // js/auth.js (Supabase auth + email confirm + UA errors)
+// + redirect back after login
+// + merge guest cart/fav -> user
 
 (() => {
   const sb = window.sb;
@@ -14,7 +16,6 @@
   function tAuthError(msg = "") {
     const m = String(msg || "").trim();
 
-    // частые Supabase ошибки
     const map = {
       "Invalid login credentials": "Невірний email або пароль.",
       "Email not confirmed": "Пошта не підтверджена.",
@@ -29,14 +30,12 @@
 
     if (map[m]) return map[m];
 
-    // мягкий фолбэк по ключевым словам
     const low = m.toLowerCase();
     if (low.includes("invalid login")) return "Невірний email або пароль.";
     if (low.includes("email not confirmed")) return "Пошта не підтверджена.";
     if (low.includes("rate limit") || low.includes("too many")) return "Забагато спроб. Спробуй пізніше.";
     if (low.includes("password")) return "Помилка паролю. Перевір пароль і спробуй ще раз.";
 
-    // если вообще не распознали — покажем оригинал (но без англ. ужаса не получится всегда)
     return m || "Сталася помилка. Спробуй ще раз.";
   }
 
@@ -72,6 +71,18 @@
     return !!user?.email_confirmed_at;
   }
 
+  function pickRedirectTarget() {
+    const back = (typeof window.popPostAuthRedirect === "function")
+      ? window.popPostAuthRedirect()
+      : (localStorage.getItem("post_auth_redirect") || "");
+
+    if (back && typeof window.popPostAuthRedirect !== "function") {
+      localStorage.removeItem("post_auth_redirect");
+    }
+
+    return back || pageUrl("profile.html");
+  }
+
   // временно сохраняем user в localStorage
   function saveUserToLocalStorage(user) {
     const md = user?.user_metadata || {};
@@ -85,6 +96,20 @@
     };
     localStorage.setItem("user", JSON.stringify(u));
     localStorage.setItem("sb_uid", user?.id || "");
+  }
+
+  async function afterAuthSuccess(user) {
+    try {
+      // ✅ merge guest -> user (чтобы не слетали корзина/избранное)
+      if (typeof window.mergeGuestToUser === "function" && user?.id) {
+        window.mergeGuestToUser(user.id);
+      }
+    } catch {}
+
+    saveUserToLocalStorage(user);
+
+    // ✅ вернуться туда, откуда пришёл (cart/checkout/etc)
+    location.href = pickRedirectTarget();
   }
 
   // ---------- safety ----------
@@ -185,8 +210,7 @@
       return showMsg("Пошта не підтверджена.", "err");
     }
 
-    saveUserToLocalStorage(user);
-    location.href = "profile.html";
+    await afterAuthSuccess(user);
   }
 
   // ---------- REGISTER ----------
@@ -251,11 +275,11 @@
     const forgotBtn = document.getElementById("forgotBtn");
     if (forgotBtn) forgotBtn.addEventListener("click", onForgotPassword);
 
+    // Если уже есть сессия — обновим localStorage и уйдём назад
     const { data } = await sb.auth.getSession();
     if (data?.session) {
       const { data: uData } = await sb.auth.getUser();
-      if (uData?.user) saveUserToLocalStorage(uData.user);
-      location.href = "profile.html";
+      if (uData?.user) await afterAuthSuccess(uData.user);
       return;
     }
 

@@ -156,7 +156,9 @@ function initSearch(formId, inputId, boxId){
     }
   }
 
+  // ✅ кликаем без blur/submit гонок
   suggestBox.addEventListener('mousedown', (e) => {
+    e.preventDefault();
     const item = e.target.closest('.search-suggest__item');
     if (!item) return;
     const i = Number(item.dataset.i);
@@ -338,13 +340,3 @@ document.addEventListener('DOMContentLoaded', markActiveMenuLinks);
     else mq.addListener(onModeChange);
   });
 })();
-
-suggestBox.addEventListener('mousedown', (e) => {
-  e.preventDefault();
-  const item = e.target.closest('.search-suggest__item');
-  if (!item) return;
-  const i = Number(item.dataset.i);
-  const p = lastItems[i];
-  if (!p) return;
-  window.location.href = `${pageUrl('search.html')}?q=${encodeURIComponent(p.title)}`;
-});
