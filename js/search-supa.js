@@ -59,7 +59,6 @@
         data-price="${esc(p.price)}"
         data-img="${esc(p.img)}"
         data-desc="${esc(p.desc || '')}"
-        data-imgs="${esc(JSON.stringify(p.imgs || []))}"
       >
         <button class="fav-btn" type="button" title="В обране">♡</button>
 
@@ -107,7 +106,7 @@
     // ✅ правильный синтаксис для PostgREST: ilike.*term*
     const { data, error } = await sb
       .from("products")
-      .select("id,title,price,img,imgs,desc,created_at")
+      .select("id,title,price,img,desc,created_at")
       .eq("is_active", true)
       .or(`title.ilike.*${q}*,desc.ilike.*${q}*`)
       .order("created_at", { ascending: false })

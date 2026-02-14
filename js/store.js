@@ -58,21 +58,6 @@ function safeId(input) {
   return id;
 }
 
-
-/* ✅ normalize imgs (array | json string -> array) */
-function normImgs(input){
-  if (Array.isArray(input)) return input;
-  if (typeof input === "string"){
-    try {
-      const a = JSON.parse(input);
-      return Array.isArray(a) ? a : [];
-    } catch {
-      return [];
-    }
-  }
-  return [];
-}
-
 /* ===== Favorites ===== */
 function getFavorites(uid) {
   return getJSON(k('favorites', uid), []);
@@ -104,8 +89,6 @@ function toggleFav(productOrId) {
       price: product.price || '',
       img: product.img || '',
       desc: product.desc || ''
-    ,
-      imgs: normImgs(product.imgs)
     });
   }
 
@@ -145,9 +128,7 @@ function addToCart(productOrId, qty = 1) {
     item.img = product.img || item.img || '';
     item.desc = product.desc || item.desc || '';
     item.id = id;
-  
-    item.imgs = normImgs(product.imgs).length ? normImgs(product.imgs) : (Array.isArray(item.imgs) ? item.imgs : normImgs(item.imgs));
-} else {
+  } else {
     cart.push({
       id,
       title: product.title || '',
@@ -155,8 +136,6 @@ function addToCart(productOrId, qty = 1) {
       img: product.img || '',
       desc: product.desc || '',
       qty: q
-    ,
-      imgs: normImgs(product.imgs)
     });
   }
 

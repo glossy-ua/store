@@ -35,7 +35,6 @@
       price: priceNum ? priceNum.toFixed(2) : String(card.dataset.price || "").trim(),
       img: String(card.dataset.img || "").trim(),
       desc: String(card.dataset.desc || "").trim(),
-      imgs: String(card.dataset.imgs || \"\"),
     };
   }
 
@@ -55,7 +54,6 @@
         data-price="${esc(priceNum.toFixed(2))}"
         data-img="${esc(p.img || "")}"
         data-desc="${esc(p.desc || "")}"
-        data-imgs="${esc(JSON.stringify(p.imgs || []))}"
       >
         <button class="fav-btn" type="button" title="В обране">♡</button>
 
