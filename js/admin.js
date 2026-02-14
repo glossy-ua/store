@@ -924,6 +924,7 @@ const cat = findCategoryById(categoryId);
       stock,
       desc,
       img,
+      imgs: JSON.stringify(imgs || []),
       category_id: categoryId,
       ...(catSlug ? { category: catSlug } : {}),
       is_active: !!admActive?.checked,

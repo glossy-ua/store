@@ -12,7 +12,7 @@
 
   async function fetchProducts(params = {}) {
     const {
-      select = "id,title,price,img,desc,category,is_popular,created_at",
+      select = "id,title,price,img,imgs,desc,category,is_popular,created_at",
       limit = 100,
       category = null,
       popular = null
