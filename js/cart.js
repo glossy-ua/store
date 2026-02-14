@@ -178,7 +178,7 @@ document.addEventListener("click", (e) => {
       desc: cartItem.dataset.desc || ""
     };
 
-    openModal(product);
+    if (typeof window.openProductModal === "function") { window.openProductModal(product); } else { openModal(product); }
     return;
   }
 

@@ -1,280 +1,359 @@
 // js/product-modal.js
-(function(){
-  "use strict";
+function $(sel) { return document.querySelector(sel); }
 
-  function $(sel){ return document.querySelector(sel); }
+const modal = $('#productModal');
+const pmImg = $('#pmImg');
+const pmThumbs = $('#pmThumbs');
+const pmPrev = $('#pmPrev');
+const pmNext = $('#pmNext');
 
-  const modal = $('#productModal');
-  if(!modal) return;
+const pmTitle = $('#pmTitle');
+const pmCode = $('#pmCode');
+const pmPrice = $('#pmPrice');
+const pmDesc = $('#pmDesc');
+const pmFav = $('#pmFav');
+const pmQty = $('#pmQty');
+const pmAddToCart = $('#pmAddToCart');
 
-  const pmImg = $('#pmImg');
-  const pmThumbs = $('#pmThumbs');
-  const pmPrev = $('#pmPrev');
-  const pmNext = $('#pmNext');
+let currentProduct = null;
 
-  const pmTitle = $('#pmTitle');
-  const pmCode  = $('#pmCode');
-  const pmPrice = $('#pmPrice');
-  const pmDesc  = $('#pmDesc');
-  const pmFav   = $('#pmFav');
-  const pmQty   = $('#pmQty');
-  const pmAddToCart = $('#pmAddToCart');
+// gallery state
+let galleryUrls = [];
+let galleryIndex = 0;
 
-  let currentProduct = null;
+function escHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-  // gallery state
-  let galleryUrls = [];
-  let galleryIndex = 0;
+function safePrice(val) {
+  const n = parseFloat(String(val ?? "").replace(",", ".").replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
 
-  function safeParseJson(s){
-    try{ return JSON.parse(s); }catch{ return null; }
+function setFavBtnState(btn, active) {
+  if (!btn) return;
+  btn.classList.toggle('active', !!active);
+  btn.textContent = active ? '♥️' : '♡';
+}
+
+function safeParseJson(s) {
+  try { return JSON.parse(s); } catch { return null; }
+}
+
+function normalizeImgs(p) {
+  const arr =
+    Array.isArray(p?.imgs) ? p.imgs :
+    (typeof p?.imgs === "string" ? safeParseJson(p.imgs) : null);
+
+  const urls = (arr && Array.isArray(arr) ? arr : [])
+    .map(x => String(x || "").trim())
+    .filter(Boolean);
+
+  const main = String(p?.img || "").trim();
+  if (main && !urls.includes(main)) urls.unshift(main);
+
+  return urls.length ? urls : (main ? [main] : []);
+}
+
+function renderGallery(urls, startUrl = "") {
+  galleryUrls = Array.isArray(urls) ? urls : [];
+  galleryIndex = 0;
+
+  if (!galleryUrls.length) {
+    if (pmImg) pmImg.src = "";
+    if (pmThumbs) { pmThumbs.innerHTML = ""; pmThumbs.style.display = "none"; }
+    if (pmPrev) pmPrev.disabled = true;
+    if (pmNext) pmNext.disabled = true;
+    return;
   }
 
-  function normalizeImgs(p){
-    const arr =
-      Array.isArray(p?.imgs) ? p.imgs :
-      (typeof p?.imgs === "string" ? safeParseJson(p.imgs) : null);
-
-    const urls = (arr && Array.isArray(arr) ? arr : [])
-      .map(x => String(x || "").trim())
-      .filter(Boolean);
-
-    const main = String(p?.img || "").trim();
-    if(main && !urls.includes(main)) urls.unshift(main);
-
-    return urls.length ? urls : (main ? [main] : []);
+  if (startUrl) {
+    const i = galleryUrls.indexOf(startUrl);
+    if (i >= 0) galleryIndex = i;
   }
 
-  function setMainImage(i){
-    if(!galleryUrls.length) return;
-    galleryIndex = (i + galleryUrls.length) % galleryUrls.length;
+  setMainImage(galleryIndex);
+  renderThumbs();
+  syncNav();
+}
 
-    const url = galleryUrls[galleryIndex];
-    if(pmImg){
-      pmImg.src = url;
-      pmImg.alt = currentProduct?.title || "";
-    }
+function setMainImage(i) {
+  if (!galleryUrls.length) return;
 
-    if(pmThumbs){
-      pmThumbs.querySelectorAll(".pm-thumb").forEach((b, idx)=>{
-        b.classList.toggle("is-active", idx === galleryIndex);
-      });
-    }
-    syncNav();
+  // ✅ круг
+  galleryIndex = (i + galleryUrls.length) % galleryUrls.length;
+  const url = galleryUrls[galleryIndex];
+
+  if (pmImg) {
+    pmImg.src = url;
+    pmImg.alt = currentProduct?.title || "";
   }
 
-  function renderThumbs(){
-    if(!pmThumbs) return;
-    if(galleryUrls.length <= 1){
-      pmThumbs.innerHTML = "";
-      pmThumbs.style.display = "none";
-      return;
-    }
-    pmThumbs.style.display = "";
-    pmThumbs.innerHTML = galleryUrls.map((url, idx)=>(
-      `<button class="pm-thumb ${idx===galleryIndex?'is-active':''}" type="button" data-idx="${idx}" aria-label="Фото ${idx+1}">
-         <img src="${url}" alt="">
-       </button>`
-    )).join("");
+  if (pmThumbs) {
+    pmThumbs.querySelectorAll('.pm-thumb').forEach((b, idx) => {
+      b.classList.toggle('is-active', idx === galleryIndex);
+    });
   }
 
-  function syncNav(){
-    const multi = galleryUrls.length > 1;
-    if(pmPrev) pmPrev.disabled = !multi;
-    if(pmNext) pmNext.disabled = !multi;
+  syncNav();
+}
+
+function renderThumbs() {
+  if (!pmThumbs) return;
+
+  if (galleryUrls.length <= 1) {
+    pmThumbs.innerHTML = "";
+    pmThumbs.style.display = "none";
+    return;
   }
 
-  function renderGallery(urls, startUrl=""){
-    galleryUrls = Array.isArray(urls) ? urls : [];
-    galleryIndex = 0;
+  pmThumbs.style.display = "";
+  pmThumbs.innerHTML = galleryUrls.map((url, idx) => `
+    <button class="pm-thumb ${idx === galleryIndex ? "is-active" : ""}" type="button" data-idx="${idx}">
+      <img src="${escHtml(url)}" alt="">
+    </button>
+  `).join("");
+}
 
-    if(!galleryUrls.length){
-      if(pmImg) pmImg.src = "";
-      if(pmThumbs){ pmThumbs.innerHTML=""; pmThumbs.style.display="none"; }
-      if(pmPrev) pmPrev.disabled = true;
-      if(pmNext) pmNext.disabled = true;
-      return;
-    }
+function syncNav() {
+  const multi = galleryUrls.length > 1;
+  if (pmPrev) pmPrev.disabled = !multi;
+  if (pmNext) pmNext.disabled = !multi;
+}
 
-    if(startUrl){
-      const i = galleryUrls.indexOf(startUrl);
-      if(i >= 0) galleryIndex = i;
-    }
-
-    setMainImage(galleryIndex);
-    renderThumbs();
-    syncNav();
+function setDesc(desc) {
+  if (!pmDesc) return;
+  const text = String(desc || "").trim();
+  if (!text) {
+    pmDesc.textContent = "Опис буде додано пізніше 🙂";
+    return;
   }
+  const hasTags = /<\/?[a-z][\s\S]*>/i.test(text);
+  pmDesc[hasTags ? "innerHTML" : "textContent"] = text;
+}
 
-  function setText(el, text){
-    if(!el) return;
-    el.textContent = text == null ? "" : String(text);
-  }
+// open/close
+async function fetchProductById(id) {
+  const pid = String(id || "").trim();
+  if (!pid) return null;
 
-  function safePrice(val){
-    const n = parseFloat(String(val ?? "").replace(",", ".")) || 0;
-    return n ? n.toFixed(2) : String(val ?? "").trim();
-  }
+  const SUPABASE_URL = window.SUPABASE_URL;
+  const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
 
-  function setFavBtnState(active){
-    if(!pmFav) return;
-    pmFav.classList.toggle("active", !!active);
-    pmFav.textContent = active ? "♥️" : "♡";
-  }
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
 
-  async function fetchImgsById(id){
-    const SUPABASE_URL = window.SUPABASE_URL;
-    const KEY = window.SUPABASE_ANON_KEY;
-    if(!SUPABASE_URL || !KEY || !id) return null;
+  const select = "id,title,price,img,imgs,desc";
+  const url = `${SUPABASE_URL}/rest/v1/products?select=${encodeURIComponent(select)}&id=eq.${encodeURIComponent(pid)}&is_active=eq.true&limit=1`;
 
-    const url = `${SUPABASE_URL}/rest/v1/products?id=eq.${encodeURIComponent(id)}&select=img,imgs`;
+  try {
     const res = await fetch(url, {
-      headers:{
-        apikey: KEY,
-        Authorization: `Bearer ${KEY}`,
-        "Content-Type":"application/json"
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
       }
     });
-    if(!res.ok) return null;
+
+    if (!res.ok) return null;
     const data = await res.json();
-    return Array.isArray(data) && data[0] ? data[0] : null;
+    return Array.isArray(data) ? (data[0] || null) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function openModal(product) {
+  if (!modal) return;
+
+  // normalize input
+  const input = (typeof product === "string" || typeof product === "number")
+    ? { id: String(product) }
+    : (product || {});
+
+  const pid = String(input.id || input.code || input.product_id || "").trim();
+  if (!pid) return;
+
+  // if we don't have gallery data in this context (favorites/cart/popular), fetch full product from Supabase
+  let merged = { ...input, id: pid };
+  const hasImgs = Array.isArray(merged.imgs) ? merged.imgs.length : (typeof merged.imgs === "string" && merged.imgs.trim().length);
+  if (!hasImgs || !merged.desc || !merged.img) {
+    const full = await fetchProductById(pid);
+    if (full) merged = { ...full, ...merged };
   }
 
-  async function openProductModal(product){
-    if(!product) return;
 
-    currentProduct = {
-      id: product.id,
-      title: product.title,
-      price: product.price,
-      img: product.img,
-      desc: product.desc,
-      imgs: product.imgs
-    };
+  currentProduct = product || null;
+  if (!currentProduct) return;
 
-    // fill meta
-    setText(pmTitle, currentProduct.title || "");
-    setText(pmCode, currentProduct.id ? `Код: ${currentProduct.id}` : "");
-    setText(pmPrice, safePrice(currentProduct.price) ? `${safePrice(currentProduct.price)} грн.` : "");
+  const priceNum = safePrice(currentProduct.priceNum ?? currentProduct.price);
+  const priceText = priceNum ? `${priceNum.toFixed(2)} грн.` : (currentProduct.priceText || "");
 
-    // desc
-    if(pmDesc){
-      const text = String(currentProduct.desc || "").trim();
-      pmDesc.textContent = text || "Опис буде додано пізніше 🙂";
-    }
+  if (pmTitle) pmTitle.textContent = currentProduct.title || '';
+  if (pmCode) pmCode.textContent = currentProduct.id ? `Код: ${currentProduct.id}` : '';
+  if (pmPrice) pmPrice.textContent = priceText || '';
+  setDesc(currentProduct.desc);
+  if (pmQty) pmQty.value = 1;
 
-    // fav state (если store.js есть)
-    try{
-      const inFav = typeof window.isInFavorites === "function" && currentProduct.id
-        ? window.isInFavorites(currentProduct.id)
-        : false;
-      setFavBtnState(inFav);
-    }catch{ setFavBtnState(false); }
+  // ✅ gallery
+  const urls = normalizeImgs(currentProduct);
+  renderGallery(urls, currentProduct.img || "");
 
-    // qty default
-    if(pmQty) pmQty.value = "1";
+  // fav
+  if (typeof window.isFav === "function") setFavBtnState(pmFav, window.isFav(currentProduct.id));
 
-    // gallery from product first
-    let urls = normalizeImgs(currentProduct);
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
 
-    // if only 0/1 image -> try fetch from DB by id (чтоб не зависеть от data-imgs)
-    if(urls.length <= 1 && currentProduct.id){
-      try{
-        const row = await fetchImgsById(currentProduct.id);
-        if(row){
-          const merged = { ...currentProduct, ...row };
-          urls = normalizeImgs(merged);
-          currentProduct.img = merged.img;
-          currentProduct.imgs = merged.imgs;
-        }
-      }catch{}
-    }
+  window.lockBodyScroll?.();
+}
 
-    renderGallery(urls, currentProduct.img || "");
+function closeModal() {
+  if (!modal) return;
 
-    // show
-    modal.classList.add("is-open");
-    modal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
-  }
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
 
-  function closeModal(){
-    modal.classList.remove("is-open");
-    modal.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-    currentProduct = null;
-  }
+  window.unlockBodyScroll?.();
 
-  // expose
-  window.openProductModal = openProductModal;
-  window.closeProductModal = closeModal;
+  currentProduct = null;
+  galleryUrls = [];
+  galleryIndex = 0;
+  if (pmThumbs) { pmThumbs.innerHTML = ""; pmThumbs.style.display = "none"; }
+}
 
-  // thumb click
-  pmThumbs?.addEventListener("click", (e)=>{
-    const btn = e.target.closest(".pm-thumb");
-    if(!btn) return;
-    const idx = parseInt(btn.dataset.idx, 10);
-    if(!Number.isFinite(idx)) return;
-    setMainImage(idx);
+window.openProductModal = openModal;
+
+// overlay / x close
+document.addEventListener('click', (e) => {
+  if (!modal?.classList.contains('open')) return;
+  if (e.target?.dataset?.close === '1') closeModal();
+});
+
+// ESC + arrows
+document.addEventListener('keydown', (e) => {
+  if (!modal?.classList.contains('open')) return;
+
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowLeft') setMainImage(galleryIndex - 1);
+  if (e.key === 'ArrowRight') setMainImage(galleryIndex + 1);
+});
+
+// thumbs click
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.pm-thumb');
+  if (!btn || !modal?.classList.contains('open')) return;
+  const idx = parseInt(btn.dataset.idx, 10);
+  if (!Number.isFinite(idx)) return;
+  setMainImage(idx);
+});
+
+// prev/next click
+pmPrev?.addEventListener('click', () => setMainImage(galleryIndex - 1));
+pmNext?.addEventListener('click', () => setMainImage(galleryIndex + 1));
+
+/* ✅ SWIPE (по кругу) */
+(function initModalSwipe(){
+  // пробуем найти галерею в модалке
+  const galleryEl = document.querySelector('#productModal .pm-gallery') || pmImg?.closest?.('.pm-gallery');
+  if (!galleryEl) return;
+
+  let x0 = null;
+  let y0 = null;
+  let active = false;
+
+  galleryEl.addEventListener('pointerdown', (e) => {
+    if (!modal?.classList.contains('open')) return;
+    active = true;
+    x0 = e.clientX;
+    y0 = e.clientY;
+    try { galleryEl.setPointerCapture(e.pointerId); } catch {}
   });
 
-  // prev/next click
-  pmPrev?.addEventListener("click", ()=> setMainImage(galleryIndex - 1));
-  pmNext?.addEventListener("click", ()=> setMainImage(galleryIndex + 1));
+  galleryEl.addEventListener('pointerup', (e) => {
+    if (!active) return;
+    active = false;
 
-  // swipe (mobile)
-  (function initSwipe(){
-    const box = modal.querySelector(".pm-gallery") || modal.querySelector(".pmodal__img") || modal;
-    if(!box) return;
-    let x0 = null;
-    box.addEventListener("touchstart", (e)=>{
-      if(!e.touches || e.touches.length!==1) return;
-      x0 = e.touches[0].clientX;
-    }, {passive:true});
-    box.addEventListener("touchend", (e)=>{
-      if(x0==null) return;
-      const x1 = e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : x0;
-      const dx = x1 - x0;
-      x0 = null;
-      if(Math.abs(dx) < 40) return;
-      setMainImage(galleryIndex + (dx < 0 ? 1 : -1));
-    }, {passive:true});
-  })();
+    if (!modal?.classList.contains('open')) return;
 
-  // open via delegation on cards (click except on buttons/inputs)
-  document.addEventListener("click", (e)=>{
-    const closeBtn = e.target.closest("[data-close='1']");
-    if(closeBtn){ e.preventDefault(); closeModal(); return; }
+    const dx = e.clientX - (x0 ?? e.clientX);
+    const dy = e.clientY - (y0 ?? e.clientY);
+    x0 = null; y0 = null;
 
-    if(e.key === "Escape") return;
+    // если больше вертикально — это скролл, не листаем
+    if (Math.abs(dy) > Math.abs(dx)) return;
 
-    const card = e.target.closest(".product-card");
-    if(!card) return;
+    if (Math.abs(dx) < 30) return;
 
-    // don't open modal on action controls
-    if(e.target.closest("button") || e.target.closest("input") || e.target.closest("a")) {
-      // allow click on image/title area if it's not a control
-      if(e.target.closest(".product-card__img") || e.target.closest(".product-card__title")) {
-        // ok
-      } else {
-        return;
-      }
-    }
-
-    const product = {
-      id: card.dataset.code || "",
-      title: card.dataset.title || card.querySelector(".product-card__title")?.innerText?.trim() || "",
-      price: card.dataset.price || "",
-      img: card.dataset.img || card.querySelector(".product-card__img img")?.getAttribute("src") || "",
-      desc: card.dataset.desc || "",
-      imgs: card.dataset.imgs || ""
-    };
-
-    openProductModal(product);
+    if (dx < 0) setMainImage(galleryIndex + 1);
+    else setMainImage(galleryIndex - 1);
   });
 
-  // close on overlay/esc
-  document.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+  galleryEl.addEventListener('pointercancel', () => {
+    active = false;
+    x0 = null; y0 = null;
   });
 })();
+
+// qty +/- inside modal
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.qty__btn');
+  if (!btn) return;
+  if (!modal?.classList.contains('open')) return;
+  if (!btn.closest('.pmodal')) return;
+
+  const wrap = btn.closest('.qty');
+  const input = wrap?.querySelector('input');
+  if (!input) return;
+
+  let val = parseInt(input.value, 10) || 1;
+  if (btn.dataset.action === 'plus') val++;
+  if (btn.dataset.action === 'minus') val = Math.max(1, val - 1);
+  input.value = val;
+});
+
+// modal fav
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#pmFav')) return;
+  if (!currentProduct) return;
+
+  const prod = {
+    id: currentProduct.id,
+    title: currentProduct.title,
+    price: String(safePrice(currentProduct.priceNum ?? currentProduct.price) || currentProduct.price || ""),
+    img: currentProduct.img,
+    desc: currentProduct.desc || "",
+    imgs: normalizeImgs(currentProduct),
+  };
+
+  window.toggleFav?.(prod);
+  if (typeof window.isFav === "function") setFavBtnState(pmFav, window.isFav(currentProduct.id));
+  window.refreshFavButtons?.();
+  window.updateFavBadge?.();
+});
+
+// modal add to cart
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#pmAddToCart')) return;
+  if (!currentProduct) return;
+
+  const qty = Math.max(1, parseInt(pmQty?.value, 10) || 1);
+
+  const prod = {
+    id: currentProduct.id,
+    title: currentProduct.title,
+    price: String(safePrice(currentProduct.priceNum ?? currentProduct.price) || currentProduct.price || ""),
+    img: currentProduct.img,
+    desc: currentProduct.desc || "",
+    imgs: normalizeImgs(currentProduct),
+  };
+
+  window.addToCart?.(prod, qty);
+  window.updateCartBadge?.();
+
+  window.animateAdded?.(pmAddToCart, { duration: 700, text: "Додано", keepText: false });
+});

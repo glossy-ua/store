@@ -198,7 +198,8 @@ document.addEventListener('click', (e) => {
   const card = e.target.closest('#favoritesList .product-card');
   if (card) {
     if (e.target.closest('button, .qty, input')) return;
-    openModal(getProductFromFavCard(card));
+    const prod = getProductFromFavCard(card);
+    if (typeof window.openProductModal === "function") { window.openProductModal(prod); } else { openModal(prod); }
     return;
   }
 
