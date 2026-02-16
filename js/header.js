@@ -116,19 +116,20 @@ function initSearch(formId, inputId, boxId){
     suggestBox.hidden = false;
   }
 
-  function escapeForOr(term) {
-    return String(term)
-      .replace(/\\/g, "\\\\")
-      .replace(/,/g, "\\,")
-      .replace(/\(/g, "\\(")
-      .replace(/\)/g, "\\)");
-  }
+  function normalizeForOr(term) {
+  return String(term || "")
+    .trim()
+    .replace(/[(),;]/g, " ")
+    .replace(/\s+/g, " ");
+}
+
 
   async function fetchSuggest(q){
     if (!sb) return [];
     if (!q || q.length < 2) return [];
 
-    const safe = escapeForOr(q);
+    const safe = normalizeForOr(q);
+
 
     const { data, error } = await sb
       .from("products")

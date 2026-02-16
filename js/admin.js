@@ -1,5 +1,23 @@
 // js/admin.js
-// Admin panel: Products + Orders (filters, search, bulk actions, realtime, export, stock-deduct on done)
+// Admin panel: Products + Orders (filters, search, bulk actions, realtime, export)
+//
+// STOCK LOGIC (YOUR REQUIRED):
+// - On checkout: NO stock changes (create_order_v1 must NOT touch products.stock)
+// - In admin (PERMANENT / NO DOUBLE):
+//   ✅ Status change is handled atomically in DB by RPC public.order_set_status_v1(order_id, new_status)
+//   ✅ That RPC:
+//      * new/cancelled -> processing/ready/done : DEDUCT ONCE (sets stock_deducted=true)
+//      * (after deducted) -> cancelled : RESTORE ONCE (sets stock_deducted=false)
+//      * cancelled -> processing/ready/done : DEDUCT AGAIN
+//
+// Requires orders columns:
+// - stock_deducted boolean default false
+// - stock_deducted_at timestamptz null
+//
+// Requires DB function (run in Supabase SQL editor):
+//   public.order_set_status_v1(p_order_id uuid, p_new_status text)
+//   (SQL is provided in chat message)
+//
 // Uses global window.sb from supabaseClient.js
 
 (() => {
@@ -184,7 +202,6 @@
   function ensureMainFirst() {
     const main = galleryItems[0]?.url || "";
     setPreview(main || "");
-    // если главная НЕ новая (url уже публичный) — можно подсунуть в поле URL
     if (admImg) {
       const isNew = !!galleryItems[0]?.file;
       admImg.value = isNew ? "" : (main || "");
@@ -238,18 +255,15 @@
     }).join("");
   }
 
-  // ✅ один вход: добавили файлы. Первый файл станет главным.
   function addFilesUniversal(filesLike) {
     const files = Array.from(filesLike || []).filter(Boolean);
     if (!files.length) return;
 
-    // создаём элементы
     const items = files.map((file) => {
       const objectUrl = URL.createObjectURL(file);
       return { url: objectUrl, file, objectUrl, isNew: true };
     });
 
-    // первый — в начало (главный), остальные — в конец (галерея)
     galleryItems = [items[0], ...galleryItems, ...items.slice(1)];
 
     renderGallery();
@@ -313,6 +327,20 @@
       try { document.execCommand("copy"); toast("Скопійовано ✅", "ok", 1400); } catch {}
       document.body.removeChild(ta);
     }
+  }
+
+  // =========================
+  // STOCK (PERMANENT): DB ATOMIC RPC
+  // =========================
+  async function rpcSetOrderStatus(orderId, newStatus) {
+    // One call changes status + adjusts stock (deduct/restore) + flips stock_deducted flags atomically.
+    const { data, error } = await sb.rpc("order_set_status_v1", {
+  p_order_id: orderId,
+  p_new_status: newStatus
+});
+
+    if (error) throw error;
+    return data;
   }
 
   // ---------- AUTH ----------
@@ -386,7 +414,7 @@
       startOrdersRealtime();
     }
     if (isProducts) {
-      startOrdersRealtime(); // keep on anyway (new orders toast even on products)
+      startOrdersRealtime();
     }
   }
 
@@ -523,11 +551,9 @@
   function findCategoryById(id) {
     return categoriesCache.find(c => String(c.id) === String(id));
   }
-
   function findCategoryBySlug(slug) {
     return categoriesCache.find(c => String(c.slug) === String(slug));
   }
-
   function findFallbackBySlug(slug) {
     return categoriesFallback.find(c => String(c.slug) === String(slug));
   }
@@ -744,7 +770,6 @@
       }
     }
 
-    // init gallery from product: [img] + imgs
     clearGallery();
     const mainUrl = (product?.img || "").trim();
     const extra = parseImgsField(product?.imgs);
@@ -752,7 +777,6 @@
     galleryItems = urls.map(u => ({ url: u, isNew: false }));
     renderGallery();
 
-    // preview main + fill url field
     const first = galleryItems[0]?.url || "";
     setPreview(first);
     if (admImg) admImg.value = first || "";
@@ -787,7 +811,6 @@
     const url = (admImg.value || "").trim();
     if (!url) return;
 
-    // if url exists in gallery, move it to front; else unshift
     const idx = galleryItems.findIndex(it => String(it.url || "").trim() === url);
     if (idx >= 0) {
       setAsMain(idx);
@@ -807,7 +830,6 @@
     const files = admFile.files;
     if (!files || !files.length) return;
     addFilesUniversal(files);
-    // allow picking same files again later
     admFile.value = "";
   });
 
@@ -909,14 +931,12 @@
 
     const productId = editingId || String(Date.now());
 
-    // если галерея пустая, но есть URL — добавим
     if (!galleryItems.length && img) {
       galleryItems = [{ url: img, isNew: false }];
       renderGallery();
       ensureMainFirst();
     }
 
-    // upload files in gallery order
     try {
       for (const it of galleryItems) {
         if (it?.file) {
@@ -1261,6 +1281,8 @@
         created_at,
         total,
         status,
+        stock_deducted,
+        stock_deducted_at,
         receiver_name,
         receiver_phone,
         receiver_city,
@@ -1303,6 +1325,10 @@
       const currentStatus = String(o.status || "new");
       const badge = `<span class="oa-badge ${statusClass(currentStatus)}">${escHtml(statusLabel(currentStatus))}</span>`;
 
+      const deductedHint = o.stock_deducted
+        ? `<span class="pill pill-green" title="Stock вже списано">stock ✓</span>`
+        : `<span class="pill pill-orange" title="Stock ще не списано">stock …</span>`;
+
       const itemsHtml = items.map((it) => `
         <div class="oa-item">
           <div class="oa-item__img">
@@ -1329,7 +1355,7 @@
                 Замовлення: <span class="oa-id__mono">${escHtml(o.id)}</span>
                 <button class="btn-mini" type="button" data-copy="oid" title="Копіювати ID">⧉</button>
               </div>
-              <div class="oa-meta">${fmtDate(o.created_at)} • <strong>${money(o.total)} грн</strong> • ${badge}</div>
+              <div class="oa-meta">${fmtDate(o.created_at)} • <strong>${money(o.total)} грн</strong> • ${badge} • ${deductedHint}</div>
             </div>
 
             <div class="oa-status">
@@ -1382,7 +1408,7 @@
     const select = e.target;
     const card = select.closest("[data-order-id]");
     const orderId = card?.dataset?.orderId;
-    const newStatus = select.value;
+    const newStatus = String(select.value || "new");
 
     if (!orderId) return;
 
@@ -1392,19 +1418,25 @@
     select.disabled = true;
 
     try {
-      const { error } = await sb
-        .from("orders")
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq("id", orderId);
+      // ✅ ONE atomic call in DB (no double-deduct possible)
+      const updated = await rpcSetOrderStatus(orderId, newStatus);
 
-      if (error) throw error;
-
-      if (o) o.status = newStatus;
-
-      if (prevStatus !== "done" && newStatus === "done") {
-        await deductStockForOrder(orderId);
-        await loadProducts();
+      if (o) {
+        o.status = newStatus;
+        if (updated && typeof updated === "object") {
+          if (updated.status != null) o.status = String(updated.status);
+          if (updated.updated_at != null) o.updated_at = updated.updated_at;
+          if (updated.stock_deducted != null) o.stock_deducted = !!updated.stock_deducted;
+          if (updated.stock_deducted_at !== undefined) o.stock_deducted_at = updated.stock_deducted_at;
+        }
       }
+
+      const couldTouchStock =
+        (prevStatus !== "cancelled" && newStatus === "cancelled") ||
+        (prevStatus === "cancelled" && newStatus !== "cancelled") ||
+        (prevStatus === "new" && (newStatus === "processing" || newStatus === "ready" || newStatus === "done"));
+
+      if (couldTouchStock) await loadProducts();
 
       applyOrdersFilter();
       toast("Статус оновлено ✅", "ok", 1400);
@@ -1414,41 +1446,6 @@
       await loadOrders();
     } finally {
       select.disabled = false;
-    }
-  }
-
-  async function deductStockForOrder(orderId) {
-    const order = allOrdersCache.find(x => x.id === orderId);
-    const items = Array.isArray(order?.order_items) ? order.order_items : [];
-    if (!items.length) return;
-
-    for (const it of items) {
-      const pid = String(it.product_id || "");
-      const qty = Math.max(0, safeInt(it.qty));
-      if (!pid || qty <= 0) continue;
-
-      try {
-        const { data: pRow, error: gErr } = await sb
-          .from("products")
-          .select("id, stock")
-          .eq("id", pid)
-          .maybeSingle();
-
-        if (gErr) throw gErr;
-        if (!pRow) continue;
-
-        const cur = Math.max(0, safeInt(pRow.stock));
-        const next = Math.max(0, cur - qty);
-
-        const { error: uErr } = await sb
-          .from("products")
-          .update({ stock: next, updated_at: new Date().toISOString() })
-          .eq("id", pid);
-
-        if (uErr) throw uErr;
-      } catch (e) {
-        console.error("deductStockForOrder error:", e);
-      }
     }
   }
 
@@ -1541,7 +1538,8 @@
         const { data } = await sb
           .from("orders")
           .select(`
-            id, created_at, total, status, receiver_name, receiver_phone, receiver_city,
+            id, created_at, total, status, stock_deducted, stock_deducted_at,
+            receiver_name, receiver_phone, receiver_city,
             receiver_post_office, receiver_comment, updated_at,
             order_items ( id, product_id, title, img, price, qty, sum )
           `)

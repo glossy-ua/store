@@ -34,14 +34,14 @@
     return;
   }
 
-  function escapeForOr(term) {
-    // В .or строке запятая — разделитель условий, скобки тоже могут ломать
-    return String(term)
-      .replace(/\\/g, "\\\\")
-      .replace(/,/g, "\\,")
-      .replace(/\(/g, "\\(")
-      .replace(/\)/g, "\\)");
-  }
+  function normalizeForOr(term) {
+  return String(term || "")
+    .trim()
+    // символы, которые часто ломают .or()
+    .replace(/[(),;]/g, " ")
+    .replace(/\s+/g, " ");
+}
+
 
   function render(items) {
     if (!items.length) {
@@ -101,7 +101,8 @@
     show("Завантаження...");
     if (meta) meta.innerHTML = `Запит: <b>${esc(qRaw)}</b>`;
 
-    const q = escapeForOr(qRaw);
+    const q = normalizeForOr(qRaw);
+
 
     // ✅ правильный синтаксис для PostgREST: ilike.*term*
     const { data, error } = await sb
