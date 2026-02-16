@@ -119,7 +119,7 @@
 
   
 
-  <!-- PRODUCT MODAL -->
+<!-- PRODUCT MODAL -->
 <div id="productModal" class="pmodal" aria-hidden="true">
   <div class="pmodal__overlay" data-close="1"></div>
 
@@ -128,24 +128,22 @@
 
     <div class="pmodal__top">
       <div class="pmodal__img">
-        <div class="pm-gallery">
-  <button class="pm-nav pm-nav--prev" id="pmPrev" type="button" aria-label="Prev">‹</button>
-  <img id="pmImg" src="" alt="">
-  <button class="pm-nav pm-nav--next" id="pmNext" type="button" aria-label="Next">›</button>
-</div>
-<div class="pm-thumbs" id="pmThumbs" aria-label="Gallery thumbnails"></div>
-</div>
+        <!-- ✅ GALLERY NAV -->
+        <button id="pmPrev" type="button" aria-label="Попереднє фото">‹</button>
+        <img id="pmImg" src="" alt="">
+        <button id="pmNext" type="button" aria-label="Наступне фото">›</button>
+
+        <!-- ✅ THUMBS -->
+        <div id="pmThumbs"></div>
+      </div>
 
       <div class="pmodal__info">
         <h2 id="pmTitle" class="pmodal__title"></h2>
         <div class="pmodal__meta muted" id="pmCode"></div>
 
         <div class="pmodal__priceRow">
-  <div class="pmodal__price" id="pmPrice"></div>
-</div>
-
-
-
+          <div class="pmodal__price" id="pmPrice"></div>
+        </div>
 
         <div class="pmodal__actions">
           <div class="qty">
@@ -167,6 +165,8 @@
   </div>
 </div>
 
+
+
 <!-- JS -->
 <script src="js/store.js"></script>
 
@@ -175,9 +175,13 @@
 
 <script src="js/header.js"></script>
 <script src="js/db.js"></script>
+
+<!-- ✅ единая модалка с галереей -->
+<script src="js/product-modal.js"></script>
+
 <script src="js/cart.js"></script>
 
 
-  <script src="js/product-modal.js"></script>
+
 </body>
 </html>

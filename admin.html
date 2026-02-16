@@ -168,13 +168,8 @@
 
       <div class="pmodal__top">
         <div class="pmodal__img">
-          <div class="pm-gallery">
-  <button class="pm-nav pm-nav--prev" id="pmPrev" type="button" aria-label="Prev">‹</button>
-  <img id="pmImg" src="" alt="">
-  <button class="pm-nav pm-nav--next" id="pmNext" type="button" aria-label="Next">›</button>
-</div>
-<div class="pm-thumbs" id="pmThumbs" aria-label="Gallery thumbnails"></div>
-</div>
+          <img id="pmImg" src="" alt="">
+        </div>
 
         <div class="pmodal__info">
           <h2 class="pmodal__title" id="admModalTitle">Товар</h2>
@@ -207,37 +202,27 @@
               <textarea id="admDesc" class="adm-textarea" placeholder="Опис..."></textarea>
             </div>
 
+            <!-- ONE universal dropzone for ALL photos -->
             <div class="adm-field" style="margin-top:12px">
               <label class="adm-label">Фото (Storage)</label>
 
               <div id="admDrop" class="adm-drop">
                 <div class="adm-drop__inner">
                   <div class="adm-drop__title">Перетягни фото сюди</div>
-                  <div class="adm-drop__sub">або натисни кнопку</div>
+                  <div class="adm-drop__sub">або натисни кнопку (перший файл буде головним)</div>
                   <button id="admPick" type="button" class="btn">Завантажити фото</button>
-                  <input id="admFile" type="file" accept="image/*" hidden>
+                  <input id="admFile" type="file" accept="image/*" multiple hidden>
                 </div>
               </div>
 
               <label class="adm-label" style="display:block;margin-top:12px">Або URL (опційно)</label>
               <input id="admImg" class="adm-input" type="text" placeholder="https://...jpg">
-            
 
-          
-          <label class="muted" style="display:block;margin-top:12px">Додаткові фото (галерея)</label>
-
-          <div id="admDropMore" class="adm-drop">
-            <div class="adm-drop__inner">
-              <div class="adm-drop__title">Перетягни фото сюди</div>
-              <div class="adm-drop__sub">або натисни кнопку</div>
-              <button id="admPickMore" type="button" class="btn">Додати фото</button>
-              <input id="admFilesMore" type="file" accept="image/*" multiple hidden>
+              <div id="admImgsList" class="adm-gallery" aria-label="Галерея фото" style="margin-top:12px"></div>
+              <div class="muted" style="margin-top:8px">
+                ⭐️ — зробити головним • ✕ — видалити. Перше фото в списку — головне.
+              </div>
             </div>
-          </div>
-
-          <div id="admImgsList" class="adm-gallery" aria-label="Галерея фото"></div>
-          <div class="muted" style="margin-top:8px">⭐ — зробити головним • ✕ — видалити. Перше фото в списку — головне.</div>
-</div>
 
             <div class="adm-row" style="gap:16px;margin-top:12px;align-items:center">
               <label class="adm-check">
