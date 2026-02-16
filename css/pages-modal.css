@@ -273,71 +273,162 @@
 }
 
 
-/* ===== GALLERY ===== */
+/* ===== PRODUCT MODAL GALLERY (arrows + thumbs) ===== */
+
 .pm-gallery{
   position: relative;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #f6f6f6;
 }
-.pm-gallery #pmImg{
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 14px;
+.pm-gallery > img{
+  display:block;
+  width:100%;
+  height:auto;
+  user-select:none;
+  -webkit-user-drag:none;
 }
 .pm-nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:42px;
+  height:42px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+  z-index:2;
+}
+.pm-nav--prev{ left:10px; }
+.pm-nav--next{ right:10px; }
+
+.pm-thumbs{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+  overflow:auto;
+  padding-bottom:2px;
+  scrollbar-width: thin;
+}
+.pm-thumb{
+  border:1px solid rgba(0,0,0,.12);
+  background:#fff;
+  border-radius:12px;
+  padding:0;
+  width:64px;
+  height:52px;
+  overflow:hidden;
+  flex: 0 0 auto;
+  cursor:pointer;
+}
+.pm-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.pm-thumb.is-active{
+  border-color: rgba(0,0,0,.45);
+  box-shadow: 0 0 0 2px rgba(0,0,0,.08);
+}
+
+/* on small screens make arrows a bit smaller */
+@media (max-width: 480px){
+  .pm-nav{ width:38px; height:38px; }
+  .pm-thumb{ width:58px; height:48px; }
+}
+
+/* ===== MODAL GALLERY (pmPrev/pmNext/pmThumbs) ===== */
+.pmodal__img{
+  position: relative; /* чтобы стрелки позиционировались относительно блока картинки */
+}
+
+/* стрелки */
+#pmPrev, #pmNext{
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  border: none;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 6px 16px rgba(0,0,0,.10);
+  display: grid;
+  place-items: center;
+  font-size: 28px;
   line-height: 1;
-  user-select: none;
-}
-.pm-nav:disabled{
-  opacity: .35;
-  cursor: default;
-}
-.pm-nav--prev{ left: 10px; }
-.pm-nav--next{ right: 10px; }
-
-.pm-thumbs{
-  margin-top: 10px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.pm-thumb{
-  border: none;
-  padding: 0;
-  width: 54px;
-  height: 54px;
-  border-radius: 12px;
-  overflow: hidden;
   cursor: pointer;
-  background: transparent;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.10);
-  opacity: .8;
+  user-select: none;
+  z-index: 5;
 }
-.pm-thumb img{
+
+#pmPrev{ left: 10px; }
+#pmNext{ right: 10px; }
+
+#pmPrev:hover, #pmNext:hover{
+  background: #fff;
+}
+
+#pmPrev:active, #pmNext:active{
+  transform: translateY(-50%) scale(0.98);
+}
+
+/* чтобы не было фокуса уродского */
+#pmPrev:focus, #pmNext:focus{
+  outline: none;
+}
+#pmPrev:focus-visible, #pmNext:focus-visible{
+  box-shadow: 0 0 0 3px rgba(255,140,0,.25), 0 6px 16px rgba(0,0,0,.10);
+}
+
+/* миниатюры */
+#pmThumbs{
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding: 4px 2px;
+}
+
+#pmThumbs .pm-thumb{
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  flex: 0 0 auto;
+  width: 66px;
+  height: 66px;
+  overflow: hidden;
+}
+
+#pmThumbs .pm-thumb img{
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-.pm-thumb.active{
-  opacity: 1;
-  outline: 2px solid rgba(0,0,0,0.35);
-  outline-offset: 2px;
+
+#pmThumbs .pm-thumb.is-active{
+  border-color: rgba(255,140,0,.9);
+}
+
+/* мобилка — стрелки поменьше */
+@media (max-width: 600px){
+  #pmPrev, #pmNext{
+    width: 38px;
+    height: 38px;
+    font-size: 24px;
+  }
+  #pmPrev{ left: 8px; }
+  #pmNext{ right: 8px; }
 }
