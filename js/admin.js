@@ -68,16 +68,14 @@
   const admErr = document.getElementById("admErr");
   const pmImg = document.getElementById("pmImg");
 
+  // ONE universal dropzone (multiple)
   const admDrop = document.getElementById("admDrop");
   const admPick = document.getElementById("admPick");
   const admFile = document.getElementById("admFile");
 
-  
-  const admDropMore = document.getElementById("admDropMore");
-  const admPickMore = document.getElementById("admPickMore");
-  const admFilesMore = document.getElementById("admFilesMore");
   const admImgsList = document.getElementById("admImgsList");
-// ---------- DOM (orders) ----------
+
+  // ---------- DOM (orders) ----------
   const ordersGrid = document.getElementById("ordersGrid");
   const orderStatusFilter = document.getElementById("orderStatusFilter");
   const orderSearch = document.getElementById("orderSearch");
@@ -86,15 +84,14 @@
 
   // ---------- STATE ----------
   let editingId = null;
-  let selectedFile = null;
   let existingImgUrl = "";
 
-  
   let galleryItems = []; // [{url, file?, objectUrl?, isNew?}]
-let ordersLoadedOnce = false;
+  let ordersLoadedOnce = false;
   let currentTab = "products";
   let allOrdersCache = [];
   let categoriesCache = []; // [{id, slug, title, sort, is_active}]
+  let categoriesFallback = []; // [{slug,title}]
   let productsCache = [];   // raw list from DB
 
   // products view state
@@ -105,6 +102,17 @@ let ordersLoadedOnce = false;
 
   // realtime
   let ordersChannel = null;
+
+  // ✅ дефолтные категории, если categories и products.category пустые
+  const DEFAULT_CATEGORIES = [
+    { slug: "applicators", title: "Аплікатори" },
+    { slug: "brushes", title: "Щітки" },
+    { slug: "frames", title: "Номерні рамки" },
+    { slug: "interior", title: "Для салону" },
+    { slug: "microfiber", title: "Мікрофібра" },
+    { slug: "other", title: "Інше" },
+    { slug: "wheels", title: "Колеса" },
+  ];
 
   // ---------- HELPERS ----------
   function escHtml(s) {
@@ -137,11 +145,6 @@ let ordersLoadedOnce = false;
     if (pmImg) pmImg.src = url || "";
   }
 
-  function previewFromFile(file) {
-    if (!file) return;
-    setPreview(URL.createObjectURL(file));
-  }
-
   function parseImgsField(v) {
     if (!v) return [];
     if (Array.isArray(v)) return v.filter(Boolean);
@@ -152,7 +155,6 @@ let ordersLoadedOnce = false;
         const parsed = JSON.parse(s);
         return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
       } catch {
-        // allow comma-separated fallback
         if (s.includes(",")) return s.split(",").map(x => x.trim()).filter(Boolean);
         return [];
       }
@@ -165,12 +167,6 @@ let ordersLoadedOnce = false;
       try { URL.revokeObjectURL(it.objectUrl); } catch {}
       it.objectUrl = "";
     }
-  }
-
-  function clearGallery() {
-    galleryItems.forEach(revokeObjectUrl);
-    galleryItems = [];
-    renderGallery();
   }
 
   function uniqUrls(urls) {
@@ -186,10 +182,13 @@ let ordersLoadedOnce = false;
   }
 
   function ensureMainFirst() {
-    // first item is main; also keep admImg in sync
     const main = galleryItems[0]?.url || "";
-    if (admImg) admImg.value = main && !galleryItems[0]?.isNew ? main : (admImg.value || "");
     setPreview(main || "");
+    // если главная НЕ новая (url уже публичный) — можно подсунуть в поле URL
+    if (admImg) {
+      const isNew = !!galleryItems[0]?.file;
+      admImg.value = isNew ? "" : (main || "");
+    }
   }
 
   function setAsMain(idx) {
@@ -211,6 +210,12 @@ let ordersLoadedOnce = false;
     ensureMainFirst();
   }
 
+  function clearGallery() {
+    galleryItems.forEach(revokeObjectUrl);
+    galleryItems = [];
+    if (admImgsList) admImgsList.innerHTML = "";
+  }
+
   function renderGallery() {
     if (!admImgsList) return;
     if (!galleryItems.length) {
@@ -225,7 +230,7 @@ let ordersLoadedOnce = false;
           ${isMain ? `<div class="adm-thumb__badge">MAIN</div>` : ""}
           <img src="${url}" alt="">
           <div class="adm-thumb__bar">
-            <button type="button" class="adm-thumb__btn" data-action="main" data-idx="${idx}" title="Зробити головним">⭐</button>
+            <button type="button" class="adm-thumb__btn" data-action="main" data-idx="${idx}" title="Зробити головним">⭐️</button>
             <button type="button" class="adm-thumb__btn" data-action="remove" data-idx="${idx}" title="Видалити">✕</button>
           </div>
         </div>
@@ -233,20 +238,22 @@ let ordersLoadedOnce = false;
     }).join("");
   }
 
-  function addFilesToGallery(files) {
-    const list = Array.from(files || []).filter(Boolean);
-    if (!list.length) return;
+  // ✅ один вход: добавили файлы. Первый файл станет главным.
+  function addFilesUniversal(filesLike) {
+    const files = Array.from(filesLike || []).filter(Boolean);
+    if (!files.length) return;
 
-    list.forEach((file) => {
+    // создаём элементы
+    const items = files.map((file) => {
       const objectUrl = URL.createObjectURL(file);
-      galleryItems.push({ url: objectUrl, file, objectUrl, isNew: true });
+      return { url: objectUrl, file, objectUrl, isNew: true };
     });
 
+    // первый — в начало (главный), остальные — в конец (галерея)
+    galleryItems = [items[0], ...galleryItems, ...items.slice(1)];
+
     renderGallery();
-    if (galleryItems.length === list.length) {
-      // gallery was empty before
-      ensureMainFirst();
-    }
+    ensureMainFirst();
   }
 
   function fmtDate(dt) {
@@ -297,7 +304,6 @@ let ordersLoadedOnce = false;
       await navigator.clipboard.writeText(String(text || ""));
       toast("Скопійовано ✅", "ok", 1400);
     } catch {
-      // fallback
       const ta = document.createElement("textarea");
       ta.value = String(text || "");
       ta.style.position = "fixed";
@@ -380,7 +386,6 @@ let ordersLoadedOnce = false;
       startOrdersRealtime();
     }
     if (isProducts) {
-      // stop realtime to reduce noise (optional)
       startOrdersRealtime(); // keep on anyway (new orders toast even on products)
     }
   }
@@ -399,37 +404,120 @@ let ordersLoadedOnce = false;
       .order("title", { ascending: true });
 
     if (error) {
-      console.error("loadCategories error:", error);
+      console.warn("loadCategories error:", error);
       categoriesCache = [];
+      await loadLegacyCategoriesFromProducts();
       renderCategorySelectOptions();
       renderCategoryFilterOptions();
       return;
     }
 
     categoriesCache = (data || []).filter(c => c.is_active !== false);
+
+    if (!categoriesCache.length) {
+      await loadLegacyCategoriesFromProducts();
+    }
+
     renderCategorySelectOptions();
     renderCategoryFilterOptions();
+  }
+
+  async function loadLegacyCategoriesFromProducts() {
+    try {
+      const { data, error } = await sb
+        .from("products")
+        .select("category")
+        .neq("category", null)
+        .limit(2000);
+
+      if (error) throw error;
+
+      const set = new Set();
+      (data || []).forEach(row => {
+        const s = String(row?.category || "").trim();
+        if (s) set.add(s);
+      });
+
+      const list = Array.from(set).sort((a, b) => a.localeCompare(b, "uk"));
+      categoriesFallback = list.map(slug => ({ slug, title: slug }));
+    } catch (e) {
+      console.warn("loadLegacyCategoriesFromProducts failed:", e);
+      categoriesFallback = [];
+    }
+
+    if (!categoriesFallback.length) {
+      categoriesFallback = [...DEFAULT_CATEGORIES];
+    }
+  }
+
+  function isSlugValue(v) {
+    return String(v || "").startsWith("slug:");
+  }
+
+  function unwrapSlugValue(v) {
+    const s = String(v || "");
+    return s.startsWith("slug:") ? s.slice(5) : s;
   }
 
   function renderCategorySelectOptions() {
     if (!admCategory) return;
 
-    const opts = categoriesCache.length
-      ? categoriesCache
-          .map(c => `<option value="${escHtml(c.id)}">${escHtml(c.title || c.slug || "")}</option>`)
-          .join("")
-      : `<option value="" disabled>Немає категорій</option>`;
+    const cur = admCategory.value || "";
 
-    admCategory.innerHTML = opts;
+    if (categoriesCache.length) {
+      const opts = categoriesCache
+        .map(c => `<option value="${escHtml(c.id)}">${escHtml(c.title || c.slug || "")}</option>`)
+        .join("");
+      admCategory.innerHTML = `<option value="" disabled>Оберіть категорію</option>` + opts;
+
+      if (cur && Array.from(admCategory.options).some(o => o.value === cur)) {
+        admCategory.value = cur;
+      } else {
+        admCategory.selectedIndex = Math.max(1, admCategory.options.length > 1 ? 1 : 0);
+      }
+      return;
+    }
+
+    if (categoriesFallback.length) {
+      const opts = categoriesFallback
+        .map(c => `<option value="slug:${escHtml(c.slug)}">${escHtml(c.title || c.slug || "")}</option>`)
+        .join("");
+      admCategory.innerHTML = `<option value="" disabled>Оберіть категорію</option>` + opts;
+
+      if (cur && Array.from(admCategory.options).some(o => o.value === cur)) {
+        admCategory.value = cur;
+      } else {
+        admCategory.selectedIndex = Math.max(1, admCategory.options.length > 1 ? 1 : 0);
+      }
+      return;
+    }
+
+    admCategory.innerHTML = `<option value="" disabled selected>Немає категорій</option>`;
   }
 
   function renderCategoryFilterOptions() {
     if (!prodCategoryFilter) return;
     const cur = prodCategoryFilter.value || "all";
-    prodCategoryFilter.innerHTML =
-      `<option value="all">Всі</option>` +
-      categoriesCache.map(c => `<option value="${escHtml(c.id)}">${escHtml(c.title || c.slug || "")}</option>`).join("");
-    prodCategoryFilter.value = cur;
+
+    let html = `<option value="all">Всі</option>`;
+
+    if (categoriesCache.length) {
+      html += categoriesCache
+        .map(c => `<option value="${escHtml(c.id)}">${escHtml(c.title || c.slug || "")}</option>`)
+        .join("");
+    } else if (categoriesFallback.length) {
+      html += categoriesFallback
+        .map(c => `<option value="slug:${escHtml(c.slug)}">${escHtml(c.title || c.slug || "")}</option>`)
+        .join("");
+    }
+
+    prodCategoryFilter.innerHTML = html;
+
+    if (Array.from(prodCategoryFilter.options).some(o => o.value === cur)) {
+      prodCategoryFilter.value = cur;
+    } else {
+      prodCategoryFilter.value = "all";
+    }
   }
 
   function findCategoryById(id) {
@@ -438,6 +526,10 @@ let ordersLoadedOnce = false;
 
   function findCategoryBySlug(slug) {
     return categoriesCache.find(c => String(c.slug) === String(slug));
+  }
+
+  function findFallbackBySlug(slug) {
+    return categoriesFallback.find(c => String(c.slug) === String(slug));
   }
 
   // =========================
@@ -482,7 +574,6 @@ let ordersLoadedOnce = false;
 
     let rows = [...productsCache];
 
-    // search (title or id)
     if (f.q) {
       rows = rows.filter(p => {
         const t = String(p?.title || "").toLowerCase();
@@ -491,26 +582,25 @@ let ordersLoadedOnce = false;
       });
     }
 
-    // category
     if (f.catId && f.catId !== "all") {
-      rows = rows.filter(p => String(p?.category_id || "") === String(f.catId));
+      if (isSlugValue(f.catId)) {
+        const slug = unwrapSlugValue(f.catId);
+        rows = rows.filter(p => String(p?.category || "") === String(slug));
+      } else {
+        rows = rows.filter(p => String(p?.category_id || "") === String(f.catId));
+      }
     }
 
-    // active
     if (f.active === "active") rows = rows.filter(p => p?.is_active !== false);
     if (f.active === "inactive") rows = rows.filter(p => p?.is_active === false);
 
-    // popular
     if (f.popular === "popular") rows = rows.filter(p => p?.is_popular === true);
     if (f.popular === "not_popular") rows = rows.filter(p => p?.is_popular !== true);
 
-    // low stock
     if (f.lowStockOn) {
       rows = rows.filter(p => safeInt(p?.stock) <= f.lowN);
     }
 
-    // sorting
-    const by = (fn) => rows.sort((a,b) => fn(a) - fn(b));
     switch (f.sort) {
       case "old":
         rows.sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
@@ -533,7 +623,7 @@ let ordersLoadedOnce = false;
       case "title_desc":
         rows.sort((a,b) => String(b.title||"").localeCompare(String(a.title||""), "uk"));
         break;
-      default: // new
+      default:
         rows.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
@@ -621,15 +711,12 @@ let ordersLoadedOnce = false;
         </article>
       `;
     }).join("");
-
-    // one delegated handler for grid
   }
 
   function openAdminModal(product = null) {
     if (!modal) return;
 
     editingId = product?.id || null;
-    selectedFile = null;
     existingImgUrl = product?.img || "";
     setErr("");
 
@@ -639,28 +726,25 @@ let ordersLoadedOnce = false;
     if (admPrice) admPrice.value = product?.price ?? "";
     if (admStock) admStock.value = safeInt(product?.stock ?? 0);
     if (admDesc) admDesc.value = product?.desc || "";
-    if (admImg) admImg.value = product?.img || "";
     if (admActive) admActive.checked = product?.is_active ?? true;
     if (admPopular) admPopular.checked = product?.is_popular ?? false;
 
-    // category: prefer category_id, fallback to legacy product.category (slug)
     if (admCategory) {
       const pid = product?.category_id;
       const pSlug = product?.category;
 
-      let target = null;
-      if (pid) target = findCategoryById(pid);
-      if (!target && pSlug) target = findCategoryBySlug(pSlug);
-
-      if (target) {
-        admCategory.value = target.id;
-      } else {
-        if (categoriesCache.length) admCategory.value = categoriesCache[0].id;
+      if (categoriesCache.length) {
+        const target = pid ? findCategoryById(pid) : (pSlug ? findCategoryBySlug(pSlug) : null);
+        if (target) admCategory.value = String(target.id);
+        else admCategory.selectedIndex = Math.max(1, admCategory.options.length > 1 ? 1 : 0);
+      } else if (categoriesFallback.length) {
+        const fs = pSlug ? findFallbackBySlug(pSlug) : null;
+        if (fs) admCategory.value = `slug:${fs.slug}`;
+        else admCategory.selectedIndex = Math.max(1, admCategory.options.length > 1 ? 1 : 0);
       }
     }
 
-    
-    // init gallery from product: prefer product.imgs, always ensure main is first
+    // init gallery from product: [img] + imgs
     clearGallery();
     const mainUrl = (product?.img || "").trim();
     const extra = parseImgsField(product?.imgs);
@@ -668,14 +752,14 @@ let ordersLoadedOnce = false;
     galleryItems = urls.map(u => ({ url: u, isNew: false }));
     renderGallery();
 
-    // preview main
+    // preview main + fill url field
     const first = galleryItems[0]?.url || "";
     setPreview(first);
     if (admImg) admImg.value = first || "";
-modal.setAttribute("aria-hidden", "false");
+
+    modal.setAttribute("aria-hidden", "false");
     modal.classList.add("open");
 
-    // lock background if available (you already have helpers in store.js, but admin may not load it)
     try { window.lockBodyScroll?.(); } catch {}
   }
 
@@ -684,7 +768,6 @@ modal.setAttribute("aria-hidden", "false");
     modal.setAttribute("aria-hidden", "true");
     modal.classList.remove("open");
     editingId = null;
-    selectedFile = null;
     existingImgUrl = "";
     setErr("");
 
@@ -699,12 +782,10 @@ modal.setAttribute("aria-hidden", "false");
   });
   admCancel?.addEventListener("click", closeAdminModal);
 
+  // URL input -> make it main
   admImg?.addEventListener("input", () => {
     const url = (admImg.value || "").trim();
     if (!url) return;
-
-    // manual URL => becomes main, and clears pending file for main
-    selectedFile = null;
 
     // if url exists in gallery, move it to front; else unshift
     const idx = galleryItems.findIndex(it => String(it.url || "").trim() === url);
@@ -717,32 +798,20 @@ modal.setAttribute("aria-hidden", "false");
     }
   });
 
-addBtn?.addEventListener("click", () => openAdminModal(null));
+  addBtn?.addEventListener("click", () => openAdminModal(null));
 
-  // dropzone
+  // ---------- ONE universal dropzone ----------
   admPick?.addEventListener("click", () => admFile?.click());
 
   admFile?.addEventListener("change", () => {
-    const f = admFile.files?.[0];
-    if (!f) return;
-
-    // main photo via file => put as first in gallery
-    selectedFile = f;
-
-    // remove existing temp main preview if any
-    const tmpIdx = galleryItems.findIndex(it => it.__mainTmp);
-    if (tmpIdx >= 0) removeFromGallery(tmpIdx);
-
-    const objectUrl = URL.createObjectURL(f);
-    galleryItems.unshift({ url: objectUrl, file: f, objectUrl, isNew: true, __mainTmp: true });
-    renderGallery();
-    setPreview(objectUrl);
-
-    // clear URL field (поки фото не завантажено)
-    if (admImg) admImg.value = "";
+    const files = admFile.files;
+    if (!files || !files.length) return;
+    addFilesUniversal(files);
+    // allow picking same files again later
+    admFile.value = "";
   });
 
-["dragenter", "dragover"].forEach((ev) => {
+  ["dragenter", "dragover"].forEach((ev) => {
     admDrop?.addEventListener(ev, (e) => {
       e.preventDefault();
       admDrop.classList.add("is-drag");
@@ -756,56 +825,9 @@ addBtn?.addEventListener("click", () => openAdminModal(null));
   });
 
   admDrop?.addEventListener("drop", (e) => {
-    const f = e.dataTransfer?.files?.[0];
-    if (!f) return;
-
-    selectedFile = f;
-
-    if (admFile) {
-      const dt = new DataTransfer();
-      dt.items.add(f);
-      admFile.files = dt.files;
-    }
-
-    // main photo => first in gallery
-    const tmpIdx = galleryItems.findIndex(it => it.__mainTmp);
-    if (tmpIdx >= 0) removeFromGallery(tmpIdx);
-
-    const objectUrl = URL.createObjectURL(f);
-    galleryItems.unshift({ url: objectUrl, file: f, objectUrl, isNew: true, __mainTmp: true });
-    renderGallery();
-    setPreview(objectUrl);
-    if (admImg) admImg.value = "";
-  });
-
-// ===== MULTI-PHOTO GALLERY =====
-  admPickMore?.addEventListener("click", () => admFilesMore?.click());
-
-  admFilesMore?.addEventListener("change", () => {
-    const files = admFilesMore.files;
-    if (!files || !files.length) return;
-    addFilesToGallery(files);
-    // allow picking same file again later
-    admFilesMore.value = "";
-  });
-
-  ["dragenter", "dragover"].forEach((ev) => {
-    admDropMore?.addEventListener(ev, (e) => {
-      e.preventDefault();
-      admDropMore.classList.add("is-drag");
-    });
-  });
-  ["dragleave", "drop"].forEach((ev) => {
-    admDropMore?.addEventListener(ev, (e) => {
-      e.preventDefault();
-      admDropMore.classList.remove("is-drag");
-    });
-  });
-
-  admDropMore?.addEventListener("drop", (e) => {
     const files = e.dataTransfer?.files;
     if (!files || !files.length) return;
-    addFilesToGallery(files);
+    addFilesUniversal(files);
   });
 
   admImgsList?.addEventListener("click", (e) => {
@@ -816,14 +838,16 @@ addBtn?.addEventListener("click", () => openAdminModal(null));
     if (act === "main") setAsMain(idx);
     if (act === "remove") removeFromGallery(idx);
   });
-function extFromName(name = "") {
+
+  // ---------- storage upload ----------
+  function extFromName(name = "") {
     const m = String(name).toLowerCase().match(/\.(png|jpg|jpeg|webp|gif)$/);
     return m ? m[1] : "jpg";
   }
 
   async function uploadToStorage(file, productId) {
     const ext = extFromName(file.name);
-    const filePath = `${productId}_${Date.now()}.${ext}`;
+    const filePath = `${productId}_${Date.now()}_${Math.random().toString(16).slice(2)}.${ext}`;
 
     const { error: upErr } = await sb.storage.from(BUCKET).upload(filePath, file, {
       cacheControl: "3600",
@@ -845,7 +869,6 @@ function extFromName(name = "") {
     const { error } = await sb.from("products").delete().eq("id", id);
     if (error) return alert(error.message);
 
-    // keep cache fresh
     productsCache = productsCache.filter(p => String(p.id) !== String(id));
     selectedProductIds.delete(String(id));
     applyProductsFilter();
@@ -873,26 +896,27 @@ function extFromName(name = "") {
     const price = safePrice(admPrice.value);
     const stock = admStock ? Math.max(0, safeInt(admStock.value)) : 0;
     const desc = admDesc.value.trim();
-    const categoryId = (admCategory.value || "").trim();
+    const categoryRaw = (admCategory.value || "").trim();
+    const categoryId = isSlugValue(categoryRaw) ? null : categoryRaw;
+    const categorySlug = isSlugValue(categoryRaw) ? unwrapSlugValue(categoryRaw) : null;
 
     let img = (admImg.value || "").trim();
 
     if (!title) return setErr("Вкажи назву товару");
-    if (!categoryId) return setErr("Вкажи категорію");
+    if (!categoryId && !categorySlug) return setErr("Вкажи категорію");
 
     if (!img && editingId && existingImgUrl) img = existingImgUrl;
 
-    
-    // ===== upload gallery files (main + extra) =====
     const productId = editingId || String(Date.now());
 
-    // if user typed main URL but gallery is empty — init gallery from it
+    // если галерея пустая, но есть URL — добавим
     if (!galleryItems.length && img) {
       galleryItems = [{ url: img, isNew: false }];
       renderGallery();
+      ensureMainFirst();
     }
 
-    // upload in order, replacing object URLs with public URLs
+    // upload files in gallery order
     try {
       for (const it of galleryItems) {
         if (it?.file) {
@@ -901,7 +925,6 @@ function extFromName(name = "") {
           it.url = publicUrl;
           it.file = null;
           it.isNew = false;
-          if (it.__mainTmp) it.__mainTmp = false;
         }
       }
     } catch (e) {
@@ -909,14 +932,14 @@ function extFromName(name = "") {
       return setErr(`Upload error: ${e?.message || e}`);
     }
 
-    // final urls
     const imgs = uniqUrls(galleryItems.map(it => it.url));
     const mainImg = imgs[0] || img || "";
 
     img = mainImg;
     if (!img) return setErr("Вкажи фото або URL картинки");
-const cat = findCategoryById(categoryId);
-    const catSlug = cat?.slug || null;
+
+    const cat = categoryId ? findCategoryById(categoryId) : null;
+    const catSlug = cat?.slug || categorySlug || null;
 
     const payload = {
       title,
@@ -925,7 +948,7 @@ const cat = findCategoryById(categoryId);
       desc,
       img,
       imgs: JSON.stringify(imgs || []),
-      category_id: categoryId,
+      ...(categoryId ? { category_id: categoryId } : {}),
       ...(catSlug ? { category: catSlug } : {}),
       is_active: !!admActive?.checked,
       is_popular: !!admPopular?.checked,
@@ -945,7 +968,6 @@ const cat = findCategoryById(categoryId);
       return setErr(res.error.message || "Помилка збереження");
     }
 
-    // sync cache
     const row = res.data;
     if (row) {
       const idx = productsCache.findIndex(p => String(p.id) === String(row.id));
@@ -964,20 +986,17 @@ const cat = findCategoryById(categoryId);
     if (!card) return;
     const pid = card.dataset.pid;
 
-    // edit/delete
     const editBtn = e.target.closest("[data-edit]");
     const delBtn = e.target.closest("[data-del]");
     if (editBtn) return editProduct(editBtn.dataset.edit);
     if (delBtn) return deleteProduct(delBtn.dataset.del);
 
-    // select checkbox click (handled on change too, but keep safe)
     const sel = e.target.closest("[data-select]");
     if (sel) return;
 
-    // toggle active/popular
     const tgl = e.target.closest("[data-toggle]");
     if (tgl) {
-      const kind = tgl.dataset.toggle; // active|popular
+      const kind = tgl.dataset.toggle;
       const p = productsCache.find(x => String(x.id) === String(pid));
       if (!p) return;
 
@@ -997,7 +1016,6 @@ const cat = findCategoryById(categoryId);
 
         if (error) throw error;
 
-        // update cache + UI
         const idx = productsCache.findIndex(x => String(x.id) === String(pid));
         if (idx >= 0) productsCache[idx] = { ...productsCache[idx], ...data };
 
@@ -1012,7 +1030,6 @@ const cat = findCategoryById(categoryId);
       return;
     }
 
-    // stock +/- and input
     const stBtn = e.target.closest("[data-stock]");
     if (stBtn) {
       const mode = stBtn.dataset.stock;
@@ -1076,7 +1093,6 @@ const cat = findCategoryById(categoryId);
     } catch (err) {
       console.error(err);
       alert(err?.message || "Не вдалося оновити stock");
-      // revert UI
       applyProductsFilter();
     }
   }
@@ -1110,7 +1126,11 @@ const cat = findCategoryById(categoryId);
   function updateProductToolbar() {
     if (!prodToolbar || !prodSelectedCount || !prodSelectAll) return;
 
-    const visibleIds = new Set(prodFiltered.slice((prodPage-1)*PAGE_SIZE, (prodPage-1)*PAGE_SIZE + PAGE_SIZE).map(p => String(p.id)));
+    const visibleIds = new Set(
+      prodFiltered
+        .slice((prodPage-1)*PAGE_SIZE, (prodPage-1)*PAGE_SIZE + PAGE_SIZE)
+        .map(p => String(p.id))
+    );
     const selectedVisible = [...selectedProductIds].filter(id => visibleIds.has(String(id)));
 
     const count = selectedProductIds.size;
@@ -1118,7 +1138,6 @@ const cat = findCategoryById(categoryId);
 
     prodToolbar.hidden = count === 0;
 
-    // select all on current page
     prodSelectAll.checked = selectedVisible.length > 0 && selectedVisible.length === visibleIds.size;
     prodSelectAll.indeterminate = selectedVisible.length > 0 && selectedVisible.length < visibleIds.size;
   }
@@ -1131,14 +1150,13 @@ const cat = findCategoryById(categoryId);
     if (prodSelectAll.checked) ids.forEach(id => selectedProductIds.add(id));
     else ids.forEach(id => selectedProductIds.delete(id));
 
-    applyProductsFilter(); // rerender checks
+    applyProductsFilter();
   });
 
   async function bulkUpdate(patch) {
     const ids = [...selectedProductIds];
     if (!ids.length) return;
 
-    // optimistic UI
     ids.forEach(id => {
       const idx = productsCache.findIndex(p => String(p.id) === String(id));
       if (idx >= 0) productsCache[idx] = { ...productsCache[idx], ...patch };
@@ -1171,7 +1189,6 @@ const cat = findCategoryById(categoryId);
     if (!ids.length) return;
     if (!confirm(`Видалити ${ids.length} товар(ів)?`)) return;
 
-    // optimistic
     productsCache = productsCache.filter(p => !selectedProductIds.has(String(p.id)));
     selectedProductIds.clear();
     applyProductsFilter();
@@ -1384,10 +1401,9 @@ const cat = findCategoryById(categoryId);
 
       if (o) o.status = newStatus;
 
-      // deduct stock ONLY when переход: not done -> done
       if (prevStatus !== "done" && newStatus === "done") {
         await deductStockForOrder(orderId);
-        await loadProducts(); // refresh
+        await loadProducts();
       }
 
       applyOrdersFilter();
@@ -1406,7 +1422,6 @@ const cat = findCategoryById(categoryId);
     const items = Array.isArray(order?.order_items) ? order.order_items : [];
     if (!items.length) return;
 
-    // naive safe approach: read each product stock then update
     for (const it of items) {
       const pid = String(it.product_id || "");
       const qty = Math.max(0, safeInt(it.qty));
@@ -1433,7 +1448,6 @@ const cat = findCategoryById(categoryId);
         if (uErr) throw uErr;
       } catch (e) {
         console.error("deductStockForOrder error:", e);
-        // don't block the whole order
       }
     }
   }
@@ -1524,7 +1538,6 @@ const cat = findCategoryById(categoryId);
         const row = payload?.new;
         if (!row?.id) return;
 
-        // fetch full order with items
         const { data } = await sb
           .from("orders")
           .select(`
@@ -1537,7 +1550,6 @@ const cat = findCategoryById(categoryId);
 
         if (!data) return;
 
-        // avoid dup
         const exists = allOrdersCache.some(o => o.id === data.id);
         if (!exists) {
           allOrdersCache.unshift(data);
@@ -1554,9 +1566,7 @@ const cat = findCategoryById(categoryId);
           applyOrdersFilter();
         }
       })
-      .subscribe((status) => {
-        // console.log("orders realtime:", status);
-      });
+      .subscribe(() => {});
   }
 
   function stopOrdersRealtime() {

@@ -1,362 +1,404 @@
 // js/product-modal.js
-function $(sel) { return document.querySelector(sel); }
+// ЕДИНАЯ логика модалки товара + галерея (стрелки/миниатюры/свайп)
+// Другие страницы должны только звать: window.openProductModal(productLike)
+//
+// productLike минимально: { id, title, price, img, desc, imgs? }
+// Если imgs нет — попробуем подтянуть товар из Supabase по id и взять imgs оттуда.
 
-const modal = $('#productModal');
-const pmImg = $('#pmImg');
-const pmThumbs = $('#pmThumbs');
-const pmPrev = $('#pmPrev');
-const pmNext = $('#pmNext');
+(function () {
+  const modal = document.getElementById("productModal");
+  if (!modal) return;
 
-const pmTitle = $('#pmTitle');
-const pmCode = $('#pmCode');
-const pmPrice = $('#pmPrice');
-const pmDesc = $('#pmDesc');
-const pmFav = $('#pmFav');
-const pmQty = $('#pmQty');
-const pmAddToCart = $('#pmAddToCart');
+  // ------- DOM -------
+  const pmImg = document.getElementById("pmImg");
+  const pmThumbs = document.getElementById("pmThumbs");
+  const pmPrev = document.getElementById("pmPrev");
+  const pmNext = document.getElementById("pmNext");
 
-let currentProduct = null;
+  const pmTitle = document.getElementById("pmTitle");
+  const pmCode = document.getElementById("pmCode");
+  const pmPrice = document.getElementById("pmPrice");
+  const pmDesc = document.getElementById("pmDesc");
+  const pmFav = document.getElementById("pmFav");
+  const pmQty = document.getElementById("pmQty");
+  const pmAddToCart = document.getElementById("pmAddToCart");
 
-// gallery state
-let galleryUrls = [];
-let galleryIndex = 0;
+  // ------- STATE -------
+  let currentProduct = null;
+  let gallery = [];
+  let index = 0;
 
-function escHtml(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function safePrice(val) {
-  const n = parseFloat(String(val ?? "").replace(",", ".").replace(/[^\d.]/g, ""));
-  return Number.isFinite(n) ? n : 0;
-}
-
-function setFavBtnState(btn, active) {
-  if (!btn) return;
-  btn.classList.toggle('active', !!active);
-  btn.textContent = active ? '♥️' : '♡';
-}
-
-function safeParseJson(s) {
-  try { return JSON.parse(s); } catch { return null; }
-}
-
-function normalizeImgs(p) {
-  const arr =
-    Array.isArray(p?.imgs) ? p.imgs :
-    (typeof p?.imgs === "string" ? safeParseJson(p.imgs) : null);
-
-  const urls = (arr && Array.isArray(arr) ? arr : [])
-    .map(x => String(x || "").trim())
-    .filter(Boolean);
-
-  const main = String(p?.img || "").trim();
-  if (main && !urls.includes(main)) urls.unshift(main);
-
-  return urls.length ? urls : (main ? [main] : []);
-}
-
-function renderGallery(urls, startUrl = "") {
-  galleryUrls = Array.isArray(urls) ? urls : [];
-  galleryIndex = 0;
-
-  if (!galleryUrls.length) {
-    if (pmImg) pmImg.src = "";
-    if (pmThumbs) { pmThumbs.innerHTML = ""; pmThumbs.style.display = "none"; }
-    if (pmPrev) pmPrev.disabled = true;
-    if (pmNext) pmNext.disabled = true;
-    return;
+  // ------- UTILS -------
+  function escHtml(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
-  if (startUrl) {
-    const i = galleryUrls.indexOf(startUrl);
-    if (i >= 0) galleryIndex = i;
+  function safePrice(val) {
+    const n = parseFloat(String(val ?? "").replace(",", ".").replace(/[^\d.]/g, ""));
+    return Number.isFinite(n) ? n : 0;
   }
 
-  setMainImage(galleryIndex);
-  renderThumbs();
-  syncNav();
-}
-
-function setMainImage(i) {
-  if (!galleryUrls.length) return;
-
-  // ✅ круг
-  galleryIndex = (i + galleryUrls.length) % galleryUrls.length;
-  const url = galleryUrls[galleryIndex];
-
-  if (pmImg) {
-    pmImg.src = url;
-    pmImg.alt = currentProduct?.title || "";
+  function hasHtml(s) {
+    return /<\/?[a-z][\s\S]*>/i.test(String(s || ""));
   }
 
-  if (pmThumbs) {
-    pmThumbs.querySelectorAll('.pm-thumb').forEach((b, idx) => {
-      b.classList.toggle('is-active', idx === galleryIndex);
-    });
+  function normalizeImgs(p) {
+    if (!p) return [];
+    let arr = [];
+
+    if (Array.isArray(p.imgs)) {
+      arr = p.imgs;
+    } else if (typeof p.imgs === "string" && p.imgs.trim()) {
+      try {
+        const parsed = JSON.parse(p.imgs);
+        if (Array.isArray(parsed)) arr = parsed;
+      } catch {}
+    }
+
+    arr = arr
+      .map(x => String(x || "").trim())
+      .filter(Boolean);
+
+    const main = String(p.img || "").trim();
+    if (main && !arr.includes(main)) arr.unshift(main);
+
+    const uniq = [];
+    const seen = new Set();
+    for (const u of arr) {
+      const key = u;
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      uniq.push(u);
+    }
+
+    return uniq.length ? uniq : (main ? [main] : []);
   }
 
-  syncNav();
-}
-
-function renderThumbs() {
-  if (!pmThumbs) return;
-
-  if (galleryUrls.length <= 1) {
-    pmThumbs.innerHTML = "";
-    pmThumbs.style.display = "none";
-    return;
+  function preload(url) {
+    if (!url) return;
+    const img = new Image();
+    img.src = url;
   }
 
-  pmThumbs.style.display = "";
-  pmThumbs.innerHTML = galleryUrls.map((url, idx) => `
-    <button class="pm-thumb ${idx === galleryIndex ? "is-active" : ""}" type="button" data-idx="${idx}">
-      <img src="${escHtml(url)}" alt="">
-    </button>
-  `).join("");
-}
-
-function syncNav() {
-  const multi = galleryUrls.length > 1;
-  if (pmPrev) pmPrev.disabled = !multi;
-  if (pmNext) pmNext.disabled = !multi;
-}
-
-function setDesc(desc) {
-  if (!pmDesc) return;
-  const text = String(desc || "").trim();
-  if (!text) {
-    pmDesc.textContent = "Опис буде додано пізніше 🙂";
-    return;
+  function preloadNeighbors() {
+    if (!gallery.length) return;
+    if (gallery.length === 1) {
+      preload(gallery[0]);
+      return;
+    }
+    const prev = gallery[(index - 1 + gallery.length) % gallery.length];
+    const next = gallery[(index + 1) % gallery.length];
+    preload(prev);
+    preload(next);
   }
-  const hasTags = /<\/?[a-z][\s\S]*>/i.test(text);
-  pmDesc[hasTags ? "innerHTML" : "textContent"] = text;
-}
 
-// open/close
-async function fetchProductById(id) {
-  const pid = String(id || "").trim();
-  if (!pid) return null;
+  // ------- SUPABASE FETCH (страховка если imgs не передали) -------
+  async function fetchProductById(id) {
+    const SUPABASE_URL = window.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
 
-  const SUPABASE_URL = window.SUPABASE_URL;
-  const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
 
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+    const select = "id,title,price,img,desc,imgs";
+    const q = new URLSearchParams();
+    q.set("select", select);
+    q.set("id", `eq.${id}`);
+    q.set("limit", "1");
 
-  const select = "id,title,price,img,imgs,desc";
-  const url = `${SUPABASE_URL}/rest/v1/products?select=${encodeURIComponent(select)}&id=eq.${encodeURIComponent(pid)}&is_active=eq.true&limit=1`;
+    const url = `${SUPABASE_URL}/rest/v1/products?${q.toString()}`;
 
-  try {
-    const res = await fetch(url, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
+    try {
+      const res = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+        }
+      });
+      if (!res.ok) return null;
+      const rows = await res.json();
+      return rows?.[0] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // ------- GALLERY -------
+  function setHidden(el, hidden) {
+    if (!el) return;
+    if (hidden) el.setAttribute("hidden", "");
+    else el.removeAttribute("hidden");
+  }
+
+  function updateNav() {
+    const multi = gallery.length > 1;
+    setHidden(pmPrev, !multi);
+    setHidden(pmNext, !multi);
+    setHidden(pmThumbs, !multi);
+  }
+
+  function setImage(i) {
+    if (!gallery.length || !pmImg) return;
+
+    index = (i + gallery.length) % gallery.length;
+
+    pmImg.src = gallery[index];
+    pmImg.draggable = false;
+
+    if (pmThumbs) {
+      pmThumbs.querySelectorAll(".pm-thumb").forEach((el, idx) => {
+        el.classList.toggle("is-active", idx === index);
+      });
+    }
+
+    preloadNeighbors();
+  }
+
+  function renderThumbs() {
+    if (!pmThumbs) return;
+
+    if (gallery.length <= 1) {
+      pmThumbs.innerHTML = "";
+      return;
+    }
+
+    pmThumbs.innerHTML = gallery.map((url, i) => `
+      <button class="pm-thumb ${i === index ? "is-active" : ""}" type="button" data-pm-thumb="${i}">
+        <img src="${escHtml(url)}" alt="">
+      </button>
+    `).join("");
+  }
+
+  function initGallery(urls) {
+    gallery = Array.isArray(urls) ? urls : [];
+    index = 0;
+
+    if (!gallery.length) {
+      if (pmImg) pmImg.src = "";
+      if (pmThumbs) pmThumbs.innerHTML = "";
+      updateNav();
+      return;
+    }
+
+    renderThumbs();
+    setImage(0);
+    updateNav();
+  }
+
+  // ------- OPEN / CLOSE -------
+  async function openModal(productLike) {
+    if (!productLike) return;
+
+    let p = { ...productLike };
+    const id = String(p.id || "").trim();
+
+    // если imgs не пришло — подгружаем из базы по id (если сможем)
+    // (оставил твою логику: если imgs пусто/строка — пробуем докинуть из БД)
+    if ((!p.imgs || (Array.isArray(p.imgs) && p.imgs.length === 0) || typeof p.imgs === "string") && id) {
+      const dbP = await fetchProductById(id);
+      if (dbP) p = { ...p, ...dbP };
+    }
+
+    currentProduct = {
+      id: id,
+      title: p.title || "",
+      price: p.price ?? "",
+      priceNum: safePrice(p.price),
+      img: String(p.img || "").trim(),
+      desc: p.desc || "",
+      imgs: p.imgs
+    };
+
+    if (pmTitle) pmTitle.textContent = currentProduct.title;
+    if (pmCode) pmCode.textContent = currentProduct.id ? `Код: ${currentProduct.id}` : "";
+
+    if (pmPrice) {
+      const n = safePrice(currentProduct.price);
+      pmPrice.textContent = n ? `${n.toFixed(2)} грн` : "";
+    }
+
+    if (pmDesc) {
+      const d = currentProduct.desc || "Опис буде додано пізніше 🙂";
+      pmDesc[hasHtml(d) ? "innerHTML" : "textContent"] = d;
+    }
+
+    if (pmQty) pmQty.value = 1;
+
+    // fav state
+    if (pmFav) {
+      pmFav.style.display = "";
+      const active = typeof window.isFav === "function" ? window.isFav(currentProduct.id) : false;
+      pmFav.classList.toggle("active", !!active);
+      pmFav.textContent = active ? "♥️" : "♡";
+    }
+
+    initGallery(normalizeImgs(currentProduct));
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal() {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    currentProduct = null;
+    gallery = [];
+    index = 0;
+    if (pmThumbs) pmThumbs.innerHTML = "";
+  }
+
+  window.openProductModal = openModal;
+
+  // ------- EVENTS -------
+  document.addEventListener("click", (e) => {
+    if (!modal.classList.contains("open")) return;
+
+    // close
+    if (e.target?.dataset?.close === "1") {
+      closeModal();
+      return;
+    }
+
+    // prev/next
+    if (e.target.closest("#pmPrev")) {
+      e.preventDefault();
+      setImage(index - 1);
+      return;
+    }
+    if (e.target.closest("#pmNext")) {
+      e.preventDefault();
+      setImage(index + 1);
+      return;
+    }
+
+    // thumb
+    const th = e.target.closest("[data-pm-thumb]");
+    if (th) {
+      const i = parseInt(th.getAttribute("data-pm-thumb"), 10);
+      if (Number.isFinite(i)) setImage(i);
+      return;
+    }
+
+    // fav
+    if (e.target.closest("#pmFav")) {
+      if (!currentProduct) return;
+      if (typeof window.toggleFav === "function") window.toggleFav(currentProduct);
+
+      const active = typeof window.isFav === "function" ? window.isFav(currentProduct.id) : false;
+      pmFav?.classList.toggle("active", !!active);
+      if (pmFav) pmFav.textContent = active ? "♥️" : "♡";
+
+      if (typeof window.updateFavBadge === "function") window.updateFavBadge();
+      if (typeof window.refreshFavButtons === "function") window.refreshFavButtons();
+      return;
+    }
+
+    // add to cart
+    if (e.target.closest("#pmAddToCart")) {
+      if (!currentProduct) return;
+
+      const qty = Math.max(1, parseInt(pmQty?.value, 10) || 1);
+
+      const prod = {
+        id: currentProduct.id,
+        title: currentProduct.title,
+        price: String(currentProduct.priceNum || currentProduct.price || ""),
+        img: currentProduct.img,
+        desc: currentProduct.desc || ""
+      };
+
+      if (typeof window.addToCart === "function") window.addToCart(prod, qty);
+      if (typeof window.updateCartBadge === "function") window.updateCartBadge();
+      if (typeof window.animateAdded === "function") {
+        window.animateAdded(pmAddToCart, { duration: 700, text: "Додано", keepText: false });
       }
-    });
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    return Array.isArray(data) ? (data[0] || null) : null;
-  } catch {
-    return null;
-  }
-}
-
-async function openModal(product) {
-  if (!modal) return;
-
-  // normalize input
-  const input = (typeof product === "string" || typeof product === "number")
-    ? { id: String(product) }
-    : (product || {});
-
-  const pid = String(input.id || input.code || input.product_id || "").trim();
-  if (!pid) return;
-
-  // if we don't have gallery data in this context (favorites/cart/popular), fetch full product from Supabase
-  let merged = { ...input, id: pid };
-
-  const hasImgs =
-    (Array.isArray(merged.imgs) && merged.imgs.length > 0) ||
-    (typeof merged.imgs === "string" && merged.imgs.trim().length > 0);
-
-  if (!hasImgs || !merged.desc || !merged.img) {
-    const full = await fetchProductById(pid);
-    if (full) merged = { ...merged, ...full }; // ✅ база важнее
-  }
-
-  currentProduct = merged; // ✅ ВОТ ЭТО чинит перелистывание
-  if (!currentProduct) return;
-
-  const priceNum = safePrice(currentProduct.priceNum ?? currentProduct.price);
-  const priceText = priceNum ? `${priceNum.toFixed(2)} грн.` : (currentProduct.priceText || "");
-
-  if (pmTitle) pmTitle.textContent = currentProduct.title || '';
-  if (pmCode) pmCode.textContent = currentProduct.id ? `Код: ${currentProduct.id}` : '';
-  if (pmPrice) pmPrice.textContent = priceText || '';
-  setDesc(currentProduct.desc);
-  if (pmQty) pmQty.value = 1;
-
-  // ✅ gallery
-  const urls = normalizeImgs(currentProduct);
-  renderGallery(urls, currentProduct.img || "");
-
-  // fav
-  if (typeof window.isFav === "function") setFavBtnState(pmFav, window.isFav(currentProduct.id));
-
-  modal.classList.add('open');
-  modal.setAttribute('aria-hidden', 'false');
-
-  window.lockBodyScroll?.();
-}
-
-function closeModal() {
-  if (!modal) return;
-
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden', 'true');
-
-  window.unlockBodyScroll?.();
-
-  currentProduct = null;
-  galleryUrls = [];
-  galleryIndex = 0;
-  if (pmThumbs) { pmThumbs.innerHTML = ""; pmThumbs.style.display = "none"; }
-}
-
-window.openProductModal = openModal;
-
-// overlay / x close
-document.addEventListener('click', (e) => {
-  if (!modal?.classList.contains('open')) return;
-  if (e.target?.dataset?.close === '1') closeModal();
-});
-
-// ESC + arrows
-document.addEventListener('keydown', (e) => {
-  if (!modal?.classList.contains('open')) return;
-
-  if (e.key === 'Escape') closeModal();
-  if (e.key === 'ArrowLeft') setMainImage(galleryIndex - 1);
-  if (e.key === 'ArrowRight') setMainImage(galleryIndex + 1);
-});
-
-// thumbs click
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.pm-thumb');
-  if (!btn || !modal?.classList.contains('open')) return;
-  const idx = parseInt(btn.dataset.idx, 10);
-  if (!Number.isFinite(idx)) return;
-  setMainImage(idx);
-});
-
-// prev/next click
-pmPrev?.addEventListener('click', () => setMainImage(galleryIndex - 1));
-pmNext?.addEventListener('click', () => setMainImage(galleryIndex + 1));
-
-/* ✅ SWIPE (по кругу) */
-(function initModalSwipe(){
-  // пробуем найти галерею в модалке
-  const galleryEl = document.querySelector('#productModal .pm-gallery') || pmImg?.closest?.('.pm-gallery');
-  if (!galleryEl) return;
-
-  let x0 = null;
-  let y0 = null;
-  let active = false;
-
-  galleryEl.addEventListener('pointerdown', (e) => {
-    if (!modal?.classList.contains('open')) return;
-    active = true;
-    x0 = e.clientX;
-    y0 = e.clientY;
-    try { galleryEl.setPointerCapture(e.pointerId); } catch {}
+      return;
+    }
   });
 
-  galleryEl.addEventListener('pointerup', (e) => {
-    if (!active) return;
-    active = false;
+  // qty +/- (универсально)
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".qty__btn");
+    if (!btn) return;
 
-    if (!modal?.classList.contains('open')) return;
+    const wrap = btn.closest(".qty");
+    if (!wrap) return;
 
-    const dx = e.clientX - (x0 ?? e.clientX);
-    const dy = e.clientY - (y0 ?? e.clientY);
-    x0 = null; y0 = null;
+    const input = wrap.querySelector("input");
+    if (!input) return;
 
-    // если больше вертикально — это скролл, не листаем
+    let val = parseInt(input.value, 10) || 1;
+    if (btn.dataset.action === "plus") val++;
+    if (btn.dataset.action === "minus") val = Math.max(1, val - 1);
+    input.value = val;
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (!modal.classList.contains("open")) return;
+
+    if (e.key === "Escape") closeModal();
+    if (e.key === "ArrowLeft") setImage(index - 1);
+    if (e.key === "ArrowRight") setImage(index + 1);
+  });
+
+  // ------- SWIPE (pointer) -------
+  let startX = null;
+  let startY = null;
+  let activePointerId = null;
+
+  function onPointerDown(e) {
+    if (!modal.classList.contains("open")) return;
+    if (!gallery || gallery.length <= 1) return;
+    if (!e.target.closest("#pmImg")) return;
+
+    activePointerId = e.pointerId;
+    startX = e.clientX;
+    startY = e.clientY;
+
+    try { e.target.setPointerCapture?.(activePointerId); } catch {}
+  }
+
+  function finishPointer(e) {
+    if (activePointerId === null) return;
+    if (e.pointerId !== activePointerId) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    startX = null;
+    startY = null;
+    activePointerId = null;
+
+    // вертикальный скролл — не листаем
     if (Math.abs(dy) > Math.abs(dx)) return;
+    if (Math.abs(dx) < 40) return;
 
-    if (Math.abs(dx) < 30) return;
+    if (dx < 0) setImage(index + 1);
+    else setImage(index - 1);
+  }
 
-    if (dx < 0) setMainImage(galleryIndex + 1);
-    else setMainImage(galleryIndex - 1);
-  });
+  function onPointerUp(e) {
+    if (!modal.classList.contains("open")) return;
+    finishPointer(e);
+  }
 
-  galleryEl.addEventListener('pointercancel', () => {
-    active = false;
-    x0 = null; y0 = null;
-  });
+  function onPointerCancel(e) {
+    // просто сбрасываем состояние
+    if (activePointerId === null) return;
+    if (e.pointerId !== activePointerId) return;
+    startX = null;
+    startY = null;
+    activePointerId = null;
+  }
+
+  pmImg?.addEventListener("pointerdown", onPointerDown);
+  pmImg?.addEventListener("pointerup", onPointerUp);
+  pmImg?.addEventListener("pointercancel", onPointerCancel);
 })();
-
-// qty +/- inside modal
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.qty__btn');
-  if (!btn) return;
-  if (!modal?.classList.contains('open')) return;
-  if (!btn.closest('.pmodal')) return;
-
-  const wrap = btn.closest('.qty');
-  const input = wrap?.querySelector('input');
-  if (!input) return;
-
-  let val = parseInt(input.value, 10) || 1;
-  if (btn.dataset.action === 'plus') val++;
-  if (btn.dataset.action === 'minus') val = Math.max(1, val - 1);
-  input.value = val;
-});
-
-// modal fav
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#pmFav')) return;
-  if (!currentProduct) return;
-
-  const prod = {
-    id: currentProduct.id,
-    title: currentProduct.title,
-    price: String(safePrice(currentProduct.priceNum ?? currentProduct.price) || currentProduct.price || ""),
-    img: currentProduct.img,
-    desc: currentProduct.desc || "",
-    imgs: normalizeImgs(currentProduct),
-  };
-
-  window.toggleFav?.(prod);
-  if (typeof window.isFav === "function") setFavBtnState(pmFav, window.isFav(currentProduct.id));
-  window.refreshFavButtons?.();
-  window.updateFavBadge?.();
-});
-
-// modal add to cart
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#pmAddToCart')) return;
-  if (!currentProduct) return;
-
-  const qty = Math.max(1, parseInt(pmQty?.value, 10) || 1);
-
-  const prod = {
-    id: currentProduct.id,
-    title: currentProduct.title,
-    price: String(safePrice(currentProduct.priceNum ?? currentProduct.price) || currentProduct.price || ""),
-    img: currentProduct.img,
-    desc: currentProduct.desc || "",
-    imgs: normalizeImgs(currentProduct),
-  };
-
-  window.addToCart?.(prod, qty);
-  window.updateCartBadge?.();
-
-  window.animateAdded?.(pmAddToCart, { duration: 700, text: "Додано", keepText: false });
-});

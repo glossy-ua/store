@@ -158,7 +158,8 @@
           sum
         )
       `)
-      .eq("owner_id", userId)
+      .eq("user_id", userId)
+
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -387,7 +388,7 @@
       .channel("orders-status-watch")
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "orders", filter: `owner_id=eq.${userId}` },
+        { event: "UPDATE", schema: "public", table: "orders", filter: `user_id=eq.${userId}` },
         () => renderOrdersFromSupabase(userId)
       )
       .subscribe();

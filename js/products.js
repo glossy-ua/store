@@ -1,193 +1,158 @@
-/* =========================
-   products.js (catalog pages)
-   ========================= */
+// js/products.js
+// Cards interactions (qty/fav/cart + open modal)
+// Requires store.js (addToCart/toggleFav/isFav/update badges/animateAdded)
+// Modal logic lives in product-modal.js (window.openProductModal)
 
-function $(sel) { return document.querySelector(sel); }
+(function () {
+  const grid = document.getElementById("productsGrid");
+  if (!grid) return;
 
-function getProductFromCard(card) {
-  return {
-    id: String(card.dataset.code || ''),
-    title: card.dataset.title || card.querySelector('.product-card__title')?.innerText?.trim() || '',
-    price: card.dataset.price || card.querySelector('.product-card__price')?.innerText?.trim() || '',
-    img: card.dataset.img || card.querySelector('.product-card__img img')?.getAttribute('src') || '',
-    desc: card.dataset.desc || ''
-  };
-}
+  const esc = (s) =>
+    String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
 
-function setFavBtnState(btn, active) {
-  if (!btn) return;
-  btn.classList.toggle('active', active);
-  btn.textContent = active ? '♥️' : '♡';
-}
-
-// ===== MODAL refs =====
-const modal = $('#productModal');
-const pmImg = $('#pmImg');
-const pmTitle = $('#pmTitle');
-const pmCode = $('#pmCode');
-const pmPrice = $('#pmPrice');
-const pmDesc = $('#pmDesc');
-const pmFav = $('#pmFav');
-const pmQty = $('#pmQty');
-const pmAddToCart = $('#pmAddToCart');
-
-let currentProduct = null;
-
-function openModal(product) {
-  if (!modal) return;
-  currentProduct = product;
-
-  if (pmImg) { pmImg.src = product.img || ''; pmImg.alt = product.title || ''; }
-  if (pmTitle) pmTitle.textContent = product.title || '';
-  if (pmCode) pmCode.textContent = product.id ? `Код: ${product.id}` : '';
-  if (pmPrice) {
-  const n = parseFloat(String(product.price || '').replace(',', '.').replace(/[^\d.]/g, '')) || 0;
-  pmPrice.textContent = n ? `${n.toFixed(2)} грн.` : '';
-}
-
-  // в товарах desc может быть обычным текстом — выводим как текст
-  if (pmDesc) pmDesc.textContent = product.desc || 'Опис буде додано пізніше 🙂';
-  if (pmQty) pmQty.value = 1;
-
-  if (pmFav) {
-    pmFav.style.display = '';
-    setFavBtnState(pmFav, isFav(product.id));
+  function moneyToNumber(v) {
+    const n = parseFloat(String(v ?? "").replace(",", ".").replace(/[^\d.]/g, ""));
+    return Number.isFinite(n) ? n : 0;
   }
 
-  modal.classList.add('open');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-}
+  function getProductFromCard(card) {
+    const priceNum = moneyToNumber(card.dataset.price);
 
-function closeModal() {
-  if (!modal) return;
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-  currentProduct = null;
-}
+    // IMPORTANT: pass imgs if present (from catalog-supa/search-supa/home-popular)
+    let imgs = card.dataset.imgs;
+    try {
+      if (imgs && typeof imgs === "string" && imgs.trim().startsWith("[")) imgs = JSON.parse(imgs);
+    } catch {}
 
-// ===== qty +/- (карточки и модалка) =====
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.qty__btn');
-  if (!btn) return;
+    return {
+      id: String(card.dataset.code || "").trim(),
+      title: String(card.dataset.title || "").trim(),
+      price: priceNum ? priceNum.toFixed(2) : String(card.dataset.price || "").trim(),
+      img: String(card.dataset.img || "").trim(),
+      desc: String(card.dataset.desc || "").trim(),
+      imgs: imgs || undefined,
+    };
+  }
 
-  const wrap = btn.closest('.qty');
-  if (!wrap) return;
+  function setFavBtnState(btn, active) {
+    if (!btn) return;
+    btn.classList.toggle("active", !!active);
+    btn.textContent = active ? "♥️" : "♡";
+  }
 
-  const input = wrap.querySelector('input');
-  if (!input) return;
+  function syncFavButtons(root = document) {
+    if (typeof window.isFav !== "function") return;
+    root.querySelectorAll(".product-card").forEach((card) => {
+      const id = card.dataset.code;
+      const btn = card.querySelector(".fav-btn");
+      if (!btn || !id) return;
+      setFavBtnState(btn, window.isFav(id));
+    });
+  }
 
-  let val = parseInt(input.value, 10) || 1;
-  if (btn.dataset.action === 'plus') val++;
-  if (btn.dataset.action === 'minus') val = Math.max(1, val - 1);
-  input.value = val;
-});
+  // expose for modal to refresh cards (product-modal.js calls refreshFavButtons if exists)
+  window.refreshFavButtons = () => syncFavButtons(document);
 
-// ===== add to cart из карточки =====
-document.addEventListener('click', (e) => {
-  const cartBtn = e.target.closest('.product-card .cart-btn');
-  if (!cartBtn) return;
+  // initial
+  try { window.updateFavBadge?.(); } catch {}
+  try { window.updateCartBadge?.(); } catch {}
+  syncFavButtons(grid);
 
-  const card = cartBtn.closest('.product-card');
-  if (!card) return;
+  
 
-  const p = getProductFromCard(card);
-  if (!p.id) return;
+  // ===== FAV CLICK (CAPTURE) =====
+  // Иногда клики по сердцу могут "глотаться" другими обработчиками (или из‑за stopPropagation).
+  // Поэтому ловим в capture-фазе на документе.
+  document.addEventListener("click", (e) => {
+    const btn = e.target?.closest?.(".fav-btn");
+    if (!btn) return;
 
-  const qty = parseInt(card.querySelector('.qty__input')?.value, 10) || 1;
+    const card = btn.closest?.(".product-card");
+    if (!card) return;
 
-  addToCart(p, qty);
-  updateCartBadge();
-  animateAdded(cartBtn, { duration: 700 });
-});
+    // only for product cards that have dataset code/id
+    const pid = String(card.dataset.code || "").trim();
+    if (!pid) return;
 
-// ===== favorites на карточке =====
-function refreshFavButtons() {
-  updateFavBadge();
+    e.preventDefault();
+    e.stopPropagation();
 
-  document.querySelectorAll('[data-code]').forEach(card => {
-    const id = card.dataset.code;
-    const btn = card.querySelector('.fav-btn');
-    if (!btn || !id) return;
-    setFavBtnState(btn, isFav(id));
+    const p = getProductFromCard(card);
+    if (!p.id) return;
+
+    if (typeof window.toggleFav === "function") window.toggleFav(p);
+    refreshFavButtons();
+    try { window.updateFavBadge?.(); } catch {}
+  }, true);
+
+grid.addEventListener("click", (e) => {
+    const t = e.target;
+    const card = t.closest?.(".product-card");
+    if (!card) return;
+
+    // qty +/- inside card
+    if (t.matches?.(".qty__btn")) {
+      e.preventDefault();
+      e.stopPropagation();
+      const action = t.dataset.action;
+      const input = card.querySelector(".qty__input");
+      if (!input) return;
+      let v = Math.max(1, parseInt(input.value || "1", 10) || 1);
+      v = action === "plus" ? v + 1 : Math.max(1, v - 1);
+      input.value = String(v);
+      return;
+    }
+
+    // fav
+    if (t.closest?.(".fav-btn")) {
+      e.preventDefault();
+      e.stopPropagation();
+      const p = getProductFromCard(card);
+      if (!p.id) return;
+      window.toggleFav?.(p);
+      try { window.updateFavBadge?.(); } catch {}
+      syncFavButtons(card); // update this card
+      return;
+    }
+
+    // cart
+    if (t.closest?.(".cart-btn")) {
+      e.preventDefault();
+      e.stopPropagation();
+      const p = getProductFromCard(card);
+      if (!p.id) return;
+
+      const q = Math.max(1, parseInt(card.querySelector(".qty__input")?.value || "1", 10) || 1);
+      window.addToCart?.(p, q);
+      try { window.updateCartBadge?.(); } catch {}
+      window.animateAdded?.(t.closest(".cart-btn"), { duration: 700 });
+      return;
+    }
+
+    // open modal (image/title/body)
+    const clickForModal =
+      t.closest?.(".product-card__img") ||
+      t.closest?.(".product-card__title") ||
+      t.closest?.(".product-card__body");
+
+    if (clickForModal) {
+      if (t.matches?.("input, button")) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const p = getProductFromCard(card);
+      if (!p.id) return;
+
+      if (typeof window.openProductModal === "function") {
+        window.openProductModal(p);
+      } else {
+        console.warn("[products] openProductModal() not found. Add js/product-modal.js before products.js");
+      }
+    }
   });
-}
-
-
-document.addEventListener('click', (e) => {
-  const favBtn = e.target.closest('.product-card .fav-btn');
-  if (!favBtn) return;
-
-  const card = favBtn.closest('.product-card');
-  if (!card) return;
-
-  const p = getProductFromCard(card);
-  if (!p.id) return;
-
-  toggleFav(p);
-  refreshFavButtons();
-
-  // если модалка открыта этого товара — обновим сердечко
-  if (currentProduct && String(currentProduct.id) === String(p.id) && modal?.classList.contains('open')) {
-    setFavBtnState(pmFav, isFav(p.id));
-  }
-});
-
-// ===== open modal on card click =====
-document.addEventListener('click', (e) => {
-  const card = e.target.closest('.product-card');
-  if (!card) return;
-
-  // не открывать модалку по клику на кнопки/qty
-  if (e.target.closest('button, .qty, input')) return;
-
-  const p = getProductFromCard(card);
-  if (!p.id) return;
-
-  openModal(p);
-});
-
-// ===== modal close overlay/x =====
-document.addEventListener('click', (e) => {
-  if (!modal || !modal.classList.contains('open')) return;
-  if (e.target?.dataset?.close === '1') closeModal();
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && modal?.classList.contains('open')) closeModal();
-});
-
-// ===== modal fav =====
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#pmFav')) return;
-  if (!currentProduct) return;
-
-  toggleFav(currentProduct);
-  setFavBtnState(pmFav, isFav(currentProduct.id));
-  refreshFavButtons();
-});
-
-// ===== modal add to cart =====
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#pmAddToCart')) return;
-  if (!currentProduct) return;
-
-  const qty = parseInt(pmQty?.value, 10) || 1;
-  addToCart(currentProduct, qty);
-  updateCartBadge();
-
-  animateAdded(pmAddToCart, { duration: 700, text: 'Додано' });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  refreshFavButtons();
-  updateCartBadge();
-});
-
-window.addEventListener('storage', (e) => {
-  if (e.key === 'favorites') refreshFavButtons();
-  if (e.key === 'cart') updateCartBadge();
-});
-
-// ✅ чтобы карусель могла открыть модалку без костылей
-window.openProductModal = openModal;
+})();

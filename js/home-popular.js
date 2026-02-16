@@ -154,127 +154,17 @@
   }
 
   function openModalFromCard(card) {
-    const p = getProductFromCard(card);
-    if (!p.id) return;
+  const p = getProductFromCard(card);
+  if (!p.id) return;
 
-    // если есть глобальная модалка (как в каталоге) — используем её
-    if (typeof window.openProductModal === "function") {
-      window.openProductModal(p);
-      return;
-    }
-
-    const modal = document.getElementById("productModal");
-    if (!modal) return;
-
-    const pmImg = document.getElementById("pmImg");
-    const pmTitle = document.getElementById("pmTitle");
-    const pmCode = document.getElementById("pmCode");
-    const pmPrice = document.getElementById("pmPrice");
-    const pmDesc = document.getElementById("pmDesc");
-    const pmQty = document.getElementById("pmQty");
-    const pmAdd = document.getElementById("pmAddToCart");
-    const pmFav = document.getElementById("pmFav");
-
-    if (pmImg) pmImg.src = p.img || "";
-    if (pmTitle) pmTitle.textContent = p.title || "";
-    if (pmCode) pmCode.textContent = p.id ? `Код: ${p.id}` : "";
-    if (pmPrice) pmPrice.textContent = `${p.price || "0"} грн.`;
-    if (pmDesc) pmDesc.textContent = p.desc || "Опис буде додано пізніше 🙂";
-    if (pmQty) pmQty.value = "1";
-
-    if (pmFav && typeof window.isFav === "function") {
-      setFavBtnState(pmFav, window.isFav(p.id));
-    }
-
-    modal.classList.add("open");
-    modal.setAttribute("aria-hidden", "false");
-
-    // блокируем фон (если есть эти функции)
-    window.lockBodyScroll?.();
-
-    // ====== FIX: qty +/- В МОДАЛКЕ (на главной products.js не подключен) ======
-    const onModalQty = (e) => {
-      const btn = e.target.closest(".qty__btn");
-      if (!btn) return;
-      if (!modal.contains(btn)) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      const input = modal.querySelector("#pmQty");
-      if (!input) return;
-
-      const min = parseInt(input.getAttribute("min") || "1", 10) || 1;
-      let val = parseInt(input.value || String(min), 10);
-      if (!Number.isFinite(val) || val < min) val = min;
-
-      if (btn.dataset.action === "plus") val += 1;
-      if (btn.dataset.action === "minus") val = Math.max(min, val - 1);
-
-      input.value = String(val);
-    };
-
-    const onModalQtyInput = () => {
-      const input = modal.querySelector("#pmQty");
-      if (!input) return;
-
-      const min = parseInt(input.getAttribute("min") || "1", 10) || 1;
-      let val = parseInt(input.value || String(min), 10);
-      if (!Number.isFinite(val) || val < min) val = min;
-
-      input.value = String(val);
-    };
-
-    modal.addEventListener("click", onModalQty);
-    modal.querySelector("#pmQty")?.addEventListener("input", onModalQtyInput);
-    // =======================================================================
-
-    const onKey = (e) => { if (e.key === "Escape") close(); };
-    const onClick = (e) => {
-      const t = e.target;
-      if (t?.dataset?.close === "1" || t?.closest?.("[data-close='1']")) close();
-    };
-
-    const close = () => {
-      modal.classList.remove("open");
-      modal.setAttribute("aria-hidden", "true");
-
-      window.unlockBodyScroll?.();
-
-      // снимаем обработчики
-      modal.removeEventListener("click", onModalQty);
-      modal.querySelector("#pmQty")?.removeEventListener("input", onModalQtyInput);
-
-      modal.removeEventListener("click", onClick);
-      document.removeEventListener("keydown", onKey);
-    };
-
-    modal.addEventListener("click", onClick);
-    document.addEventListener("keydown", onKey);
-
-    if (pmAdd) {
-      pmAdd.onclick = () => {
-        const q = Math.max(1, parseInt(pmQty?.value || "1", 10) || 1);
-        window.addToCart?.(p, q);
-        window.updateCartBadge?.();
-        window.animateAdded?.(pmAdd, { duration: 700, text: "Додано", keepText: false });
-      };
-    }
-
-    if (pmFav) {
-      pmFav.onclick = (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-
-        window.toggleFav?.(p);
-
-        const active = (typeof window.isFav === "function") ? window.isFav(p.id) : false;
-        setFavBtnState(pmFav, active);
-
-        updateBadgesAndFavs();
-      };
-    }
+  // используем ТОЛЬКО универсальную модалку
+  if (typeof window.openProductModal === "function") {
+    window.openProductModal(p);
+  } else {
+    console.warn("[popular] openProductModal not found. Подключи js/product-modal.js перед home-popular.js");
   }
+}
+
 
   // ===== build loop =====
   function build() {
