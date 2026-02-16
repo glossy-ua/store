@@ -135,11 +135,11 @@ function goBack(){
       <div class="pmodal__top">
         <div class="pmodal__img">
           <div class="pm-gallery">
-  <button class="pm-nav pm-nav--prev" id="pmPrev" type="button" aria-label="Prev">‹</button>
+  <button id="pmPrev" class="pm-nav pm-nav--prev" type="button" aria-label="Попереднє фото" hidden>‹</button>
   <img id="pmImg" src="" alt="">
-  <button class="pm-nav pm-nav--next" id="pmNext" type="button" aria-label="Next">›</button>
+  <button id="pmNext" class="pm-nav pm-nav--next" type="button" aria-label="Наступне фото" hidden>›</button>
 </div>
-<div class="pm-thumbs" id="pmThumbs" aria-label="Gallery thumbnails"></div>
+<div id="pmThumbs" class="pm-thumbs" aria-label="Мініатюри" hidden></div>
 </div>
 
         <div class="pmodal__info">
@@ -185,11 +185,11 @@ function goBack(){
 
 <!-- page scripts -->
 <script src="../js/catalog-supa.js"></script>
+<script src="../js/product-modal.js"></script>
 <script src="../js/products.js"></script>
 
  
 
 
-  <script src="../js/product-modal.js"></script>
 </body>
 </html>
