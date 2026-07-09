@@ -1,6 +1,7 @@
 // js/checkout.js
 // Cart = localStorage
-// Orders = Supabase (orders + order_items)
+// Orders = Supabase (RPC create_order_v1) — AUTH ONLY
+// If not logged in -> redirect to auth.html (with post_auth_redirect)
 
 (function () {
   // ---------- helpers ----------
@@ -16,7 +17,7 @@
   }
 
   function moneyToNumber(v) {
-    const n = parseFloat(String(v).replace(",", ".").replace(/[^\d.]/g, ""));
+    const n = parseFloat(String(v ?? "").replace(",", ".").replace(/[^\d.]/g, ""));
     return Number.isFinite(n) ? n : 0;
   }
 
@@ -92,8 +93,13 @@
     }
   }
 
+  // supports both .field-error[data-err="..."] and ids like coPhoneErr
   function getErrEl(key) {
-    return document.querySelector(`.field-error[data-err="${key}"]`);
+    return (
+      document.querySelector(`.field-error[data-err="${key}"]`) ||
+      document.getElementById(`co${key[0].toUpperCase() + key.slice(1)}Err`) ||
+      null
+    );
   }
 
   function money2(v) {
@@ -104,7 +110,11 @@
   // ---------- cart safe ----------
   function getCartSafe() {
     if (typeof window.getCart === "function") return window.getCart();
-    try { return JSON.parse(localStorage.getItem("cart") || "[]"); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem("cart") || "[]");
+    } catch {
+      return [];
+    }
   }
 
   function setCartSafe(arr) {
@@ -129,29 +139,29 @@
 
   const sb = getSb();
 
-  // ---------- auth guard ----------
-  async function requireSessionOrRedirect() {
-    const { data: sess } = await sb.auth.getSession();
-    if (!sess?.session) {
-      // ✅ запоминаем, куда вернуться после логина
-      try { window.setPostAuthRedirect?.(location.href); } catch {
-        try { localStorage.setItem("post_auth_redirect", location.href); } catch {}
-      }
-      location.href = "auth.html";
+  async function getUserOrNull() {
+    try {
+      const { data: sess } = await sb.auth.getSession();
+      if (!sess?.session) return null;
+      const { data: uData } = await sb.auth.getUser();
+      return uData?.user || null;
+    } catch {
       return null;
     }
-    const { data: uData, error } = await sb.auth.getUser();
-    if (error || !uData?.user) {
-      try { window.setPostAuthRedirect?.(location.href); } catch {
-        try { localStorage.setItem("post_auth_redirect", location.href); } catch {}
-      }
-      location.href = "auth.html";
-      return null;
-    }
-    return uData.user;
   }
 
-  // ---------- email save ----------
+  function redirectToAuthRemember() {
+    try {
+      window.setPostAuthRedirect?.(location.href);
+    } catch {
+      try {
+        localStorage.setItem("post_auth_redirect", location.href);
+      } catch {}
+    }
+    location.href = "auth.html";
+  }
+
+  // ---------- email save (only if logged in) ----------
   async function updateUserEmailIfNeeded(newEmail, cachedUserEmail) {
     const email = String(newEmail || "").trim().toLowerCase();
     const current = String(cachedUserEmail || "").trim().toLowerCase();
@@ -159,15 +169,18 @@
     if (!email || email === current) return { changed: false };
     if (!isEmailValid(email)) return { changed: false, error: "Невірний формат email" };
 
+    const user = await getUserOrNull();
+    if (!user) return { changed: false };
+
     const { data, error } = await sb.auth.updateUser({ email });
     if (error) return { changed: false, error: error.message || "Не вдалося зберегти email" };
 
     return { changed: true, data };
   }
 
-  // ---------- autofill ----------
+  // ---------- autofill (if logged in) ----------
   async function autofillCheckoutFromSupabase() {
-    const user = await requireSessionOrRedirect();
+    const user = await getUserOrNull();
     if (!user) return null;
 
     const md = user.user_metadata || {};
@@ -185,8 +198,7 @@
     if (nameEl && !nameEl.value) nameEl.value = fullName || "";
     if (phoneEl && !phoneEl.value) phoneEl.value = md.phone || "";
     if (cityEl && !cityEl.value) cityEl.value = md.city || "";
-
-    if (emailEl && !emailEl.value) emailEl.value = (user.email || "");
+    if (emailEl && !emailEl.value) emailEl.value = user.email || "";
 
     if (serviceEl && !serviceEl.value && md.delivery_service) serviceEl.value = md.delivery_service;
     if (officeEl && !officeEl.value && md.delivery_office) officeEl.value = md.delivery_office;
@@ -194,7 +206,7 @@
     return user;
   }
 
-  // ---------- render summary (BEAUTY) ----------
+  // ---------- render summary ----------
   function renderCheckoutSummary() {
     const list = $("#checkoutList");
     const totalEl = $("#checkoutTotal");
@@ -213,7 +225,7 @@
 
     emptyEl.style.display = "none";
 
-    const items = cart.map(p => {
+    const items = cart.map((p) => {
       const qty = parseInt(p.qty, 10) || 1;
       const price = moneyToNumber(p.price);
       const sum = price * qty;
@@ -224,13 +236,15 @@
         img: p.img || "",
         price,
         qty,
-        sum
+        sum,
       };
     });
 
     const total = items.reduce((acc, i) => acc + i.sum, 0);
 
-    list.innerHTML = items.map(i => `
+    list.innerHTML = items
+      .map(
+        (i) => `
       <div class="checkout-row">
         <div class="checkout-row__img">
           <img src="${esc(i.img)}" alt="${esc(i.title)}">
@@ -247,15 +261,20 @@
 
         <div class="checkout-row__sum">${money2(i.sum)} грн.</div>
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     totalEl.textContent = `${money2(total)} грн.`;
 
     return { items, total };
   }
 
-  // ---------- sync metadata ----------
+  // ---------- sync metadata (only if logged in) ----------
   async function syncCheckoutToUserMetadata(receiver) {
+    const user = await getUserOrNull();
+    if (!user) return;
+
     const parts = String(receiver.name || "").trim().split(/\s+/).filter(Boolean);
     const firstName = parts[0] || "";
     const lastName = parts.slice(1).join(" ");
@@ -267,88 +286,12 @@
         phone: receiver.phone || "",
         city: receiver.city || "",
         delivery_service: receiver.deliveryService || "",
-        delivery_office: receiver.deliveryOffice || ""
-      }
-    });
-  }
-
-  // ---------- insert order ----------
-  async function insertOrderToSupabase({ total, receiver, items }) {
-    const { data: uData, error: uErr } = await sb.auth.getUser();
-    if (uErr || !uData?.user) throw new Error("Немає сесії. Увійди знову.");
-
-    const userId = uData.user.id;
-
-    const orderPayload = {
-      user_id: userId,
-      owner_id: userId,
-      total: Number(total.toFixed(2)),
-      receiver_name: receiver.name,
-      receiver_phone: receiver.phone,
-      receiver_city: receiver.city,
-      receiver_post_office: `${receiver.deliveryService || ""} / №${receiver.deliveryOffice || ""}`.trim(),
-      receiver_comment: receiver.comment || ""
-    };
-
-    const { data: orderRow, error: oErr } = await sb
-      .from("orders")
-      .insert([orderPayload])
-      .select("id")
-      .single();
-
-    if (oErr) throw oErr;
-
-    const orderId = orderRow.id;
-
-    const itemsPayload = items.map(i => ({
-      owner_id: userId,
-      order_id: orderId,
-      product_id: i.product_id,
-      title: i.title,
-      img: i.img,
-      price: Number(i.price),
-      qty: Number(i.qty),
-      sum: Number(i.sum)
-    }));
-
-    const { error: itErr } = await sb.from("order_items").insert(itemsPayload);
-    if (itErr) throw itErr;
-
-    return orderId;
-  }
-
-  // ---------- telegram notify ----------
-  async function notifyOrderToTelegram({ orderId, total, receiver }) {
-    const FN_URL = "https://fxaleremdkamkimuyoai.supabase.co/functions/v1/notify-telegram";
-    const ORDERS_SECRET = "orders_v1_glossy";
-
-    const payload = {
-      kind: "order",
-      order_id: String(orderId),
-      total: Number(total).toFixed(2),
-      receiver_name: receiver.name,
-      receiver_phone: receiver.phone,
-      receiver_city: receiver.city,
-      receiver_post_office: `${receiver.deliveryService || ""} / №${receiver.deliveryOffice || ""}`.trim(),
-      receiver_comment: receiver.comment || ""
-    };
-
-    const res = await fetch(FN_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-webhook-secret": ORDERS_SECRET,
+        delivery_office: receiver.deliveryOffice || "",
       },
-      body: JSON.stringify(payload),
     });
-
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok || !json.ok) {
-      console.error("TG notify failed:", json);
-    }
   }
 
-  // ---------- validation (live + submit) ----------
+  // ---------- validation ----------
   function setupValidation(state) {
     const form = $("#checkoutForm");
     if (!form) return null;
@@ -362,11 +305,11 @@
     const serviceEl = $("#deliveryService");
     const officeEl = $("#deliveryOffice");
 
-    const nameErr = getErrEl("firstName");
-    const phoneErr = getErrEl("phone");
-    const cityErr = getErrEl("city");
-    const emailErr = getErrEl("email");
-    const deliveryErr = getErrEl("delivery");
+    const nameErr = getErrEl("firstName") || document.getElementById("coFirstNameErr");
+    const phoneErr = getErrEl("phone") || document.getElementById("coPhoneErr");
+    const cityErr = getErrEl("city") || document.getElementById("coCityErr");
+    const emailErr = getErrEl("email") || document.getElementById("coEmailErr");
+    const deliveryErr = getErrEl("delivery") || document.getElementById("coDeliveryErr");
 
     phoneEl?.addEventListener("input", () => {
       phoneEl.value = phoneEl.value.replace(/[^\d+\s()-]/g, "");
@@ -386,8 +329,10 @@
     function vPhone(live = true) {
       const v = String(phoneEl?.value || "").trim();
       if (!v) {
-        if (live) { setError(phoneEl, phoneErr, ""); phoneEl?.classList.remove("input-ok","input-err"); }
-        else setError(phoneEl, phoneErr, "Вкажи телефон");
+        if (live) {
+          setError(phoneEl, phoneErr, "");
+          phoneEl?.classList.remove("input-ok", "input-err");
+        } else setError(phoneEl, phoneErr, "Вкажи телефон");
         return false;
       }
       const norm = normalizeUaPhone(v);
@@ -403,8 +348,10 @@
     function vCity(live = true) {
       const v = String(cityEl?.value || "").trim();
       if (!v) {
-        if (live) { setError(cityEl, cityErr, ""); cityEl?.classList.remove("input-ok","input-err"); }
-        else setError(cityEl, cityErr, "Вкажи місто");
+        if (live) {
+          setError(cityEl, cityErr, "");
+          cityEl?.classList.remove("input-ok", "input-err");
+        } else setError(cityEl, cityErr, "Вкажи місто");
         return false;
       }
       const msg = validateCity(v);
@@ -415,8 +362,10 @@
     function vEmail(live = true) {
       const v = String(emailEl?.value || "").trim();
       if (!v) {
-        if (live) { setError(emailEl, emailErr, ""); emailEl?.classList.remove("input-ok","input-err"); }
-        else setError(emailEl, emailErr, "Вкажи email");
+        if (live) {
+          setError(emailEl, emailErr, "");
+          emailEl?.classList.remove("input-ok", "input-err");
+        } else setError(emailEl, emailErr, "Вкажи email");
         return false;
       }
       const msg = validateEmail(v);
@@ -461,21 +410,14 @@
 
     emailEl?.addEventListener("blur", async () => {
       if (!vEmail(false)) return;
-
       if (savingEmail) return;
       savingEmail = true;
 
       try {
         const email = String(emailEl.value || "").trim();
         const res = await updateUserEmailIfNeeded(email, state.userEmail);
-
-        if (res?.error) {
-          setError(emailEl, emailErr, res.error);
-        } else if (res.changed) {
-          state.userEmail = email;
-        }
-      } catch (e) {
-        setError(emailEl, emailErr, "Не вдалося зберегти email");
+        if (res?.error) setError(emailEl, emailErr, res.error);
+        else if (res.changed) state.userEmail = email;
       } finally {
         savingEmail = false;
       }
@@ -497,12 +439,7 @@
     officeEl?.addEventListener("blur", () => vDelivery(false));
 
     function validateAll() {
-      const ok =
-        vName(false) &&
-        vPhone(false) &&
-        vCity(false) &&
-        vEmail(false) &&
-        vDelivery(false);
+      const ok = vName(false) && vPhone(false) && vCity(false) && vEmail(false) && vDelivery(false);
 
       if (!ok) {
         const firstErr = form.querySelector(".input-err");
@@ -535,11 +472,11 @@
 
         if (res?.error) throw new Error(res.error);
         if (res.changed) state.userEmail = email;
-      }
+      },
     };
   }
 
-  // ---------- submit ----------
+  // ---------- submit (AUTH ONLY) ----------
   function setupSubmit(validationApi) {
     const form = validationApi?.form;
     if (!form) return;
@@ -547,7 +484,7 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const { items, total } = renderCheckoutSummary();
+      const { items } = renderCheckoutSummary();
       if (!items.length) {
         alert("Кошик порожній.");
         return;
@@ -565,13 +502,31 @@
       }
 
       try {
-        await requireSessionOrRedirect();
+        const user = await getUserOrNull();
+        if (!user) {
+          redirectToAuthRemember();
+          return;
+        }
 
-        await validationApi.saveEmailIfChanged();
-        await syncCheckoutToUserMetadata(receiver);
+        await validationApi.saveEmailIfChanged().catch(() => {});
+        await syncCheckoutToUserMetadata(receiver).catch(() => {});
 
-        const orderId = await insertOrderToSupabase({ total, receiver, items });
-        await notifyOrderToTelegram({ orderId, total, receiver });
+        const itemsForRpc = items.map((i) => ({
+          product_id: String(i.product_id),
+          qty: Number(i.qty) || 1,
+          img: i.img || "",
+        }));
+
+        const { data: orderId, error } = await sb.rpc("create_order_v1", {
+          p_receiver_name: receiver.name,
+          p_receiver_phone: receiver.phone,
+          p_receiver_city: receiver.city,
+          p_receiver_post_office: `${receiver.deliveryService || ""} / №${receiver.deliveryOffice || ""}`.trim(),
+          p_receiver_comment: receiver.comment || "",
+          p_items: itemsForRpc,
+        });
+
+        if (error) throw error;
 
         setCartSafe([]);
         if (typeof window.updateCartBadge === "function") window.updateCartBadge();
